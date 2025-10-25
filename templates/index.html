@@ -53,10 +53,26 @@
     <script>
         const map = L.map('map').setView([20.5, 78.9], 4);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        // Base street map layer
+        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap contributors',
             maxZoom: 19
-        }).addTo(map);
+        });
+
+        // Beautiful topographical/terrain layer
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenTopoMap (CC-BY-SA), Map data: © OpenStreetMap contributors',
+            maxZoom: 17
+        });
+
+        // Start with topo layer
+        topoLayer.addTo(map);
+
+        // Layer control for user to switch
+        L.control.layers({
+            "Topographical": topoLayer,
+            "Street Map": streetLayer
+        }, null, { position: 'topright' }).addTo(map);
 
         const markers = L.markerClusterGroup({
             maxClusterRadius: 50,
