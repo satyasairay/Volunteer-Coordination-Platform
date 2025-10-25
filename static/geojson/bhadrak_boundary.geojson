@@ -1,0 +1,25 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bhadrak District",
+        "state": "Odisha",
+        "status": "active"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [86.35, 21.20],
+            [86.85, 21.20],
+            [86.85, 20.80],
+            [86.35, 20.80],
+            [86.35, 21.20]
+          ]
+        ]
+      }
+    }
+  ]
+}
