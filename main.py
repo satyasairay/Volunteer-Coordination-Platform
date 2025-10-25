@@ -20,14 +20,14 @@ from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PAS
 async def lifespan(app: FastAPI):
     await init_db()
     print("\n" + "="*60)
-    print("🗺️  Satsangee District Map - Server Started")
+    print("🕉️  SATSANGEE SEVA ATLAS - Ready to Serve")
     print("="*60)
     print("📍 Public URLs:")
-    print("   Map:     http://0.0.0.0:8000/")
-    print("   Doctors: http://0.0.0.0:8000/doctors")
+    print("   Seva Map:    http://0.0.0.0:5000/")
+    print("   Doctors:     http://0.0.0.0:5000/doctors")
     print("\n🔐 Admin URLs:")
-    print("   Login:   http://0.0.0.0:8000/admin/login")
-    print("   Dashboard: http://0.0.0.0:8000/admin")
+    print("   Login:       http://0.0.0.0:5000/admin/login")
+    print("   Dashboard:   http://0.0.0.0:5000/admin")
     print("="*60 + "\n")
     yield
 
