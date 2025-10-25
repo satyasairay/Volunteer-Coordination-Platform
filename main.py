@@ -171,6 +171,196 @@ async def create_report(
     return {"status": "success", "message": "Report submitted"}
 
 
+# ============================================================
+# SEVA API ENDPOINTS
+# ============================================================
+
+@app.get("/api/seva/feed")
+async def get_seva_feed(
+    limit: int = 20,
+    session: AsyncSession = Depends(get_session)
+):
+    """Get real-time seva activity feed - requests, responses, testimonials"""
+    
+    # Get recent requests
+    requests_query = select(SevaRequest).order_by(SevaRequest.created_at.desc()).limit(limit)
+    result = await session.execute(requests_query)
+    requests = result.scalars().all()
+    
+    # Get recent responses
+    responses_query = select(SevaResponse).order_by(SevaResponse.responded_at.desc()).limit(limit)
+    result = await session.execute(responses_query)
+    responses = result.scalars().all()
+    
+    # Get recent testimonials
+    testimonials_query = select(Testimonial).where(Testimonial.verified == True).order_by(Testimonial.created_at.desc()).limit(limit)
+    result = await session.execute(testimonials_query)
+    testimonials = result.scalars().all()
+    
+    # Build unified feed
+    feed_items = []
+    
+    for req in requests:
+        village = await session.get(Village, req.village_id)
+        feed_items.append({
+            "type": "request",
+            "id": req.id,
+            "seva_type": req.seva_type,
+            "urgency": req.urgency,
+            "status": req.status,
+            "title": req.title,
+            "village_name": village.name if village else "Unknown",
+            "requested_by": req.requested_by,
+            "created_at": req.created_at.isoformat()
+        })
+    
+    for resp in responses:
+        volunteer = await session.get(Member, resp.volunteer_id)
+        request_obj = await session.get(SevaRequest, resp.request_id)
+        feed_items.append({
+            "type": "response",
+            "id": resp.id,
+            "volunteer_name": volunteer.full_name if volunteer else "Unknown",
+            "seva_type": request_obj.seva_type if request_obj else "Unknown",
+            "status": resp.status,
+            "responded_at": resp.responded_at.isoformat()
+        })
+    
+    for test in testimonials:
+        village = await session.get(Village, test.village_id) if test.village_id else None
+        feed_items.append({
+            "type": "testimonial",
+            "id": test.id,
+            "author_name": test.author_name,
+            "content": test.content[:200],  # Truncate for feed
+            "seva_type": test.seva_type,
+            "village_name": village.name if village else None,
+            "created_at": test.created_at.isoformat()
+        })
+    
+    # Sort all by timestamp
+    feed_items.sort(key=lambda x: x.get("created_at") or x.get("responded_at"), reverse=True)
+    
+    return {"feed": feed_items[:limit]}
+
+
+@app.get("/api/seva/requests")
+async def get_seva_requests(
+    status: Optional[str] = None,
+    seva_type: Optional[str] = None,
+    urgency: Optional[str] = None,
+    village_id: Optional[int] = None,
+    session: AsyncSession = Depends(get_session)
+):
+    """Get seva requests with filters"""
+    query = select(SevaRequest)
+    
+    if status:
+        query = query.where(SevaRequest.status == status)
+    if seva_type:
+        query = query.where(SevaRequest.seva_type == seva_type)
+    if urgency:
+        query = query.where(SevaRequest.urgency == urgency)
+    if village_id:
+        query = query.where(SevaRequest.village_id == village_id)
+    
+    query = query.order_by(SevaRequest.created_at.desc())
+    result = await session.execute(query)
+    requests = result.scalars().all()
+    
+    items = []
+    for req in requests:
+        village = await session.get(Village, req.village_id)
+        assigned_volunteer = await session.get(Member, req.assigned_to_id) if req.assigned_to_id else None
+        
+        items.append({
+            "id": req.id,
+            "seva_type": req.seva_type,
+            "urgency": req.urgency,
+            "status": req.status,
+            "title": req.title,
+            "description": req.description,
+            "contact_phone": req.contact_phone,
+            "requested_by": req.requested_by,
+            "village_name": village.name if village else "Unknown",
+            "village_id": req.village_id,
+            "assigned_volunteer": assigned_volunteer.full_name if assigned_volunteer else None,
+            "created_at": req.created_at.isoformat()
+        })
+    
+    return {"requests": items}
+
+
+@app.post("/api/seva/request")
+async def create_seva_request(
+    seva_type: str = Form(...),
+    urgency: str = Form(...),
+    title: str = Form(...),
+    description: str = Form(...),
+    village_id: int = Form(...),
+    requested_by: str = Form(...),
+    contact_phone: str = Form(...),
+    location_details: Optional[str] = Form(None),
+    session: AsyncSession = Depends(get_session)
+):
+    """Create a new seva request"""
+    seva_request = SevaRequest(
+        seva_type=seva_type,
+        urgency=urgency,
+        title=title,
+        description=description,
+        village_id=village_id,
+        requested_by=requested_by,
+        contact_phone=contact_phone,
+        location_details=location_details,
+        status="open"
+    )
+    
+    session.add(seva_request)
+    await session.commit()
+    await session.refresh(seva_request)
+    
+    return {
+        "status": "success",
+        "message": "Seva request created",
+        "request_id": seva_request.id
+    }
+
+
+@app.post("/api/seva/respond")
+async def respond_to_seva(
+    request_id: int = Form(...),
+    volunteer_id: int = Form(...),
+    notes: Optional[str] = Form(None),
+    estimated_time: Optional[str] = Form(None),
+    session: AsyncSession = Depends(get_session)
+):
+    """Volunteer responds to a seva request"""
+    seva_response = SevaResponse(
+        request_id=request_id,
+        volunteer_id=volunteer_id,
+        status="offered",
+        notes=notes,
+        estimated_time=estimated_time
+    )
+    
+    session.add(seva_response)
+    
+    # Update request status to assigned
+    seva_request = await session.get(SevaRequest, request_id)
+    if seva_request:
+        seva_request.status = "assigned"
+        seva_request.assigned_to_id = volunteer_id
+        seva_request.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {
+        "status": "success",
+        "message": "Response recorded"
+    }
+
+
 @app.get("/admin/login", response_class=HTMLResponse)
 async def admin_login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})

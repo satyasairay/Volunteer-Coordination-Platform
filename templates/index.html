@@ -10,6 +10,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         #map { height: calc(100vh - 64px); width: 100%; }
+        #seva-feed-panel {
+            position: fixed;
+            right: 0;
+            top: 64px;
+            width: 380px;
+            height: calc(100vh - 64px);
+            background: white;
+            box-shadow: -4px 0 24px rgba(0,0,0,0.1);
+            z-index: 1000;
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        #seva-feed-panel.hidden {
+            transform: translateX(100%);
+        }
         .role-chip {
             display: inline-block;
             padding: 2px 8px;
@@ -24,11 +40,24 @@
         .role-Technician { background: #fce7f3; color: #831843; }
         .role-Lawyer { background: #f3e8ff; color: #6b21a8; }
         .role-Engineer { background: #dcfce7; color: #166534; }
+        .urgency-critical { border-left: 4px solid #dc2626; }
+        .urgency-high { border-left: 4px solid #f59e0b; }
+        .urgency-medium { border-left: 4px solid #3b82f6; }
+        .urgency-low { border-left: 4px solid #10b981; }
+        .seva-item { 
+            border-bottom: 1px solid #e5e7eb;
+            padding: 12px;
+            transition: background 0.2s;
+        }
+        .seva-item:hover { background: #f9fafb; }
+        @media (max-width: 768px) {
+            #seva-feed-panel { width: 100%; }
+        }
     </style>
 </head>
 <body class="bg-gray-50">
     <nav class="bg-white shadow-sm h-16 flex items-center px-4 md:px-8">
-        <h1 class="text-xl font-bold text-gray-800 mr-6">Satsangee Map</h1>
+        <h1 class="text-xl font-bold text-gray-800 mr-6">🕉️ Seva Atlas</h1>
         <input 
             type="text" 
             id="search" 
@@ -41,12 +70,35 @@
         >
             📍 Bhadrak
         </button>
+        <button 
+            id="seva-feed-toggle" 
+            class="ml-4 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition"
+        >
+            🙏 Seva Feed
+        </button>
         <a href="/doctors" class="ml-4 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
             👨‍⚕️ Doctors
         </a>
     </nav>
 
     <div id="map"></div>
+    
+    <!-- SEVA FEED PANEL -->
+    <div id="seva-feed-panel">
+        <div class="sticky top-0 bg-gradient-to-r from-orange-600 to-orange-500 text-white p-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold">🙏 Live Seva Feed</h2>
+                <button id="close-feed" class="text-white hover:text-gray-200">✕</button>
+            </div>
+            <p class="text-sm opacity-90 mt-1">Real-time service requests & responses</p>
+        </div>
+        
+        <div id="feed-container" class="p-2">
+            <div class="flex items-center justify-center py-8 text-gray-500">
+                <div class="animate-spin h-8 w-8 border-4 border-orange-500 border-t-transparent rounded-full"></div>
+            </div>
+        </div>
+    </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
@@ -165,6 +217,173 @@
                 }
             }
         });
+
+        // ==================================================
+        // SEVA FEED FUNCTIONALITY
+        // ==================================================
+        
+        const feedPanel = document.getElementById('seva-feed-panel');
+        const feedToggle = document.getElementById('seva-feed-toggle');
+        const closeButton = document.getElementById('close-feed');
+        const feedContainer = document.getElementById('feed-container');
+        
+        // Toggle feed panel
+        feedToggle.addEventListener('click', () => {
+            feedPanel.classList.toggle('hidden');
+            if (!feedPanel.classList.contains('hidden')) {
+                loadSevaFeed();
+            }
+        });
+        
+        closeButton.addEventListener('click', () => {
+            feedPanel.classList.add('hidden');
+        });
+        
+        // Load seva feed
+        async function loadSevaFeed() {
+            try {
+                const response = await fetch('/api/seva/feed?limit=20');
+                const data = await response.json();
+                renderFeed(data.feed);
+            } catch (error) {
+                feedContainer.innerHTML = '<div class="p-4 text-red-600">Error loading feed</div>';
+            }
+        }
+        
+        // Render feed items
+        function renderFeed(feedItems) {
+            if (!feedItems || feedItems.length === 0) {
+                feedContainer.innerHTML = `
+                    <div class="p-8 text-center text-gray-500">
+                        <p class="text-4xl mb-3">🙏</p>
+                        <p class="font-medium">No seva activity yet</p>
+                        <p class="text-sm mt-2">Service requests and responses will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = feedItems.map(item => {
+                if (item.type === 'request') {
+                    return `
+                        <div class="seva-item urgency-${item.urgency}">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xl">${getSevaIcon(item.seva_type)}</span>
+                                        <span class="font-semibold text-sm">${item.title}</span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mb-2">
+                                        <span class="font-medium">${item.requested_by}</span> • ${item.village_name}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-0.5 bg-gray-100 text-xs rounded">${item.seva_type}</span>
+                                        <span class="px-2 py-0.5 ${getUrgencyColor(item.urgency)} text-xs rounded font-medium">${item.urgency}</span>
+                                        <span class="px-2 py-0.5 ${getStatusColor(item.status)} text-xs rounded">${item.status}</span>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-400">${getTimeAgo(item.created_at)}</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'response') {
+                    return `
+                        <div class="seva-item" style="border-left: 4px solid #10b981;">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xl">✋</span>
+                                        <span class="font-semibold text-sm">Volunteer Responded</span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mb-2">
+                                        <span class="font-medium">${item.volunteer_name}</span> volunteered for ${item.seva_type}
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded">${item.status}</span>
+                                    </div>
+                                </div>
+                                <div class="text-xs text-gray-400">${getTimeAgo(item.responded_at)}</div>
+                            </div>
+                        </div>
+                    `;
+                } else if (item.type === 'testimonial') {
+                    return `
+                        <div class="seva-item" style="border-left: 4px solid #f59e0b;">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xl">💐</span>
+                                        <span class="font-semibold text-sm">Gratitude</span>
+                                    </div>
+                                    <div class="text-xs text-gray-600 mb-2">
+                                        <span class="font-medium">${item.author_name}</span>${item.village_name ? ' • ' + item.village_name : ''}
+                                    </div>
+                                    <div class="text-sm text-gray-700 italic">"${item.content}"</div>
+                                </div>
+                                <div class="text-xs text-gray-400">${getTimeAgo(item.created_at)}</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }).join('');
+            
+            feedContainer.innerHTML = html;
+        }
+        
+        // Helper functions
+        function getSevaIcon(sevaType) {
+            const icons = {
+                'medical': '🏥',
+                'electrical': '⚡',
+                'plumbing': '🔧',
+                'spiritual': '🙏',
+                'emergency': '🚨',
+                'other': '🛠️'
+            };
+            return icons[sevaType] || '📋';
+        }
+        
+        function getUrgencyColor(urgency) {
+            const colors = {
+                'critical': 'bg-red-100 text-red-700',
+                'high': 'bg-orange-100 text-orange-700',
+                'medium': 'bg-blue-100 text-blue-700',
+                'low': 'bg-green-100 text-green-700'
+            };
+            return colors[urgency] || 'bg-gray-100 text-gray-700';
+        }
+        
+        function getStatusColor(status) {
+            const colors = {
+                'open': 'bg-blue-100 text-blue-700',
+                'assigned': 'bg-yellow-100 text-yellow-700',
+                'in_progress': 'bg-purple-100 text-purple-700',
+                'fulfilled': 'bg-green-100 text-green-700',
+                'closed': 'bg-gray-100 text-gray-700'
+            };
+            return colors[status] || 'bg-gray-100 text-gray-700';
+        }
+        
+        function getTimeAgo(timestamp) {
+            const now = new Date();
+            const time = new Date(timestamp);
+            const diff = Math.floor((now - time) / 1000); // seconds
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            return Math.floor(diff / 86400) + 'd ago';
+        }
+        
+        // Auto-refresh feed every 30 seconds
+        setInterval(() => {
+            if (!feedPanel.classList.contains('hidden')) {
+                loadSevaFeed();
+            }
+        }, 30000);
+        
+        // Load feed on page load
+        loadSevaFeed();
     </script>
 </body>
 </html>
