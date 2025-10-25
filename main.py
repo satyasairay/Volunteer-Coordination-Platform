@@ -12,7 +12,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from db import init_db, get_session
-from models import Village, Member, Doctor, Audit, Report
+from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial
 from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PASSWORD
 
 

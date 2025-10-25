@@ -33,10 +33,18 @@ class Member(SQLModel, table=True):
     verified: bool = Field(default=False, index=True)
     notes: Optional[str] = None
     village_id: int = Field(foreign_key="villages.id", index=True)
+    
+    # SEVA enhancements
+    available: bool = Field(default=True, index=True)
+    seva_types: str = Field(default="")  # Comma-separated: medical,electrical,spiritual,emergency
+    total_seva_count: int = Field(default=0)
+    last_seva_date: Optional[datetime] = None
+    
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     village: Optional[Village] = Relationship(back_populates="members")
+    seva_responses: List["SevaResponse"] = Relationship(back_populates="volunteer")
 
 
 class Doctor(SQLModel, table=True):
@@ -78,3 +86,92 @@ class Report(SQLModel, table=True):
     reason: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     created_by_ip: str
+
+
+class SevaRequest(SQLModel, table=True):
+    """Service requests from community members"""
+    __tablename__ = "seva_requests"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Request details
+    seva_type: str = Field(index=True)  # medical, electrical, plumbing, spiritual, emergency, other
+    urgency: str = Field(index=True)    # low, medium, high, critical
+    status: str = Field(default="open", index=True)  # open, assigned, in_progress, fulfilled, closed
+    
+    # Location
+    village_id: int = Field(foreign_key="villages.id", index=True)
+    location_details: Optional[str] = None
+    
+    # Description
+    title: str
+    description: str
+    contact_phone: str
+    
+    # Tracking
+    requested_by: str  # Name of person requesting
+    assigned_to_id: Optional[int] = Field(default=None, foreign_key="members.id")
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    fulfilled_at: Optional[datetime] = None
+    
+    # Relationships
+    village: Optional[Village] = Relationship()
+    assigned_volunteer: Optional[Member] = Relationship()
+    responses: List["SevaResponse"] = Relationship(back_populates="request")
+    testimonials: List["Testimonial"] = Relationship(back_populates="seva_request")
+
+
+class SevaResponse(SQLModel, table=True):
+    """Volunteer responses to seva requests"""
+    __tablename__ = "seva_responses"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Links
+    request_id: int = Field(foreign_key="seva_requests.id", index=True)
+    volunteer_id: int = Field(foreign_key="members.id", index=True)
+    
+    # Response
+    status: str = Field(default="offered")  # offered, accepted, declined, completed
+    notes: Optional[str] = None
+    estimated_time: Optional[str] = None  # "30 minutes", "1 hour", etc.
+    
+    # Timestamps
+    responded_at: datetime = Field(default_factory=datetime.utcnow)
+    completed_at: Optional[datetime] = None
+    
+    # Relationships
+    request: Optional[SevaRequest] = Relationship(back_populates="responses")
+    volunteer: Optional[Member] = Relationship(back_populates="seva_responses")
+
+
+class Testimonial(SQLModel, table=True):
+    """Gratitude messages and seva impact stories"""
+    __tablename__ = "testimonials"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Story details
+    author_name: str
+    author_phone: Optional[str] = None
+    content: str  # The gratitude message or story
+    
+    # Context
+    village_id: Optional[int] = Field(default=None, foreign_key="villages.id")
+    seva_request_id: Optional[int] = Field(default=None, foreign_key="seva_requests.id")
+    seva_type: Optional[str] = None  # medical, electrical, etc.
+    volunteer_name: Optional[str] = None  # Name of volunteer being thanked
+    
+    # Moderation
+    verified: bool = Field(default=False, index=True)
+    featured: bool = Field(default=False)  # Highlight special stories
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    
+    # Relationships
+    village: Optional[Village] = Relationship()
+    seva_request: Optional[SevaRequest] = Relationship(back_populates="testimonials")
