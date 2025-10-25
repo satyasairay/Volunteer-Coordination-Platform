@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Satsangee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-sm h-16 flex items-center px-4 md:px-8">
+        <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
+        <div class="ml-auto flex gap-4">
+            <a href="/admin/members" class="text-blue-600 hover:underline">Members</a>
+            <a href="/admin/doctors" class="text-blue-600 hover:underline">Doctors</a>
+            <a href="/admin/logout" class="text-red-600 hover:underline">Logout</a>
+        </div>
+    </nav>
+
+    <div class="max-w-6xl mx-auto p-8">
+        <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-3xl font-bold text-blue-600">{{ stats.villages }}</h3>
+                <p class="text-gray-600 mt-2">Villages</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-3xl font-bold text-green-600">{{ stats.members }}</h3>
+                <p class="text-gray-600 mt-2">Members</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h3 class="text-3xl font-bold text-purple-600">{{ stats.doctors }}</h3>
+                <p class="text-gray-600 mt-2">Doctors</p>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold mb-4">Bulk Upload Villages</h2>
+                <p class="text-sm text-gray-600 mb-4">CSV Format: name,block,lat,lng,south,west,north,east,code_2011</p>
+                <form id="villages-form" enctype="multipart/form-data" class="space-y-4">
+                    <input 
+                        type="file" 
+                        name="file" 
+                        accept=".csv" 
+                        required
+                        class="w-full border border-gray-300 rounded p-2"
+                    />
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+                        Upload Villages
+                    </button>
+                </form>
+                <div id="villages-result" class="mt-4"></div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold mb-4">Bulk Upload Members</h2>
+                <p class="text-sm text-gray-600 mb-4">CSV Format: full_name,role,phone,languages,village</p>
+                <form id="members-form" enctype="multipart/form-data" class="space-y-4">
+                    <input 
+                        type="file" 
+                        name="file" 
+                        accept=".csv" 
+                        required
+                        class="w-full border border-gray-300 rounded p-2"
+                    />
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="verify_on_import" class="rounded" />
+                        <span class="text-sm">Verify all on import</span>
+                    </label>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                        Upload Members
+                    </button>
+                </form>
+                <div id="members-result" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('villages-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const result = document.getElementById('villages-result');
+            result.innerHTML = '<p class="text-blue-600">Uploading...</p>';
+            
+            try {
+                const res = await fetch('/admin/bulk/villages', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                result.innerHTML = `
+                    <div class="p-3 bg-green-50 rounded">
+                        <p class="text-green-800 font-semibold">✓ Inserted: ${data.inserted}</p>
+                        ${data.errors.length ? `<p class="text-red-600 mt-2">Errors: ${data.errors.join(', ')}</p>` : ''}
+                    </div>
+                `;
+                e.target.reset();
+            } catch (err) {
+                result.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+            }
+        });
+
+        document.getElementById('members-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const result = document.getElementById('members-result');
+            result.innerHTML = '<p class="text-blue-600">Uploading...</p>';
+            
+            try {
+                const res = await fetch('/admin/bulk/members', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                result.innerHTML = `
+                    <div class="p-3 bg-green-50 rounded">
+                        <p class="text-green-800 font-semibold">✓ Inserted: ${data.inserted}</p>
+                        ${data.errors.length ? `<p class="text-red-600 mt-2">Errors: ${data.errors.join(', ')}</p>` : ''}
+                    </div>
+                `;
+                e.target.reset();
+            } catch (err) {
+                result.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>

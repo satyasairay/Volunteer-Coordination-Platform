@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Doctors - Satsangee Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-sm h-16 flex items-center px-4 md:px-8">
+        <a href="/admin" class="text-blue-600 hover:underline">← Dashboard</a>
+        <h1 class="text-xl font-bold text-gray-800 ml-6">Manage Doctors</h1>
+        <a href="/admin/logout" class="ml-auto text-red-600 hover:underline">Logout</a>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-8">
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Add New Doctor</h2>
+            <form method="POST" action="/admin/doctors/new" class="grid md:grid-cols-2 gap-4">
+                <input type="text" name="full_name" placeholder="Full Name" required class="px-4 py-2 border rounded" />
+                <input type="text" name="specialty" placeholder="Specialty" required class="px-4 py-2 border rounded" />
+                <input type="text" name="city" placeholder="City" required class="px-4 py-2 border rounded" />
+                <input type="text" name="hospital" placeholder="Hospital/Clinic" required class="px-4 py-2 border rounded" />
+                <input type="tel" name="phone" placeholder="Phone" required class="px-4 py-2 border rounded" />
+                <input type="text" name="languages" placeholder="Languages" class="px-4 py-2 border rounded" />
+                <input type="text" name="referral_reason" placeholder="Why recommended?" class="md:col-span-2 px-4 py-2 border rounded" />
+                <input type="text" name="referred_by" placeholder="Referred by" class="px-4 py-2 border rounded" />
+                <input type="number" name="rank" placeholder="Rank (0=default)" min="0" value="0" class="px-4 py-2 border rounded" />
+                <label class="flex items-center gap-2 px-4 py-2">
+                    <input type="checkbox" name="verified" class="rounded" />
+                    <span>Verified</span>
+                </label>
+                <button type="submit" class="md:col-span-2 bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                    Add Doctor
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <h2 class="text-xl font-bold mb-4">All Doctors</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-3 text-left">Name</th>
+                            <th class="p-3 text-left">Specialty</th>
+                            <th class="p-3 text-left">City</th>
+                            <th class="p-3 text-left">Hospital</th>
+                            <th class="p-3 text-left">Phone</th>
+                            <th class="p-3 text-left">Status</th>
+                            <th class="p-3 text-left">Rank</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3">{{ doctor.full_name }}</td>
+                            <td class="p-3">{{ doctor.specialty }}</td>
+                            <td class="p-3">{{ doctor.city }}</td>
+                            <td class="p-3">{{ doctor.hospital }}</td>
+                            <td class="p-3">{{ doctor.phone }}</td>
+                            <td class="p-3">
+                                {% if doctor.verified %}
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">✓ Verified</span>
+                                {% else %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-3">{{ doctor.rank }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

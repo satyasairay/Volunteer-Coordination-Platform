@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Members - Satsangee Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <nav class="bg-white shadow-sm h-16 flex items-center px-4 md:px-8">
+        <a href="/admin" class="text-blue-600 hover:underline">← Dashboard</a>
+        <h1 class="text-xl font-bold text-gray-800 ml-6">Manage Members</h1>
+        <a href="/admin/logout" class="ml-auto text-red-600 hover:underline">Logout</a>
+    </nav>
+
+    <div class="max-w-7xl mx-auto p-8">
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">Add New Member</h2>
+            <form method="POST" action="/admin/members/new" class="grid md:grid-cols-2 gap-4">
+                <input type="text" name="full_name" placeholder="Full Name" required class="px-4 py-2 border rounded" />
+                <select name="role" required class="px-4 py-2 border rounded">
+                    <option value="">Select Role</option>
+                    <option value="Volunteer">Volunteer</option>
+                    <option value="Electrician">Electrician</option>
+                    <option value="Plumber">Plumber</option>
+                    <option value="Technician">Technician</option>
+                    <option value="Lawyer">Lawyer</option>
+                    <option value="Engineer">Engineer</option>
+                </select>
+                <input type="tel" name="phone" placeholder="Phone" required class="px-4 py-2 border rounded" />
+                <input type="text" name="languages" placeholder="Languages (comma separated)" class="px-4 py-2 border rounded" />
+                <select name="village_id" required class="px-4 py-2 border rounded">
+                    <option value="">Select Village</option>
+                    {% for village in villages %}
+                    <option value="{{ village.id }}">{{ village.name }} ({{ village.block }})</option>
+                    {% endfor %}
+                </select>
+                <input type="text" name="notes" placeholder="Notes (optional)" class="px-4 py-2 border rounded" />
+                <label class="flex items-center gap-2 px-4 py-2">
+                    <input type="checkbox" name="verified" class="rounded" />
+                    <span>Verified</span>
+                </label>
+                <button type="submit" class="md:col-span-2 bg-green-600 text-white py-2 rounded hover:bg-green-700">
+                    Add Member
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-white p-6 rounded-lg shadow">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold">All Members</h2>
+                <form method="GET" class="flex gap-2">
+                    <input 
+                        type="text" 
+                        name="q" 
+                        value="{{ search_query or '' }}" 
+                        placeholder="Search..." 
+                        class="px-4 py-2 border rounded"
+                    />
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                        Search
+                    </button>
+                </form>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-100">
+                        <tr>
+                            <th class="p-3 text-left">Name</th>
+                            <th class="p-3 text-left">Role</th>
+                            <th class="p-3 text-left">Phone</th>
+                            <th class="p-3 text-left">Village</th>
+                            <th class="p-3 text-left">Status</th>
+                            <th class="p-3 text-left">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for member in members %}
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="p-3">{{ member.full_name }}</td>
+                            <td class="p-3">{{ member.role }}</td>
+                            <td class="p-3">{{ member.phone }}</td>
+                            <td class="p-3">{{ member.village.name }}</td>
+                            <td class="p-3">
+                                {% if member.verified %}
+                                <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs">✓ Verified</span>
+                                {% else %}
+                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="p-3">
+                                {% if not member.verified %}
+                                <button 
+                                    onclick="verifyMember({{ member.id }})"
+                                    class="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700"
+                                >
+                                    Verify
+                                </button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function verifyMember(id) {
+            if (!confirm('Verify this member?')) return;
+            
+            try {
+                const res = await fetch(`/admin/members/${id}/verify`, {
+                    method: 'POST'
+                });
+                
+                if (res.ok) {
+                    location.reload();
+                } else {
+                    alert('Failed to verify member');
+                }
+            } catch (err) {
+                alert('Error: ' + err.message);
+            }
+        }
+    </script>
+</body>
+</html>
