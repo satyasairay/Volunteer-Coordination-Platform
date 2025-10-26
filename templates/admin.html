@@ -96,15 +96,35 @@
     </div>
 
     <script>
-        // Pin style definitions with SVG paths
+        // Pin style definitions with SVG paths - 18 creative styles
         const pinStyles = [
-            { id: 'mappin', name: 'Map Pin', svg: '<path d="M0,-8 C-3,-8 -5,-6 -5,-3 C-5,0 0,8 0,8 C0,8 5,0 5,-3 C5,-6 3,-8 0,-8 Z" fill="currentColor"/><circle cx="0" cy="-3" r="2" fill="white"/>' },
-            { id: 'diamond', name: 'Diamond', svg: '<path d="M0,-6 L4,0 L0,6 L-4,0 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'star', name: 'Star', svg: '<path d="M0,-6 L1.5,-2 L6,-1.5 L2.5,1.5 L3,6 L0,4 L-3,6 L-2.5,1.5 L-6,-1.5 L-1.5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'triangle', name: 'Triangle', svg: '<path d="M0,-6 L5,5 L-5,5 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'hexagon', name: 'Hexagon', svg: '<path d="M0,-6 L5,-3 L5,3 L0,6 L-5,3 L-5,-3 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'pentagon', name: 'Pentagon', svg: '<path d="M0,-6 L5,-2 L3,5 L-3,5 L-5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'marker', name: 'Marker', svg: '<circle cx="0" cy="0" r="5" fill="currentColor" stroke="white" stroke-width="1"/><circle cx="0" cy="0" r="2" fill="white"/>' }
+            // Classic
+            { id: 'mappin', name: '📍 Map Pin', svg: '<path d="M0,-8 C-3,-8 -5,-6 -5,-3 C-5,0 0,8 0,8 C0,8 5,0 5,-3 C5,-6 3,-8 0,-8 Z" fill="currentColor"/><circle cx="0" cy="-3" r="2" fill="white"/>' },
+            { id: 'diamond', name: '💎 Diamond', svg: '<path d="M0,-6 L4,0 L0,6 L-4,0 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'star', name: '⭐ Star', svg: '<path d="M0,-6 L1.5,-2 L6,-1.5 L2.5,1.5 L3,6 L0,4 L-3,6 L-2.5,1.5 L-6,-1.5 L-1.5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'triangle', name: '🔺 Triangle', svg: '<path d="M0,-6 L5,5 L-5,5 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'hexagon', name: '⬡ Hexagon', svg: '<path d="M0,-6 L5,-3 L5,3 L0,6 L-5,3 L-5,-3 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'pentagon', name: '⬟ Pentagon', svg: '<path d="M0,-6 L5,-2 L3,5 L-3,5 L-5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            
+            // Flags
+            { id: 'flag', name: '🚩 Flag', svg: '<rect x="0" y="-6" width="1" height="12" fill="white"/><path d="M1,-6 L8,-4 L8,-1 L1,-3 Z" fill="currentColor" stroke="white" stroke-width="0.4"/>' },
+            { id: 'wavyflag', name: '🏴 Wavy Flag', svg: '<rect x="0" y="-6" width="1" height="12" fill="white"/><path d="M1,-5 Q4,-6 7,-5 L7,-2 Q4,-3 1,-2 Z" fill="currentColor" stroke="white" stroke-width="0.4"/>' },
+            { id: 'pennant', name: '⛳ Pennant', svg: '<rect x="0" y="-6" width="1" height="12" fill="white"/><path d="M1,-5 L9,0 L1,5 Z" fill="currentColor" stroke="white" stroke-width="0.4"/>' },
+            
+            // Location
+            { id: 'pinpoint', name: '📌 Pinpoint', svg: '<path d="M0,-8 C-3,-8 -6,-5 -6,-2 C-6,2 0,8 0,8 C0,8 6,2 6,-2 C6,-5 3,-8 0,-8 Z" fill="currentColor" stroke="white" stroke-width="0.7"/><path d="M0,-7 L-2,-3 L2,-3 Z" fill="white"/>' },
+            { id: 'droplet', name: '💧 Droplet', svg: '<path d="M0,-7 C-3,-4 -4,0 -4,2 C-4,5 -2,7 0,7 C2,7 4,5 4,2 C4,0 3,-4 0,-7 Z" fill="currentColor" stroke="white" stroke-width="0.7"/>' },
+            { id: 'beacon', name: '🔵 Beacon', svg: '<circle cx="0" cy="0" r="6" fill="currentColor" stroke="white" stroke-width="1"/><circle cx="0" cy="0" r="2.5" fill="white"/>' },
+            { id: 'ring', name: '⭕ Ring', svg: '<circle cx="0" cy="0" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="0" cy="0" r="1.5" fill="white"/>' },
+            
+            // Directional
+            { id: 'arrow', name: '⬆️ Arrow', svg: '<path d="M0,-7 L3,-4 L1,-4 L1,5 L-1,5 L-1,-4 L-3,-4 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'pointer', name: '👉 Pointer', svg: '<path d="M-4,-5 L4,-5 L7,0 L4,5 L-4,5 L-1,0 Z" fill="currentColor" stroke="white" stroke-width="0.6"/>' },
+            
+            // Special
+            { id: 'heart', name: '❤️ Heart', svg: '<path d="M0,-3 C0,-4.5 -1.5,-6 -3,-6 C-4.5,-6 -6,-4.5 -6,-3 C-6,0 0,6 0,6 C0,6 6,0 6,-3 C6,-4.5 4.5,-6 3,-6 C1.5,-6 0,-4.5 0,-3 Z" fill="currentColor" stroke="white" stroke-width="0.6"/>' },
+            { id: 'shield', name: '🛡️ Shield', svg: '<path d="M0,-6 L5,-4 L5,2 C5,4.5 2.5,7 0,7 C-2.5,7 -5,4.5 -5,2 L-5,-4 Z" fill="currentColor" stroke="white" stroke-width="0.7"/>' },
+            { id: 'target', name: '🎯 Target', svg: '<circle cx="0" cy="0" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="0" cy="0" r="3" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="0" cy="0" r="1.5" fill="currentColor"/>' }
         ];
 
         // Load map settings and populate pin styles
