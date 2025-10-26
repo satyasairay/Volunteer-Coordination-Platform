@@ -96,12 +96,12 @@
             font-weight: 600;
         }
         
-        /* Map container with BRIGHT FOREST BACKGROUND & LOTUS OVERLAY */
+        /* Map container with BIG LEAF BACKGROUND */
         #map-container {
             height: calc(100vh - 60px - 40px);
             width: 100%;
             position: relative;
-            background: url('/static/stock_images/bright_sunlit_green__fd4a9d7d.jpg') center/cover no-repeat;
+            background: url('/static/stock_images/single_large_green_l_b6ea0cc7.jpg') center/cover no-repeat;
             background-blend-mode: normal;
         }
         
@@ -113,30 +113,9 @@
             left: 0;
             right: 0;
             bottom: 0;
-            box-shadow: inset 0 0 80px 40px rgba(0, 0, 0, 0.4);
+            box-shadow: inset 0 0 80px 40px rgba(0, 0, 0, 0.3);
             pointer-events: none;
             z-index: 5;
-        }
-        
-        #map-container::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(1.1);
-            width: 60%;
-            height: 60%;
-            background: url('/static/stock_images/sacred_lotus_flower__b2b213a6.jpg') center/contain no-repeat;
-            opacity: 0.06;
-            filter: blur(2px) saturate(1.5);
-            pointer-events: none;
-            z-index: 1;
-            animation: lotus-float 8s ease-in-out infinite;
-        }
-        
-        @keyframes lotus-float {
-            0%, 100% { transform: translate(-50%, -50%) scale(1.1) rotate(0deg); }
-            50% { transform: translate(-50%, -48%) scale(1.15) rotate(2deg); }
         }
         
         svg {
@@ -883,19 +862,19 @@
             }
         }
         
-        // Generate 3D glowing dot HTML based on style
+        // Generate 3D glowing dot HTML based on style - SMALL & VIBRANT for all zoom levels
         function getDotHTML(styleId, color) {
             const styles = {
-                'neon_glow': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 8px 3px ${color}, 0 0 12px 6px ${color}66, inset 0 0 4px ${color};"></div>`,
-                'pulse_ring': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 3px ${color}88, 0 0 8px 2px ${color}; animation: pulse 1.5s ease-in-out infinite;"></div>`,
-                'double_halo': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 6px 2px ${color}, 0 0 12px 5px ${color}66, 0 0 20px 8px ${color}33;"></div>`,
-                'soft_blur': `<div style="width: 14px; height: 14px; background: ${color}; border-radius: 50%; filter: blur(3px); opacity: 0.9;"></div>`,
-                'sharp_core': `<div style="width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 0 2px #111, 0 0 12px 4px ${color};"></div>`,
-                'plasma': `<div style="width: 14px; height: 14px; background: radial-gradient(circle, ${color} 0%, ${color}66 50%, transparent 100%); border-radius: 50%; filter: blur(1px);"></div>`,
-                'crystal': `<div style="width: 12px; height: 12px; background: linear-gradient(135deg, white, ${color}); border-radius: 50%; box-shadow: 0 0 8px 2px ${color}88, inset -2px -2px 4px rgba(255,255,255,0.6);"></div>`,
-                'firefly': `<div style="width: 10px; height: 10px; background: radial-gradient(circle, ${color}ff 0%, ${color}88 40%, transparent 70%); border-radius: 50%; box-shadow: 0 0 10px 4px ${color}66;"></div>`,
-                'laser': `<div style="width: 8px; height: 8px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}ff, 0 0 8px 3px ${color}cc, 0 0 1px 1px white; border: 1px solid white;"></div>`,
-                'halo_fade': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 2px ${color}99, 0 0 0 5px ${color}55, 0 0 0 8px ${color}22;"></div>`
+                'neon_glow': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 6px 2px ${color}, 0 0 10px 4px ${color}cc, 0 0 14px 6px ${color}88, inset 0 0 3px white;"></div>`,
+                'pulse_ring': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 0 2px ${color}dd, 0 0 8px 3px ${color}; animation: pulse 1.5s ease-in-out infinite;"></div>`,
+                'double_halo': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 5px 2px ${color}, 0 0 10px 4px ${color}aa, 0 0 16px 6px ${color}66;"></div>`,
+                'soft_blur': `<div style="width: 7px; height: 7px; background: ${color}; border-radius: 50%; filter: blur(2px); opacity: 0.95; box-shadow: 0 0 8px 3px ${color};"></div>`,
+                'sharp_core': `<div style="width: 5px; height: 5px; background: white; border-radius: 50%; box-shadow: 0 0 0 1px ${color}, 0 0 10px 4px ${color}, 0 0 15px 6px ${color}88;"></div>`,
+                'plasma': `<div style="width: 7px; height: 7px; background: radial-gradient(circle, white 0%, ${color} 40%, ${color}88 100%); border-radius: 50%; box-shadow: 0 0 8px 3px ${color};"></div>`,
+                'crystal': `<div style="width: 6px; height: 6px; background: linear-gradient(135deg, white, ${color}); border-radius: 50%; box-shadow: 0 0 8px 3px ${color}dd, inset -1px -1px 2px rgba(255,255,255,0.8);"></div>`,
+                'firefly': `<div style="width: 5px; height: 5px; background: radial-gradient(circle, ${color} 0%, ${color}dd 30%, ${color}66 100%); border-radius: 50%; box-shadow: 0 0 10px 4px ${color}cc;"></div>`,
+                'laser': `<div style="width: 4px; height: 4px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}, 0 0 8px 4px ${color}dd, 0 0 1px 1px white; border: 1px solid white;"></div>`,
+                'halo_fade': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 0 2px ${color}cc, 0 0 0 4px ${color}77, 0 0 0 6px ${color}44;"></div>`
             };
             return styles[styleId] || styles['neon_glow'];
         }
@@ -1019,11 +998,15 @@
             const zoomLevel = event.transform.k;
             const pins = g.selectAll(".village-pin");
             
-            if (zoomLevel > 2) {
-                // Zoomed in enough - show pins
-                pins.transition().duration(200).attr("opacity", 0.85);
+            // Counter-scale pins to keep them SMALL at all zoom levels
+            const counterScale = 1 / zoomLevel;
+            pins.attr("transform", `scale(${counterScale})`);
+            
+            if (zoomLevel > 1) {
+                // Show pins at any zoom level
+                pins.transition().duration(200).attr("opacity", 0.9);
             } else {
-                // Zoomed out - hide pins
+                // Only hide at base zoom
                 pins.transition().duration(200).attr("opacity", 0);
             }
         }
