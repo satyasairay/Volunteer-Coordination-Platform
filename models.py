@@ -204,3 +204,22 @@ class BlockSettings(SQLModel, table=True):
     
     # Timestamps
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class MapSettings(SQLModel, table=True):
+    """Global map visualization settings (admin-controlled)"""
+    __tablename__ = "map_settings"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Choropleth settings
+    metric_name: str = Field(default="population")  # population, seva_count, literacy_rate, development_index
+    color_scheme: str = Field(default="Blues")  # Blues, Greens, Reds, Purples, Oranges, Viridis, Turbo
+    
+    # Display options
+    show_villages: bool = Field(default=True)
+    show_blocks: bool = Field(default=True)
+    village_point_color: str = Field(default="#e63946")  # Red dots
+    
+    # Timestamps
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

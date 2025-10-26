@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Settings - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { background: #f8f9fa; }
+        .card { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .preview-map { width: 100%; height: 400px; border: 2px solid #e5e7eb; border-radius: 8px; background: #f9fafb; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-gray-900 text-white p-4 shadow-lg">
+            <div class="max-w-7xl mx-auto flex justify-between items-center">
+                <div>
+                    <h1 class="text-2xl font-bold">🗺️ Map Visualization Settings</h1>
+                    <p class="text-sm text-gray-400">Control choropleth colors, metrics, and display options</p>
+                </div>
+                <a href="/admin" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition">← Back to Admin</a>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto p-6">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- Settings Panel -->
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-6">Map Settings</h2>
+                    
+                    <form id="settingsForm" class="space-y-6">
+                        
+                        <!-- Data Metric -->
+                        <div>
+                            <label class="block font-semibold mb-2">Data Metric</label>
+                            <select id="metric_name" class="w-full border border-gray-300 rounded-lg p-3">
+                                <option value="population">Population</option>
+                                <option value="seva_count">Seva Count</option>
+                                <option value="literacy_rate">Literacy Rate (%)</option>
+                                <option value="development_index">Development Index</option>
+                            </select>
+                            <p class="text-sm text-gray-500 mt-1">Which metric to visualize in the choropleth</p>
+                        </div>
+                        
+                        <!-- Color Scheme -->
+                        <div>
+                            <label class="block font-semibold mb-2">Color Scheme</label>
+                            <select id="color_scheme" class="w-full border border-gray-300 rounded-lg p-3">
+                                <option value="Blues">Blues (Professional)</option>
+                                <option value="Greens">Greens (Nature)</option>
+                                <option value="Reds">Reds (Alert)</option>
+                                <option value="Purples">Purples (Royal)</option>
+                                <option value="Oranges">Oranges (Warm)</option>
+                                <option value="Viridis">Viridis (Scientific)</option>
+                                <option value="Turbo">Turbo (Vibrant)</option>
+                            </select>
+                            <p class="text-sm text-gray-500 mt-1">Color gradient for block visualization</p>
+                        </div>
+                        
+                        <!-- Village Point Color -->
+                        <div>
+                            <label class="block font-semibold mb-2">Village Point Color</label>
+                            <div class="flex gap-3">
+                                <input type="color" id="village_point_color" value="#e63946" class="w-16 h-12 border border-gray-300 rounded-lg cursor-pointer">
+                                <input type="text" id="village_color_hex" value="#e63946" class="flex-1 border border-gray-300 rounded-lg p-3 font-mono">
+                            </div>
+                            <p class="text-sm text-gray-500 mt-1">Color of village pins on the map</p>
+                        </div>
+                        
+                        <!-- Display Toggles -->
+                        <div>
+                            <label class="block font-semibold mb-2">Display Options</label>
+                            <div class="space-y-2">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_blocks" checked class="w-5 h-5 rounded">
+                                    <span>Show Block Polygons</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" id="show_villages" checked class="w-5 h-5 rounded">
+                                    <span>Show Village Points</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <!-- Save Button -->
+                        <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg">
+                            💾 Save Settings
+                        </button>
+                    </form>
+                    
+                    <div id="status" class="mt-4 p-3 rounded-lg hidden"></div>
+                </div>
+                
+                <!-- Preview Panel -->
+                <div class="card">
+                    <h2 class="text-xl font-bold mb-4">Live Preview</h2>
+                    <p class="text-sm text-gray-600 mb-4">Changes will be reflected on the public map after saving</p>
+                    
+                    <div class="preview-map flex items-center justify-center">
+                        <div class="text-center text-gray-400">
+                            <svg class="w-24 h-24 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
+                            </svg>
+                            <p class="font-semibold">Map Preview</p>
+                            <p class="text-sm mt-2">Save settings to see changes on the live map</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Current Settings Display -->
+                    <div class="mt-6 space-y-2 text-sm">
+                        <div class="flex justify-between p-2 bg-gray-50 rounded">
+                            <span class="font-semibold">Metric:</span>
+                            <span id="current_metric">Loading...</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-gray-50 rounded">
+                            <span class="font-semibold">Color Scheme:</span>
+                            <span id="current_scheme">Loading...</span>
+                        </div>
+                        <div class="flex justify-between p-2 bg-gray-50 rounded">
+                            <span class="font-semibold">Village Color:</span>
+                            <span id="current_village_color">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load current settings
+        async function loadSettings() {
+            const response = await fetch('/api/map-settings');
+            const settings = await response.json();
+            
+            document.getElementById('metric_name').value = settings.metric_name;
+            document.getElementById('color_scheme').value = settings.color_scheme;
+            document.getElementById('village_point_color').value = settings.village_point_color;
+            document.getElementById('village_color_hex').value = settings.village_point_color;
+            document.getElementById('show_blocks').checked = settings.show_blocks;
+            document.getElementById('show_villages').checked = settings.show_villages;
+            
+            // Update current settings display
+            document.getElementById('current_metric').textContent = settings.metric_name.replace('_', ' ').toUpperCase();
+            document.getElementById('current_scheme').textContent = settings.color_scheme;
+            document.getElementById('current_village_color').innerHTML = `<span style="display:inline-block;width:20px;height:20px;background:${settings.village_point_color};border:1px solid #ccc;border-radius:3px;margin-right:6px;"></span>${settings.village_point_color}`;
+        }
+        
+        // Sync color picker with hex input
+        document.getElementById('village_point_color').addEventListener('input', (e) => {
+            document.getElementById('village_color_hex').value = e.target.value;
+        });
+        
+        document.getElementById('village_color_hex').addEventListener('input', (e) => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                document.getElementById('village_point_color').value = e.target.value;
+            }
+        });
+        
+        // Save settings
+        document.getElementById('settingsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const data = {
+                metric_name: document.getElementById('metric_name').value,
+                color_scheme: document.getElementById('color_scheme').value,
+                village_point_color: document.getElementById('village_point_color').value,
+                show_blocks: document.getElementById('show_blocks').checked,
+                show_villages: document.getElementById('show_villages').checked
+            };
+            
+            const status = document.getElementById('status');
+            status.className = 'mt-4 p-3 rounded-lg bg-blue-100 text-blue-800';
+            status.textContent = 'Saving...';
+            status.classList.remove('hidden');
+            
+            try {
+                const response = await fetch('/admin/settings/map', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    status.className = 'mt-4 p-3 rounded-lg bg-green-100 text-green-800';
+                    status.textContent = '✓ Settings saved successfully! Visit the main map to see changes.';
+                    loadSettings();
+                } else {
+                    status.className = 'mt-4 p-3 rounded-lg bg-red-100 text-red-800';
+                    status.textContent = '✗ Failed to save settings';
+                }
+            } catch (error) {
+                status.className = 'mt-4 p-3 rounded-lg bg-red-100 text-red-800';
+                status.textContent = '✗ Error: ' + error.message;
+            }
+        });
+        
+        // Load settings on page load
+        loadSettings();
+    </script>
+</body>
+</html>

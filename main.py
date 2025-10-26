@@ -13,7 +13,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from db import init_db, get_session
-from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings
+from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings
 from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PASSWORD
 
 
@@ -714,6 +714,88 @@ async def admin_blocks_page(
 ):
     """Admin page for managing block color settings"""
     return templates.TemplateResponse("admin_blocks.html", {
+        "request": request,
+        "admin": admin
+    })
+
+
+@app.get("/api/map-settings")
+async def get_map_settings(session: AsyncSession = Depends(get_session)):
+    """Get current map visualization settings"""
+    result = await session.execute(select(MapSettings))
+    settings = result.scalar_one_or_none()
+    
+    # Return defaults if no settings exist
+    if not settings:
+        return {
+            "metric_name": "population",
+            "color_scheme": "Blues",
+            "show_villages": True,
+            "show_blocks": True,
+            "village_point_color": "#e63946"
+        }
+    
+    return {
+        "metric_name": settings.metric_name,
+        "color_scheme": settings.color_scheme,
+        "show_villages": settings.show_villages,
+        "show_blocks": settings.show_blocks,
+        "village_point_color": settings.village_point_color
+    }
+
+
+@app.post("/admin/settings/map")
+async def save_map_settings(
+    request: Request,
+    admin=Depends(get_current_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Save map visualization settings"""
+    data = await request.json()
+    
+    # Get or create settings
+    result = await session.execute(select(MapSettings))
+    settings = result.scalar_one_or_none()
+    
+    if not settings:
+        settings = MapSettings(
+            metric_name=data.get("metric_name", "population"),
+            color_scheme=data.get("color_scheme", "Blues"),
+            show_villages=data.get("show_villages", True),
+            show_blocks=data.get("show_blocks", True),
+            village_point_color=data.get("village_point_color", "#e63946")
+        )
+        session.add(settings)
+    else:
+        settings.metric_name = data.get("metric_name", settings.metric_name)
+        settings.color_scheme = data.get("color_scheme", settings.color_scheme)
+        settings.show_villages = data.get("show_villages", settings.show_villages)
+        settings.show_blocks = data.get("show_blocks", settings.show_blocks)
+        settings.village_point_color = data.get("village_point_color", settings.village_point_color)
+        settings.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    # Audit log
+    audit = Audit(
+        table_name="map_settings",
+        row_id=settings.id,
+        action="update_map_settings",
+        changed_by=admin["email"]
+    )
+    session.add(audit)
+    await session.commit()
+    
+    return {"status": "success"}
+
+
+@app.get("/admin/settings/map", response_class=HTMLResponse)
+async def admin_map_settings_page(
+    request: Request,
+    admin=Depends(get_current_admin)
+):
+    """Admin page for map visualization settings"""
+    return templates.TemplateResponse("admin_map_settings.html", {
         "request": request,
         "admin": admin
     })
