@@ -408,7 +408,7 @@
                     const feed = document.getElementById('seva-feed');
                     const count = document.getElementById('seva-count');
                     
-                    if (data.length === 0) {
+                    if (!Array.isArray(data) || data.length === 0) {
                         feed.innerHTML = '<p style="color: rgba(255,255,255,0.6);">No active seva requests at the moment.</p>';
                         count.textContent = '0';
                         return;
@@ -432,6 +432,9 @@
                         }
                         return '';
                     }).join('');
+                })
+                .catch(err => {
+                    console.error('Error loading seva feed:', err);
                 });
         }
 
