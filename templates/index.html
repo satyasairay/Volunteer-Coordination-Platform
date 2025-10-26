@@ -7,29 +7,82 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
-        body { margin: 0; overflow: hidden; background: #f8f9fa; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #ffffff; }
         
-        /* Full screen map */
-        #map-container { 
-            height: 100vh; 
-            width: 100%; 
+        /* Navigation */
+        nav {
+            background: rgba(26, 26, 26, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #f97316;
+        }
+        
+        .nav-location {
+            color: rgba(255,255,255,0.6);
+            font-size: 14px;
+            margin-left: 12px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .nav-tab {
+            padding: 8px 20px;
+            border-radius: 20px;
+            border: none;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .nav-tab.active {
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+        }
+        
+        .nav-tab:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .nav-tab:not(.active):hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Map container */
+        #map-container {
+            height: calc(100vh - 60px);
+            width: 100%;
             position: relative;
-            background: #ffffff;
         }
         
-        svg { 
-            width: 100%; 
-            height: 100%; 
-        }
+        svg { width: 100%; height: 100%; }
         
-        /* Block styling - USA choropleth blue gradient */
+        /* Blocks */
         .block-path {
             stroke: #ffffff;
             stroke-width: 1.5;
-            stroke-linejoin: round;
-            transition: all 0.2s ease;
             cursor: pointer;
+            transition: all 0.2s;
         }
         
         .block-path:hover {
@@ -38,113 +91,35 @@
             filter: brightness(0.95);
         }
         
-        /* Block labels */
         .block-label {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             font-size: 13px;
             font-weight: 600;
             fill: #ffffff;
             text-anchor: middle;
             pointer-events: none;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
         }
         
-        /* Village pins - subtle */
-        .village-pin {
+        /* Villages */
+        .village-point {
             cursor: pointer;
             transition: all 0.2s;
         }
         
-        .village-pin:hover {
-            transform: scale(1.4);
-        }
-        
-        /* Glassmorphic floating header */
-        #header {
-            position: fixed;
-            top: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 1000;
-            background: rgba(26, 26, 26, 0.85);
-            backdrop-filter: blur(20px);
-            border-radius: 50px;
-            padding: 12px 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        #header h1 {
-            font-size: 20px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin: 0;
-        }
-        
-        .header-btn {
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: none;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            white-space: nowrap;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(249, 115, 22, 0.5);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        /* Tooltip */
-        .tooltip {
-            position: absolute;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            pointer-events: none;
-            z-index: 1000;
-            opacity: 0;
-            transition: opacity 0.2s;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .tooltip.show {
-            opacity: 1;
+        .village-point:hover {
+            r: 5 !important;
         }
         
         /* Legend */
         .legend {
-            position: fixed;
-            top: 100px;
+            position: absolute;
+            top: 20px;
             right: 20px;
             background: white;
             padding: 15px;
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            z-index: 999;
+            z-index: 100;
         }
         
         .legend h3 {
@@ -170,266 +145,275 @@
             border-radius: 3px;
         }
         
-        /* Seva Feed Panel */
-        #seva-panel {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 999;
-            background: rgba(26, 26, 26, 0.95);
-            backdrop-filter: blur(20px);
-            border-radius: 24px 24px 0 0;
-            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
-            transform: translateY(calc(100% - 80px));
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            max-height: 80vh;
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+        }
+        
+        .tooltip.show { opacity: 1; }
+        
+        /* Zoom controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
             display: flex;
             flex-direction: column;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 8px;
+            z-index: 100;
         }
         
-        #seva-panel.expanded { transform: translateY(0); }
-        
-        .panel-handle {
+        .zoom-btn {
             width: 40px;
-            height: 5px;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 3px;
-            margin: 12px auto 8px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             cursor: pointer;
-        }
-        
-        .panel-header {
-            padding: 12px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: white;
-        }
-        
-        .panel-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 16px 24px;
-        }
-        
-        .seva-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .seva-item h3 {
-            color: white;
-            font-size: 16px;
+            font-size: 20px;
             font-weight: 600;
-            margin: 0 0 8px 0;
+            transition: all 0.2s;
         }
         
-        .seva-item p {
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 14px;
-            margin: 0;
+        .zoom-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+        
+        /* Mobile responsive */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 12px;
+                padding: 12px 16px;
+            }
+            
+            .nav-tabs {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .nav-tab {
+                flex: 1;
+                text-align: center;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .legend {
+                top: 10px;
+                right: 10px;
+                font-size: 11px;
+                padding: 10px;
+            }
+            
+            .zoom-controls {
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .zoom-btn {
+                width: 36px;
+                height: 36px;
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="header">
-        <h1>🕉️ Seva Atlas</h1>
-        <span style="color: rgba(255,255,255,0.6); font-size: 14px;">📍 Bhadrak</span>
-        <button class="header-btn btn-primary" onclick="toggleSevaPanel()">🔥 Seva Feed</button>
-        <button class="header-btn btn-secondary" onclick="window.location.href='/doctors'">👨‍⚕️ Doctors</button>
-    </div>
-    
-    <div class="legend">
-        <h3>Blocks (Population)</h3>
-        <div id="legend-items"></div>
-    </div>
+    <nav>
+        <div style="display: flex; align-items: center;">
+            <div class="nav-brand">
+                🕉️ Seva Atlas
+            </div>
+            <span class="nav-location">📍 Bhadrak</span>
+        </div>
+        <div class="nav-tabs">
+            <a href="/" class="nav-tab active">Map</a>
+            <a href="/doctors" class="nav-tab">Doctors</a>
+        </div>
+    </nav>
     
     <div id="map-container">
+        <div class="legend">
+            <h3>Blocks (Population)</h3>
+            <div id="legend-items"></div>
+        </div>
+        
+        <div class="zoom-controls">
+            <button class="zoom-btn" onclick="zoomIn()">+</button>
+            <button class="zoom-btn" onclick="zoomOut()">−</button>
+            <button class="zoom-btn" onclick="resetZoom()" style="font-size: 16px;">⟲</button>
+        </div>
+        
         <svg id="map"></svg>
         <div class="tooltip" id="tooltip"></div>
-    </div>
-    
-    <div id="seva-panel">
-        <div class="panel-handle" onclick="toggleSevaPanel()"></div>
-        <div class="panel-header">
-            <h2 style="margin:0; font-size: 18px; font-weight: 700;">🔥 Active Seva Requests</h2>
-            <button onclick="toggleSevaPanel()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
-        </div>
-        <div class="panel-content" id="seva-content">
-            <p style="color: rgba(255,255,255,0.5);">Loading...</p>
-        </div>
     </div>
 
     <script>
         const width = window.innerWidth;
-        const height = window.innerHeight;
+        const height = window.innerHeight - 60;
         
         const svg = d3.select("#map")
             .attr("viewBox", `0 0 ${width} ${height}`);
         
-        let villages = [];
+        let zoom = d3.zoom()
+            .scaleExtent([1, 20])
+            .on("zoom", zoomed);
         
-        // USA choropleth style - blue gradient color scale
-        // Light blue to dark blue based on population
+        svg.call(zoom);
+        
+        let g = svg.append("g");
+        let projection, path;
+        
+        // Color scale - blue gradient (USA choropleth style)
         const colorScale = d3.scaleSequential()
-            .domain([160000, 260000]) // Population range
+            .domain([160000, 260000])
             .interpolator(d3.interpolateBlues);
         
-        // Load villages
-        fetch('/api/villages')
+        // Load blocks (small file, OK to load)
+        fetch('/static/geojson/bhadrak_blocks.geojson')
             .then(res => res.json())
-            .then(data => {
-                villages = data;
+            .then(blocks => {
+                // Create projection
+                projection = d3.geoMercator()
+                    .center([86.4, 21.05])
+                    .scale(35000)
+                    .translate([width / 2, height / 2]);
+                
+                path = d3.geoPath().projection(projection);
+                
+                // Draw blocks
+                g.selectAll(".block")
+                    .data(blocks.features)
+                    .enter()
+                    .append("path")
+                    .attr("class", "block-path")
+                    .attr("d", path)
+                    .attr("fill", d => colorScale(d.properties.population || 200000))
+                    .on("mouseover", showBlockTooltip)
+                    .on("mouseout", hideTooltip);
+                
+                // Block labels
+                g.selectAll(".block-label")
+                    .data(blocks.features)
+                    .enter()
+                    .append("text")
+                    .attr("class", "block-label")
+                    .attr("transform", d => {
+                        const centroid = path.centroid(d);
+                        return `translate(${centroid[0]}, ${centroid[1]})`;
+                    })
+                    .text(d => d.properties.name);
+                
+                // Create legend
+                createLegend(blocks.features);
+                
+                // Load villages (API returns lightweight data, not GeoJSON)
+                loadVillages();
             });
         
-        function loadMap() {
-            fetch('/static/geojson/bhadrak_blocks.geojson')
+        function loadVillages() {
+            fetch('/api/villages')
                 .then(res => res.json())
-                .then(geojson => {
-                    // Create projection centered on Bhadrak
-                    const projection = d3.geoMercator()
-                        .center([86.4, 21.05]) // Center of Bhadrak
-                        .scale(35000)
-                        .translate([width / 2, height / 2]);
+                .then(villages => {
+                    console.log(`✅ Loaded ${villages.length} villages from API (not GeoJSON)`);
                     
-                    const path = d3.geoPath().projection(projection);
-                    
-                    // Draw blocks with USA choropleth style
-                    svg.selectAll(".block")
-                        .data(geojson.features)
+                    // Draw village points
+                    g.selectAll(".village")
+                        .data(villages.filter(v => v.lat && v.lng && v.show_pin !== false))
                         .enter()
-                        .append("path")
-                        .attr("class", "block-path")
-                        .attr("d", path)
-                        .attr("fill", d => {
-                            const pop = d.properties.population || 200000;
-                            return colorScale(pop);
-                        })
-                        .on("mouseover", function(event, d) {
-                            const tooltip = d3.select("#tooltip");
-                            tooltip.html(`
-                                <strong>${d.properties.name}</strong><br>
-                                Population: ${d.properties.population?.toLocaleString() || 'N/A'}<br>
-                                Villages: ${d.properties.villages || 'N/A'}
-                            `)
-                            .style("left", (event.pageX + 10) + "px")
-                            .style("top", (event.pageY - 10) + "px")
-                            .classed("show", true);
-                        })
-                        .on("mouseout", function() {
-                            d3.select("#tooltip").classed("show", false);
-                        });
-                    
-                    // Add block labels
-                    svg.selectAll(".block-label")
-                        .data(geojson.features)
-                        .enter()
-                        .append("text")
-                        .attr("class", "block-label")
-                        .attr("transform", d => {
-                            const centroid = path.centroid(d);
-                            return `translate(${centroid[0]}, ${centroid[1]})`;
-                        })
-                        .text(d => d.properties.name);
-                    
-                    // Create legend
-                    const legendItems = geojson.features
-                        .sort((a, b) => (b.properties.population || 0) - (a.properties.population || 0));
-                    
-                    const legendHTML = legendItems.map(d => {
-                        const color = colorScale(d.properties.population || 200000);
-                        return `
-                            <div class="legend-item">
-                                <div class="legend-color" style="background: ${color}"></div>
-                                <span>${d.properties.name}</span>
-                            </div>
-                        `;
-                    }).join('');
-                    
-                    document.getElementById('legend-items').innerHTML = legendHTML;
-                    
-                    // Store projection for village pins
-                    window.mapProjection = projection;
-                    renderVillages();
+                        .append("circle")
+                        .attr("class", "village-point")
+                        .attr("cx", d => projection([d.lng, d.lat])[0])
+                        .attr("cy", d => projection([d.lng, d.lat])[1])
+                        .attr("r", 3)
+                        .attr("fill", "#e63946")
+                        .attr("stroke", "#ffffff")
+                        .attr("stroke-width", 1)
+                        .on("mouseover", showVillageTooltip)
+                        .on("mouseout", hideTooltip)
+                        .on("click", zoomToVillage);
                 });
         }
         
-        function renderVillages() {
-            if (!window.mapProjection || villages.length === 0) return;
+        function createLegend(blocks) {
+            const sorted = blocks.sort((a, b) => 
+                (b.properties.population || 0) - (a.properties.population || 0)
+            );
             
-            const projection = window.mapProjection;
+            const html = sorted.map(d => `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: ${colorScale(d.properties.population || 200000)}"></div>
+                    <span>${d.properties.name}</span>
+                </div>
+            `).join('');
             
-            // Create village pin group
-            const pinsGroup = svg.append("g").attr("class", "villages");
-            
-            villages.forEach(v => {
-                if (v.lat && v.lng && v.show_pin !== false) {
-                    const [x, y] = projection([v.lng, v.lat]);
-                    
-                    // Create subtle pins
-                    const pin = pinsGroup.append("g")
-                        .attr("class", "village-pin")
-                        .attr("transform", `translate(${x}, ${y})`)
-                        .on("mouseover", function(event) {
-                            d3.select("#tooltip")
-                                .html(`<strong>${v.name}</strong><br>Block: ${v.block}`)
-                                .style("left", (event.pageX + 10) + "px")
-                                .style("top", (event.pageY - 10) + "px")
-                                .classed("show", true);
-                        })
-                        .on("mouseout", function() {
-                            d3.select("#tooltip").classed("show", false);
-                        });
-                    
-                    // Simple circle pin
-                    pin.append("circle")
-                        .attr("r", 4)
-                        .attr("fill", "#e63946")
-                        .attr("stroke", "#ffffff")
-                        .attr("stroke-width", 1.5);
-                }
-            });
+            document.getElementById('legend-items').innerHTML = html;
         }
         
-        function toggleSevaPanel() {
-            document.getElementById('seva-panel').classList.toggle('expanded');
+        function showBlockTooltip(event, d) {
+            const tooltip = d3.select("#tooltip");
+            tooltip.html(`
+                <strong>${d.properties.name}</strong><br>
+                Population: ${d.properties.population?.toLocaleString() || 'N/A'}<br>
+                Villages: ${d.properties.villages || 'N/A'}
+            `)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px")
+            .classed("show", true);
         }
         
-        // Load seva feed
-        fetch('/api/seva/feed?limit=20')
-            .then(res => res.json())
-            .then(data => {
-                const content = document.getElementById('seva-content');
-                if (data.length === 0) {
-                    content.innerHTML = '<p style="color: rgba(255,255,255,0.5);">No active requests</p>';
-                    return;
-                }
-                
-                content.innerHTML = data.map(seva => `
-                    <div class="seva-item">
-                        <h3>${seva.title}</h3>
-                        <p><strong>Village:</strong> ${seva.village}</p>
-                        <p>${seva.description}</p>
-                        <p style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.5);">
-                            ${new Date(seva.created_at).toLocaleDateString()}
-                        </p>
-                    </div>
-                `).join('');
-            });
+        function showVillageTooltip(event, d) {
+            const tooltip = d3.select("#tooltip");
+            tooltip.html(`
+                <strong>${d.name}</strong><br>
+                Block: ${d.block}
+            `)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px")
+            .classed("show", true);
+        }
         
-        // Initialize map
-        loadMap();
+        function hideTooltip() {
+            d3.select("#tooltip").classed("show", false);
+        }
         
-        // Handle resize
-        window.addEventListener('resize', () => {
-            location.reload();
-        });
+        function zoomed(event) {
+            g.attr("transform", event.transform);
+        }
+        
+        function zoomIn() {
+            svg.transition().call(zoom.scaleBy, 1.5);
+        }
+        
+        function zoomOut() {
+            svg.transition().call(zoom.scaleBy, 0.67);
+        }
+        
+        function resetZoom() {
+            svg.transition().call(zoom.transform, d3.zoomIdentity);
+        }
+        
+        function zoomToVillage(event, d) {
+            const [x, y] = projection([d.lng, d.lat]);
+            const scale = 10;
+            const translate = [width / 2 - scale * x, height / 2 - scale * y];
+            
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+        }
     </script>
 </body>
 </html>
