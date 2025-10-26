@@ -419,14 +419,7 @@
             <div class="loading-progress" id="loading-progress"></div>
         </div>
         
-        <div class="legend" id="legend" style="display: none;">
-            <h3>Population</h3>
-            <div class="legend-gradient" id="legend-gradient"></div>
-            <div class="legend-labels">
-                <span id="legend-min">1,000</span>
-                <span id="legend-max">20,000</span>
-            </div>
-        </div>
+        <!-- Population legend removed as requested -->
         
         <div class="zoom-controls">
             <button class="zoom-btn" onclick="zoomIn()">+</button>
@@ -493,21 +486,13 @@
                     .domain([1000, 20000])
                     .interpolator(t => interpolator(0.4 + t * 0.55));
                 
-                // Update legend gradient
-                updateLegend();
+                // Legend removed, skip gradient update
                 
                 // Now load map
                 loadMap();
             });
         
-        function updateLegend() {
-            const gradient = document.getElementById('legend-gradient');
-            const scheme = mapSettings.color_scheme || 'Blues';
-            gradient.style.background = `linear-gradient(to right, 
-                ${colorScale(1000)}, 
-                ${colorScale(10000)}, 
-                ${colorScale(20000)})`;
-        }
+        // Legend function removed since population legend was removed
         
         async function loadMap() {
             try {
@@ -569,33 +554,32 @@
                 const pins = g.selectAll(".village-pin")
                     .data(villages.features)
                     .enter()
-                    .append("text")
+                    .append("circle")
                     .attr("class", "village-pin")
                     .attr("transform", d => {
                         const centroid = path.centroid(d);
                         return `translate(${centroid[0]}, ${centroid[1]})`;
                     })
-                    .attr("text-anchor", "middle")
-                    .attr("dominant-baseline", "middle")
-                    .attr("font-size", "14px")
+                    .attr("r", 3.5) // Medium size - not too small, not too big
                     .attr("cursor", "pointer")
                     .attr("opacity", 0) // Hidden by default, shown on zoom
-                    .text("📍")
-                    .style("fill", d => {
+                    .attr("fill", d => {
                         // If village has data, color based on field workers, else default blue
                         if (d.properties.field_worker_count > 0) {
                             return pinColorScale(d.properties.field_worker_count);
                         }
-                        return "#5a8fc4"; // Default blue matching choropleth
+                        return "#3b7bbf"; // Darker blue for visibility
                     })
+                    .attr("stroke", "#ffffff")
+                    .attr("stroke-width", 1)
+                    .style("filter", "drop-shadow(0px 1px 2px rgba(0,0,0,0.3))")
                     .on("mouseover", showPinTooltip)
                     .on("mouseout", hideTooltip)
                     .on("click", showVillageModal);
                 
                 console.log(`✅ Added ${pins.size()} pins (zoom to reveal)`);
                 
-                // Show legend and hide loading
-                document.getElementById('legend').style.display = 'block';
+                // Hide loading
                 document.getElementById('loading').style.display = 'none';
                 console.log('✅ Map with pins complete!');
                 
