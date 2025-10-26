@@ -815,7 +815,6 @@
                 const blockStats = await statsRes.json();
                 
                 populateBlockSidebar(blockStats);
-                populateMobileDropdown(blockStats);
                 
                 // ============================================================
                 // PHASE 3: Heat Map Layer Setup
@@ -893,27 +892,6 @@
             });
         }
         
-        function populateMobileDropdown(blockStats) {
-            const select = document.getElementById('block-select-mobile');
-            blockStats.forEach(block => {
-                const option = document.createElement('option');
-                option.value = block.block_name;
-                option.textContent = `${block.block_name} (${block.total_villages} villages)`;
-                select.appendChild(option);
-            });
-            
-            select.onchange = (e) => {
-                if (e.target.value) {
-                    const blockFeature = g.selectAll(".block-boundary")
-                        .data().find(d => d.properties.name === e.target.value);
-                    if (blockFeature) {
-                        zoomToBlock(blockFeature);
-                    }
-                } else {
-                    resetZoom();
-                }
-            };
-        }
         
         function zoomToBlock(blockFeature) {
             const bounds = path.bounds(blockFeature);
