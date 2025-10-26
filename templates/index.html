@@ -367,7 +367,7 @@
                 
                 updateProgress(`Rendering ${villages.features.length} villages...`);
                 
-                // Step 3: Draw ALL village polygons at once (D3 handles efficiently)
+                // Step 3: Draw ALL 1,315 village polygons
                 updateProgress(`Rendering all ${villages.features.length} villages...`);
                 
                 const villagePaths = g.selectAll(".village-polygon")
@@ -375,32 +375,15 @@
                     .enter()
                     .append("path")
                     .attr("class", "village-polygon")
-                    .attr("d", d => {
-                        const p = path(d);
-                        if (!p) console.warn('No path for village:', d.properties.name);
-                        return p;
-                    })
-                    .attr("fill", d => {
-                        const color = colorScale(d.properties.population || 5000);
-                        return color;
-                    })
-                    .attr("stroke", "#333")
-                    .attr("stroke-width", 0.2)
+                    .attr("d", path)
+                    .attr("fill", d => colorScale(d.properties.population || 5000))
+                    .attr("stroke", "#fff")
+                    .attr("stroke-width", 0.3)
                     .on("mouseover", showVillageTooltip)
                     .on("mouseout", hideTooltip)
                     .on("click", zoomToVillage);
                 
                 console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
-                
-                // Debug: Check if paths are being drawn
-                const sampleVillage = villages.features[0];
-                console.log('Sample village:', sampleVillage.properties.name);
-                console.log('Sample path:', path(sampleVillage));
-                console.log('Sample color:', colorScale(sampleVillage.properties.population));
-                
-                // Count actual path elements in SVG
-                const pathCount = document.querySelectorAll('.village-polygon').length;
-                console.log(`DOM has ${pathCount} village path elements`);
                 
                 // Show legend and hide loading
                 document.getElementById('legend').style.display = 'block';
