@@ -8,33 +8,54 @@
 
 ## Recent Changes (October 26, 2025)
 
-### ✅ Phase 1 Completed: Pin System with Tooltips & Modal
-1. **Database Schema Added:**
-   - `village_pins` table: Stores field_worker_count and uk_center_count per village
-   - `custom_labels` table: Stores customizable terminology (e.g., "Field Workers" vs "Volunteers")
+### ✅ PHASE 1 COMPLETE: Google Maps-Style Pin System
 
-2. **API Endpoints Created:**
-   - `/api/villages/pins` - Returns all 1,315 villages with pin data merged
-   - `/api/custom-labels` - GET/PUT for label management
+**CRITICAL FIXES APPLIED:**
+1. **Pin Rendering Fixed:**
+   - ❌ BEFORE: Large circular markers (4-10px radius)
+   - ✅ NOW: Small pin emoji symbols (📍) at 14px font size
+   - Proper blue color matching choropleth (#5a8fc4 default)
+   - Data-driven colors for villages with field worker data
 
-3. **Interactive Pin Layer:**
-   - Shining blue pin markers on choropleth base
-   - Data-driven gradient colors (darker = more field workers)
-   - Hover tooltip shows: Village name, block, field worker count, UK center count
-   - Click modal displays detailed village information
-   - Click-anywhere-to-close modal behavior
-   - Fully responsive and touch-friendly
+2. **Zoom-Based Visibility (Google Maps Style):**
+   - ❌ BEFORE: Pins always visible, cluttering the view
+   - ✅ NOW: Pins hidden at default zoom level (opacity 0)
+   - ✅ Pins appear when zoom level > 2 (smooth 200ms transition)
+   - Clean choropleth view when zoomed out, detailed pins when zoomed in
 
-4. **Admin Panel Enhancement:**
-   - Label customization section added
-   - Admin can change terminology (e.g., "Field Workers" → "Volunteers")
-   - Real-time updates reflected on map
+3. **ALL Villages Get Pins:**
+   - ❌ BEFORE: Only 3 villages had pins
+   - ✅ NOW: All 1,315 villages have default pins
+   - Villages with data: Enhanced colors based on field worker count
+   - Villages without data: Default blue pin, ready for admin updates
 
-5. **Sample Data:**
-   - 3 villages populated with pin data for testing:
-     - Apanda: 12 field workers, 3 UK centers
-     - Nachhipur: 8 field workers, 2 UK centers
-     - Bodhapur: 15 field workers, 5 UK centers
+4. **Smart Tooltips:**
+   - Villages WITH data: Show field workers, UK centers, "Click for details"
+   - Villages WITHOUT data: Show name, block, population only
+   - Clean, uncluttered information display
+
+5. **Modal Updates:**
+   - Villages WITH data: Full stats cards
+   - Villages WITHOUT data: Shows "No field worker data available yet"
+   - Admin can add/update data per village
+
+### Database Schema
+- `village_pins` table: Stores field_worker_count and uk_center_count per village
+- `custom_labels` table: Stores customizable terminology (e.g., "Field Workers" vs "Volunteers")
+
+### API Endpoints
+- `/api/villages/pins` - Returns all 1,315 villages with pin data merged
+- `/api/custom-labels` - GET/PUT for label management
+
+### Admin Panel
+- Label customization section for changing terminology
+- Real-time updates reflected on map
+- Currently: 3 villages have data, 1,312 have default pins awaiting data
+
+### Sample Data (Ready for Admin Updates)
+- Apanda: 12 field workers, 3 UK centers
+- Nachhipur: 8 field workers, 2 UK centers
+- Bodhapur: 15 field workers, 5 UK centers
 
 ## Project Architecture
 
