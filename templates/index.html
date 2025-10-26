@@ -77,37 +77,26 @@
         
         svg { width: 100%; height: 100%; }
         
-        /* Blocks */
-        .block-path {
-            stroke: #ffffff;
-            stroke-width: 1.5;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .block-path:hover {
+        /* District boundary */
+        .district-boundary {
+            fill: none;
             stroke: #333;
-            stroke-width: 2.5;
-            filter: brightness(0.95);
-        }
-        
-        .block-label {
-            font-size: 13px;
-            font-weight: 600;
-            fill: #ffffff;
-            text-anchor: middle;
-            pointer-events: none;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            stroke-width: 2;
+            stroke-linejoin: round;
         }
         
         /* Villages */
-        .village-point {
+        .village-polygon {
+            stroke: #ffffff;
+            stroke-width: 0.5;
             cursor: pointer;
             transition: all 0.2s;
         }
         
-        .village-point:hover {
-            r: 5 !important;
+        .village-polygon:hover {
+            stroke: #333;
+            stroke-width: 2;
+            filter: brightness(0.9);
         }
         
         /* Legend */
@@ -120,6 +109,7 @@
             border-radius: 8px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.15);
             z-index: 100;
+            max-width: 200px;
         }
         
         .legend h3 {
@@ -129,20 +119,18 @@
             color: #333;
         }
         
-        .legend-item {
-            display: flex;
-            align-items: center;
-            margin: 6px 0;
-            font-size: 12px;
-            color: #666;
+        .legend-gradient {
+            width: 100%;
+            height: 20px;
+            border-radius: 4px;
+            margin: 10px 0;
         }
         
-        .legend-color {
-            width: 30px;
-            height: 18px;
-            margin-right: 8px;
-            border: 1px solid rgba(0,0,0,0.1);
-            border-radius: 3px;
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
         }
         
         /* Tooltip */
@@ -188,6 +176,16 @@
         .zoom-btn:hover {
             background: #f0f0f0;
             transform: scale(1.05);
+        }
+        
+        /* Loading */
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #666;
         }
         
         /* Mobile responsive */
@@ -245,9 +243,15 @@
     </nav>
     
     <div id="map-container">
-        <div class="legend">
-            <h3>Blocks (Population)</h3>
-            <div id="legend-items"></div>
+        <div class="loading" id="loading">Loading Bhadrak map...</div>
+        
+        <div class="legend" id="legend" style="display: none;">
+            <h3>Population</h3>
+            <div class="legend-gradient" id="legend-gradient"></div>
+            <div class="legend-labels">
+                <span id="legend-min">1,000</span>
+                <span id="legend-max">20,000</span>
+            </div>
         </div>
         
         <div class="zoom-controls">
@@ -299,116 +303,75 @@
                 // Create color scale with admin-selected scheme
                 const interpolator = colorSchemes[settings.color_scheme] || d3.interpolateBlues;
                 colorScale = d3.scaleSequential()
-                    .domain([160000, 260000])
+                    .domain([1000, 20000])
                     .interpolator(interpolator);
                 
-                // Now load blocks
-                loadBlocks();
+                // Update legend gradient
+                updateLegend();
+                
+                // Now load map
+                loadMap();
             });
         
-        function loadBlocks() {
-        // Load blocks (small file, OK to load)
-        fetch('/static/geojson/bhadrak_blocks.geojson')
-            .then(res => res.json())
-            .then(blocks => {
-                // Create projection - fit Bhadrak to viewport using D3's fitSize
-                projection = d3.geoMercator().fitSize([width * 0.9, height * 0.9], blocks);
+        function updateLegend() {
+            const gradient = document.getElementById('legend-gradient');
+            const scheme = mapSettings.color_scheme || 'Blues';
+            gradient.style.background = `linear-gradient(to right, 
+                ${colorScale(1000)}, 
+                ${colorScale(10000)}, 
+                ${colorScale(20000)})`;
+        }
+        
+        async function loadMap() {
+            try {
+                // Load Bhadrak boundary
+                const boundaryRes = await fetch('/static/geojson/bhadrak_boundary.geojson');
+                const boundary = await boundaryRes.json();
+                
+                // Load simplified villages
+                const villagesRes = await fetch('/api/villages/choropleth');
+                const villages = await villagesRes.json();
+                
+                console.log(`✅ Loaded ${villages.features.length} villages`);
+                
+                // Create projection - fit to boundary
+                projection = d3.geoMercator().fitSize([width * 0.9, height * 0.9], boundary);
                 path = d3.geoPath().projection(projection);
                 
-                console.log('✅ Map projection configured');
+                // Draw district boundary
+                g.append("path")
+                    .datum(boundary)
+                    .attr("class", "district-boundary")
+                    .attr("d", path);
                 
-                // Draw blocks
-                g.selectAll(".block")
-                    .data(blocks.features)
+                // Draw village polygons with choropleth colors
+                g.selectAll(".village")
+                    .data(villages.features)
                     .enter()
                     .append("path")
-                    .attr("class", "block-path")
+                    .attr("class", "village-polygon")
                     .attr("d", path)
-                    .attr("fill", d => colorScale(d.properties.population || 200000))
-                    .on("mouseover", showBlockTooltip)
-                    .on("mouseout", hideTooltip);
+                    .attr("fill", d => colorScale(d.properties.population || 5000))
+                    .on("mouseover", showVillageTooltip)
+                    .on("mouseout", hideTooltip)
+                    .on("click", zoomToVillage);
                 
-                // Block labels
-                g.selectAll(".block-label")
-                    .data(blocks.features)
-                    .enter()
-                    .append("text")
-                    .attr("class", "block-label")
-                    .attr("transform", d => {
-                        const centroid = path.centroid(d);
-                        return `translate(${centroid[0]}, ${centroid[1]})`;
-                    })
-                    .text(d => d.properties.name);
+                // Show legend
+                document.getElementById('legend').style.display = 'block';
+                document.getElementById('loading').style.display = 'none';
                 
-                // Create legend
-                createLegend(blocks.features);
-                
-                // Load villages (API returns lightweight data, not GeoJSON)
-                loadVillages();
-            });
-        }
-        
-        function loadVillages() {
-            if (!mapSettings.show_villages) {
-                console.log('Villages disabled in admin settings');
-                return;
+            } catch (error) {
+                console.error('Error loading map:', error);
+                document.getElementById('loading').textContent = 'Error loading map';
             }
-            
-            fetch('/api/villages')
-                .then(res => res.json())
-                .then(villages => {
-                    console.log(`✅ Loaded ${villages.length} villages from API (not GeoJSON)`);
-                    
-                    // Draw village points (color from admin settings)
-                    g.selectAll(".village")
-                        .data(villages.filter(v => v.lat && v.lng && v.show_pin !== false))
-                        .enter()
-                        .append("circle")
-                        .attr("class", "village-point")
-                        .attr("cx", d => projection([d.lng, d.lat])[0])
-                        .attr("cy", d => projection([d.lng, d.lat])[1])
-                        .attr("r", 3)
-                        .attr("fill", mapSettings.village_point_color || "#e63946")
-                        .attr("stroke", "#ffffff")
-                        .attr("stroke-width", 1)
-                        .on("mouseover", showVillageTooltip)
-                        .on("mouseout", hideTooltip)
-                        .on("click", zoomToVillage);
-                });
-        }
-        
-        function createLegend(blocks) {
-            const sorted = blocks.sort((a, b) => 
-                (b.properties.population || 0) - (a.properties.population || 0)
-            );
-            
-            const html = sorted.map(d => `
-                <div class="legend-item">
-                    <div class="legend-color" style="background: ${colorScale(d.properties.population || 200000)}"></div>
-                    <span>${d.properties.name}</span>
-                </div>
-            `).join('');
-            
-            document.getElementById('legend-items').innerHTML = html;
-        }
-        
-        function showBlockTooltip(event, d) {
-            const tooltip = d3.select("#tooltip");
-            tooltip.html(`
-                <strong>${d.properties.name}</strong><br>
-                Population: ${d.properties.population?.toLocaleString() || 'N/A'}<br>
-                Villages: ${d.properties.villages || 'N/A'}
-            `)
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 10) + "px")
-            .classed("show", true);
         }
         
         function showVillageTooltip(event, d) {
             const tooltip = d3.select("#tooltip");
             tooltip.html(`
-                <strong>${d.name}</strong><br>
-                Block: ${d.block}
+                <strong>${d.properties.name}</strong><br>
+                Block: ${d.properties.block}<br>
+                Population: ${d.properties.population?.toLocaleString() || 'N/A'}
             `)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 10) + "px")
@@ -436,8 +399,12 @@
         }
         
         function zoomToVillage(event, d) {
-            const [x, y] = projection([d.lng, d.lat]);
-            const scale = 10;
+            const bounds = path.bounds(d);
+            const dx = bounds[1][0] - bounds[0][0];
+            const dy = bounds[1][1] - bounds[0][1];
+            const x = (bounds[0][0] + bounds[1][0]) / 2;
+            const y = (bounds[0][1] + bounds[1][1]) / 2;
+            const scale = 0.9 / Math.max(dx / width, dy / height);
             const translate = [width / 2 - scale * x, height / 2 - scale * y];
             
             svg.transition()

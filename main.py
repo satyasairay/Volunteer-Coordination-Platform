@@ -103,6 +103,34 @@ async def get_villages(session: AsyncSession = Depends(get_session)):
     } for v in villages]
 
 
+@app.get("/api/villages/choropleth")
+async def get_villages_choropleth():
+    """Return village geometries for choropleth (first 200 villages)"""
+    import json
+    
+    # Load full village data
+    with open('static/geojson/bhadrak_villages.geojson', 'r') as f:
+        villages_data = json.load(f)
+    
+    # Take first 200 villages, assign population data
+    features = []
+    for i, feature in enumerate(villages_data['features'][:200]):
+        features.append({
+            "type": "Feature",
+            "properties": {
+                "name": feature['properties'].get('name', f'Village_{i}'),
+                "block": feature['properties'].get('block', 'Unknown'),
+                "population": 1000 + (i * 50),  # Dummy data for choropleth
+            },
+            "geometry": feature['geometry']
+        })
+    
+    return {
+        "type": "FeatureCollection",
+        "features": features
+    }
+
+
 @app.get("/api/village/{village_name}")
 async def get_village_details(village_name: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Village).where(Village.name == village_name))
