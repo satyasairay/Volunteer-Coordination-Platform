@@ -559,36 +559,40 @@
                 
                 console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
                 
-                // Step 4: Add shining pin markers for villages with field workers or UK centers
-                const villagesWithData = villages.features.filter(f => 
-                    f.properties.field_worker_count > 0 || f.properties.uk_center_count > 0
-                );
-                
+                // Step 4: Add pin markers for ALL villages (visible only when zoomed)
                 // Create color scale for pins based on field worker count
                 pinColorScale = d3.scaleSequential()
                     .domain([0, 15])
-                    .interpolator(t => d3.interpolateBlues(0.4 + t * 0.55));
+                    .interpolator(t => d3.interpolateBlues(0.5 + t * 0.4));
                 
+                // Add pins for ALL 1,315 villages
                 const pins = g.selectAll(".village-pin")
-                    .data(villagesWithData)
+                    .data(villages.features)
                     .enter()
-                    .append("g")
-                    .attr("class", "village-pin active")
+                    .append("text")
+                    .attr("class", "village-pin")
                     .attr("transform", d => {
                         const centroid = path.centroid(d);
                         return `translate(${centroid[0]}, ${centroid[1]})`;
+                    })
+                    .attr("text-anchor", "middle")
+                    .attr("dominant-baseline", "middle")
+                    .attr("font-size", "14px")
+                    .attr("cursor", "pointer")
+                    .attr("opacity", 0) // Hidden by default, shown on zoom
+                    .text("📍")
+                    .style("fill", d => {
+                        // If village has data, color based on field workers, else default blue
+                        if (d.properties.field_worker_count > 0) {
+                            return pinColorScale(d.properties.field_worker_count);
+                        }
+                        return "#5a8fc4"; // Default blue matching choropleth
                     })
                     .on("mouseover", showPinTooltip)
                     .on("mouseout", hideTooltip)
                     .on("click", showVillageModal);
                 
-                // Add shining circle for each pin
-                pins.append("circle")
-                    .attr("r", d => 4 + Math.min(d.properties.field_worker_count / 2, 6))
-                    .attr("fill", d => pinColorScale(d.properties.field_worker_count))
-                    .attr("opacity", 0.9);
-                
-                console.log(`✅ Added ${pins.size()} shining pins`);
+                console.log(`✅ Added ${pins.size()} pins (zoom to reveal)`);
                 
                 // Show legend and hide loading
                 document.getElementById('legend').style.display = 'block';
@@ -618,17 +622,31 @@
             const fieldWorkersIcon = customLabels.field_workers?.icon || '👥';
             const ukIcon = customLabels.uk_centers?.icon || '🏢';
             
-            tooltip.html(`
-                <strong>${props.name}</strong><br>
-                <small>Block: ${props.block}</small><br>
-                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
-                ${fieldWorkersIcon} <strong>${props.field_worker_count}</strong> ${fieldWorkersLabel}<br>
-                ${ukIcon} <strong>${props.uk_center_count}</strong> ${ukLabel}<br>
-                <small style="color: #999; margin-top: 4px; display: block;">Click for details</small>
-            `)
-            .style("left", (event.pageX + 10) + "px")
-            .style("top", (event.pageY - 10) + "px")
-            .classed("show", true);
+            // Check if village has data
+            const hasData = props.field_worker_count > 0 || props.uk_center_count > 0;
+            
+            if (hasData) {
+                tooltip.html(`
+                    <strong>${props.name}</strong><br>
+                    <small>Block: ${props.block}</small><br>
+                    <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                    ${fieldWorkersIcon} <strong>${props.field_worker_count}</strong> ${fieldWorkersLabel}<br>
+                    ${ukIcon} <strong>${props.uk_center_count}</strong> ${ukLabel}<br>
+                    <small style="color: #999; margin-top: 4px; display: block;">Click for details</small>
+                `);
+            } else {
+                // Village without data - show basic info
+                tooltip.html(`
+                    <strong>${props.name}</strong><br>
+                    <small>Block: ${props.block}</small><br>
+                    <small style="color: #999;">Population: ${props.population?.toLocaleString() || 'N/A'}</small>
+                `);
+            }
+            
+            tooltip
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px")
+                .classed("show", true);
         }
         
         function hideTooltip() {
@@ -648,17 +666,29 @@
             document.getElementById('modalVillageName').textContent = props.name;
             document.getElementById('modalVillageBlock').textContent = `Block: ${props.block}`;
             
-            // Stats cards
-            document.getElementById('modalStats').innerHTML = `
-                <div class="stat-card">
-                    <div class="stat-value">${props.field_worker_count}</div>
-                    <div class="stat-label">${fieldWorkersIcon} ${fieldWorkersLabel}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${props.uk_center_count}</div>
-                    <div class="stat-label">${ukIcon} ${ukLabel}</div>
-                </div>
-            `;
+            // Check if village has data
+            const hasData = props.field_worker_count > 0 || props.uk_center_count > 0;
+            
+            if (hasData) {
+                // Stats cards for villages with data
+                document.getElementById('modalStats').innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-value">${props.field_worker_count}</div>
+                        <div class="stat-label">${fieldWorkersIcon} ${fieldWorkersLabel}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${props.uk_center_count}</div>
+                        <div class="stat-label">${ukIcon} ${ukLabel}</div>
+                    </div>
+                `;
+            } else {
+                // No stats for villages without data
+                document.getElementById('modalStats').innerHTML = `
+                    <div style="padding: 1rem; text-align: center; color: #666; font-size: 0.9rem;">
+                        No field worker data available for this village yet.
+                    </div>
+                `;
+            }
             
             // Details
             document.getElementById('modalDetails').innerHTML = `
@@ -696,6 +726,18 @@
         
         function zoomed(event) {
             g.attr("transform", event.transform);
+            
+            // Show pins only when zoomed in (Google Maps style)
+            const zoomLevel = event.transform.k;
+            const pins = g.selectAll(".village-pin");
+            
+            if (zoomLevel > 2) {
+                // Zoomed in enough - show pins
+                pins.transition().duration(200).attr("opacity", 0.85);
+            } else {
+                // Zoomed out - hide pins
+                pins.transition().duration(200).attr("opacity", 0);
+            }
         }
         
         function zoomIn() {
