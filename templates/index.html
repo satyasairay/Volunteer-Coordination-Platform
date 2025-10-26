@@ -8,17 +8,17 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #ffffff; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1C120C; }
         
-        /* Navigation */
+        /* Navigation - OLD BOOK THEME */
         nav {
-            background: rgba(26, 26, 26, 0.95);
+            background: #2A1B12;
             backdrop-filter: blur(10px);
             padding: 12px 24px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid #5C4631;
         }
         
         .nav-brand {
@@ -27,12 +27,12 @@
             gap: 12px;
             font-size: 24px;
             font-weight: 800;
-            color: #f97316;
+            color: #C85A1E;
             letter-spacing: -0.5px;
         }
         
         .nav-location {
-            color: rgba(255,255,255,0.7);
+            color: #F5E6C8;
             font-size: 16px;
             margin-left: 16px;
             font-weight: 500;
@@ -46,7 +46,7 @@
         .nav-tab {
             padding: 8px 20px;
             border-radius: 20px;
-            border: none;
+            border: 2px solid #A38D5D;
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
@@ -56,43 +56,47 @@
         }
         
         .nav-tab.active {
-            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-            color: white;
-            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
+            background: #C85A1E;
+            color: #FFF;
+            border-color: #C85A1E;
+            box-shadow: 0 4px 12px rgba(200, 90, 30, 0.4);
         }
         
         .nav-tab:not(.active) {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255,255,255,0.8);
+            background: transparent;
+            color: #F5E6C8;
+            border-color: #A38D5D;
         }
         
         .nav-tab:not(.active):hover {
-            background: rgba(255, 255, 255, 0.15);
+            background: rgba(163, 141, 93, 0.2);
+            border-color: #D3662B;
         }
         
-        /* Footer */
+        /* Footer - OLD BOOK THEME */
         .footer {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(26, 26, 26, 0.9);
+            background: #2A1B12;
             backdrop-filter: blur(10px);
             padding: 8px 24px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 2px solid #5C4631;
             z-index: 1000;
         }
         
         .footer-text {
-            color: rgba(255,255,255,0.5);
+            color: #F5E6C8;
             font-size: 12px;
+            opacity: 0.7;
         }
         
         .footer-brand {
-            color: #f97316;
+            color: #C85A1E;
             font-weight: 600;
         }
         
@@ -454,44 +458,44 @@
         </div>
     </nav>
     
-    <!-- MINIMAL UI - Search Box + Dropdown Button -->
+    <!-- MINIMAL UI - PARCHMENT THEME - Search Box + Dropdown Button -->
     <div style="position: fixed; top: 70px; left: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 280px;">
-        <!-- Search Box for Villages -->
+        <!-- Search Box for Villages - ULTRA-LIGHT PAPER -->
         <input type="text" id="village-search" placeholder="🔍 Search villages, blocks..." 
-               style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; font-size: 14px; 
-                      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-                      transition: all 0.2s;">
+               style="width: 100%; padding: 12px 16px; border: 2px solid #BFAF86; border-radius: 12px; font-size: 14px; 
+                      background: #F7EFDA; backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(62,44,32,0.28);
+                      transition: all 0.2s; color: #1F3D5B;">
         
-        <!-- Show Blocks Dropdown Button -->
+        <!-- Show Blocks Dropdown Button - PARCHMENT -->
         <button id="toggle-blocks-panel" 
-                style="width: 100%; padding: 12px 16px; border: 2px solid rgba(249,115,22,0.3); border-radius: 12px; font-size: 14px; font-weight: 600;
-                       background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+                style="width: 100%; padding: 12px 16px; border: 2px solid #A38D5D; border-radius: 12px; font-size: 14px; font-weight: 600;
+                       background: #EEE2C3; backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(62,44,32,0.28);
                        cursor: pointer; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center;
-                       color: #1f2937;">
+                       color: #1F3D5B;">
             <span>Show Blocks & Overlays</span>
-            <span id="dropdown-arrow" style="transition: transform 0.3s;">▼</span>
+            <span id="dropdown-arrow" style="transition: transform 0.3s; color: #C85A1E;">▼</span>
         </button>
         
-        <!-- Collapsible Panel -->
-        <div id="blocks-panel" style="display: none; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); 
-                                       border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden;
-                                       max-height: 70vh; overflow-y: auto;">
-            <!-- Heat Map Toggles -->
-            <div style="padding: 16px; border-bottom: 2px solid rgba(16,185,129,0.15); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(52,211,153,0.02) 100%);">
-                <div style="font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 10px; letter-spacing: 0.5px;">🌿 HEAT MAP OVERLAYS</div>
+        <!-- Collapsible Panel - PARCHMENT -->
+        <div id="blocks-panel" style="display: none; background: #EEE2C3; backdrop-filter: blur(20px); 
+                                       border-radius: 12px; box-shadow: 0 8px 24px rgba(62,44,32,0.28); overflow: hidden;
+                                       max-height: 70vh; overflow-y: auto; border: 2px solid #BFAF86;">
+            <!-- Heat Map Toggles - WARM THEME -->
+            <div style="padding: 16px; border-bottom: 2px solid #BFAF86; background: #D9C9A1;">
+                <div style="font-size: 12px; font-weight: 700; color: #7A3B1E; margin-bottom: 10px; letter-spacing: 0.5px;">🔥 HEAT MAP OVERLAYS</div>
                 <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer; padding: 8px; border-radius: 8px;">
-                    <input type="checkbox" id="heatmap-seva" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-size: 14px; font-weight: 500;">🔥 Seva Activity</span>
+                    <input type="checkbox" id="heatmap-seva" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; accent-color: #C85A1E;">
+                    <span style="font-size: 14px; font-weight: 500; color: #3D2B1F;">🔥 Seva Activity</span>
                 </label>
                 <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 8px;">
-                    <input type="checkbox" id="heatmap-population" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-size: 14px; font-weight: 500;">👥 Population Density</span>
+                    <input type="checkbox" id="heatmap-population" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer; accent-color: #C85A1E;">
+                    <span style="font-size: 14px; font-weight: 500; color: #3D2B1F;">👥 Population Density</span>
                 </label>
             </div>
             
             <!-- Block List -->
             <div style="padding: 16px;">
-                <div style="font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 12px; letter-spacing: 0.5px;">🏞️ BLOCKS (7)</div>
+                <div style="font-size: 12px; font-weight: 700; color: #6F5D4A; margin-bottom: 12px; letter-spacing: 0.5px;">📖 BLOCKS (7)</div>
                 <div id="block-list"></div>
             </div>
         </div>
@@ -633,12 +637,12 @@
                 mapSettings = settings;
                 console.log('✅ Map settings loaded:', settings);
                 
-                // Create HEATMAP color scale - smooth gradient from light to dark (admin-selected color)
-                // Full range 0.2 to 1.0 for beautiful light-to-deep heatmap effect
-                const interpolator = colorSchemes[settings.color_scheme] || d3.interpolateBlues;
-                colorScale = d3.scaleSequential()
-                    .domain([1000, 20000])
-                    .interpolator(t => interpolator(0.2 + t * 0.8)); // Light to deep heatmap
+                // Create INK-ON-PARCHMENT color scale - Old Book Theme
+                // Using warm, low-saturation blues on parchment paper
+                const parchmentColors = ['#EBD8A7', '#B9C7CC', '#8EA6B3', '#5E7E93', '#2E4057'];
+                colorScale = d3.scaleThreshold()
+                    .domain([5000, 10000, 15000, 20000])
+                    .range(parchmentColors); // Ink-on-parchment gradient
                 
                 // Legend removed, skip gradient update
                 
@@ -693,8 +697,9 @@
                     .attr("class", "village-polygon")
                     .attr("d", path)
                     .attr("fill", d => colorScale(d.properties.population || 5000))
-                    .attr("stroke", "#fff")
-                    .attr("stroke-width", 0.3);
+                    .attr("fill-opacity", 0.82)
+                    .attr("stroke", "rgba(43,29,20,0.28)")
+                    .attr("stroke-width", 0.4);
                 
                 console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
                 
@@ -846,38 +851,41 @@
                                      block.activity_level === 'low' ? '🟠' : '⚪';
                 
                 const blockItem = document.createElement('div');
-                // MODERN ROUNDED CARD - No square boxes!
+                // PARCHMENT CARD - Old Book Theme
                 blockItem.style.cssText = `
                     padding: 16px; 
                     margin-bottom: 12px; 
-                    background: linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(249,250,251,0.95) 100%); 
-                    border-radius: 16px; 
+                    background: #EEE2C3; 
+                    border-radius: 12px; 
                     cursor: pointer; 
-                    border: 2px solid ${activityColor}; 
-                    box-shadow: 0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8);
+                    border: 2px solid #BFAF86; 
+                    box-shadow: 0 4px 12px rgba(62,44,32,0.28);
                     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                    backdrop-filter: blur(10px);
                 `;
                 blockItem.innerHTML = `
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                        <div style="font-weight: 700; font-size: 15px; color: #1f2937;">${activityEmoji} ${block.block_name}</div>
-                        <div style="font-size: 11px; color: #6b7280; font-weight: 600; background: rgba(107,114,128,0.1); padding: 3px 8px; border-radius: 12px;">${block.total_villages} villages</div>
+                        <div style="font-weight: 700; font-size: 15px; color: #1F3D5B;">${activityEmoji} ${block.block_name}</div>
+                        <div style="font-size: 11px; color: #6F5D4A; font-weight: 600; background: #D9C9A1; padding: 3px 8px; border-radius: 12px;">${block.total_villages} villages</div>
                     </div>
-                    <div style="font-size: 13px; color: #4b5563; margin-bottom: 6px; font-weight: 500;">
+                    <div style="font-size: 13px; color: #3D2B1F; margin-bottom: 6px; font-weight: 500;">
                         👥 ${block.population.toLocaleString()} people
                     </div>
-                    <div style="font-size: 12px; color: #6b7280; background: rgba(249,250,251,0.5); padding: 6px; border-radius: 8px;">
-                        📊 Active: <strong>${block.active_seva_requests}</strong> | Total: <strong>${block.total_seva_requests}</strong>
+                    <div style="font-size: 12px; color: #3D2B1F; background: #D9C9A1; padding: 6px; border-radius: 8px;">
+                        📊 Active: <strong style="color: #C85A1E;">${block.active_seva_requests}</strong> | Total: <strong>${block.total_seva_requests}</strong>
                     </div>
                 `;
                 
                 blockItem.onmouseover = () => {
                     blockItem.style.transform = 'translateY(-4px) scale(1.02)';
-                    blockItem.style.boxShadow = '0 8px 24px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.9)';
+                    blockItem.style.boxShadow = '0 8px 24px rgba(62,44,32,0.4)';
+                    blockItem.style.borderColor = '#A38D5D';
+                    blockItem.style.background = '#F7EFDA';
                 };
                 blockItem.onmouseout = () => {
                     blockItem.style.transform = 'translateY(0) scale(1)';
-                    blockItem.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.8)';
+                    blockItem.style.boxShadow = '0 4px 12px rgba(62,44,32,0.28)';
+                    blockItem.style.borderColor = '#BFAF86';
+                    blockItem.style.background = '#EEE2C3';
                 };
                 blockItem.onclick = () => {
                     // Find and zoom to this block
@@ -1137,11 +1145,13 @@
             if (panelOpen) {
                 panel.style.display = 'block';
                 arrow.style.transform = 'rotate(180deg)';
-                toggleBtn.style.borderColor = 'rgba(249,115,22,0.6)';
+                toggleBtn.style.borderColor = '#C85A1E';
+                toggleBtn.style.background = '#D9C9A1';
             } else {
                 panel.style.display = 'none';
                 arrow.style.transform = 'rotate(0deg)';
-                toggleBtn.style.borderColor = 'rgba(249,115,22,0.3)';
+                toggleBtn.style.borderColor = '#A38D5D';
+                toggleBtn.style.background = '#EEE2C3';
             }
         };
         
