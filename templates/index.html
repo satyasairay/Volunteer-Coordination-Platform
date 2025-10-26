@@ -275,12 +275,38 @@
         
         let g = svg.append("g");
         let projection, path;
+        let colorScale;
+        let mapSettings = {};
         
-        // Color scale - blue gradient (USA choropleth style)
-        const colorScale = d3.scaleSequential()
-            .domain([160000, 260000])
-            .interpolator(d3.interpolateBlues);
+        // Color scheme mappings
+        const colorSchemes = {
+            'Blues': d3.interpolateBlues,
+            'Greens': d3.interpolateGreens,
+            'Reds': d3.interpolateReds,
+            'Purples': d3.interpolatePurples,
+            'Oranges': d3.interpolateOranges,
+            'Viridis': d3.interpolateViridis,
+            'Turbo': d3.interpolateTurbo
+        };
         
+        // Load admin settings first
+        fetch('/api/map-settings')
+            .then(res => res.json())
+            .then(settings => {
+                mapSettings = settings;
+                console.log('✅ Map settings loaded:', settings);
+                
+                // Create color scale with admin-selected scheme
+                const interpolator = colorSchemes[settings.color_scheme] || d3.interpolateBlues;
+                colorScale = d3.scaleSequential()
+                    .domain([160000, 260000])
+                    .interpolator(interpolator);
+                
+                // Now load blocks
+                loadBlocks();
+            });
+        
+        function loadBlocks() {
         // Load blocks (small file, OK to load)
         fetch('/static/geojson/bhadrak_blocks.geojson')
             .then(res => res.json())
@@ -322,14 +348,20 @@
                 // Load villages (API returns lightweight data, not GeoJSON)
                 loadVillages();
             });
+        }
         
         function loadVillages() {
+            if (!mapSettings.show_villages) {
+                console.log('Villages disabled in admin settings');
+                return;
+            }
+            
             fetch('/api/villages')
                 .then(res => res.json())
                 .then(villages => {
                     console.log(`✅ Loaded ${villages.length} villages from API (not GeoJSON)`);
                     
-                    // Draw village points
+                    // Draw village points (color from admin settings)
                     g.selectAll(".village")
                         .data(villages.filter(v => v.lat && v.lng && v.show_pin !== false))
                         .enter()
@@ -338,7 +370,7 @@
                         .attr("cx", d => projection([d.lng, d.lat])[0])
                         .attr("cy", d => projection([d.lng, d.lat])[1])
                         .attr("r", 3)
-                        .attr("fill", "#e63946")
+                        .attr("fill", mapSettings.village_point_color || "#e63946")
                         .attr("stroke", "#ffffff")
                         .attr("stroke-width", 1)
                         .on("mouseover", showVillageTooltip)
