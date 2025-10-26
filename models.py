@@ -236,7 +236,7 @@ class VillagePin(SQLModel, table=True):
     __tablename__ = "village_pins"
     
     id: Optional[int] = Field(default=None, primary_key=True)
-    village_id: int = Field(foreign_key="villages.id", index=True, unique=True)
+    village_id: int = Field(index=True, unique=True)
     
     # Core metrics
     field_worker_count: int = Field(default=0)
