@@ -32,6 +32,15 @@
             </div>
         </div>
 
+        <!-- Customizable Labels Section -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">📝 Customize Map Labels & Terminology</h2>
+            <p class="text-sm text-gray-600 mb-4">Change the labels displayed on the map (e.g., "Field Workers" instead of "Volunteers")</p>
+            
+            <div id="labels-container" class="space-y-4"></div>
+            <div id="labels-message" class="mt-4"></div>
+        </div>
+
         <div class="grid md:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-lg shadow">
                 <h2 class="text-xl font-bold mb-4">Bulk Upload Villages</h2>
@@ -76,6 +85,79 @@
     </div>
 
     <script>
+        // Load custom labels
+        async function loadLabels() {
+            try {
+                const res = await fetch('/api/custom-labels');
+                const labels = await res.json();
+                const container = document.getElementById('labels-container');
+                
+                container.innerHTML = labels.map(label => `
+                    <div class="border border-gray-200 rounded p-4">
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Label</label>
+                                <input 
+                                    type="text" 
+                                    value="${label.value}" 
+                                    data-key="${label.key}"
+                                    data-field="value"
+                                    class="label-input w-full border border-gray-300 rounded px-3 py-2"
+                                    placeholder="e.g., Field Workers"
+                                />
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-1">Icon/Emoji</label>
+                                <input 
+                                    type="text" 
+                                    value="${label.icon}" 
+                                    data-key="${label.key}"
+                                    data-field="icon"
+                                    class="label-input w-full border border-gray-300 rounded px-3 py-2"
+                                    placeholder="e.g., 👥"
+                                />
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Key: ${label.key}</p>
+                    </div>
+                `).join('');
+                
+                // Add change listeners
+                document.querySelectorAll('.label-input').forEach(input => {
+                    input.addEventListener('change', updateLabel);
+                });
+            } catch (err) {
+                console.error('Error loading labels:', err);
+            }
+        }
+        
+        async function updateLabel(e) {
+            const key = e.target.dataset.key;
+            const field = e.target.dataset.field;
+            const value = e.target.value;
+            const message = document.getElementById('labels-message');
+            
+            try {
+                const res = await fetch('/api/custom-labels', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, [field]: value })
+                });
+                
+                if (res.ok) {
+                    message.innerHTML = '<p class="text-green-600">✓ Label updated successfully!</p>';
+                    setTimeout(() => message.innerHTML = '', 3000);
+                } else {
+                    throw new Error('Failed to update label');
+                }
+            } catch (err) {
+                message.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+            }
+        }
+        
+        // Load labels on page load
+        loadLabels();
+        
         document.getElementById('villages-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
