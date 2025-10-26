@@ -3,54 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seva Atlas - Bhadrak Night View</title>
+    <title>Seva Atlas - Bhadrak 3D Terrain</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            overflow: hidden; 
-            background: #000000;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
+        * { box-sizing: border-box; }
+        body { margin: 0; overflow: hidden; background: #1a1a1a; }
         
+        /* Full screen map */
         #map { 
             height: 100vh; 
             width: 100%; 
             position: relative;
-            background: #000000;
+            background: linear-gradient(180deg, #2c3e50 0%, #3d5a80 50%, #98c1d9 100%);
         }
         
-        /* Dark base tiles */
+        /* 3D elevation color overlay */
         .leaflet-tile-pane {
-            filter: brightness(0.1) contrast(1.5);
+            position: relative;
         }
         
-        /* Header */
+        /* Hypsometric tinting - elevation colors */
+        .leaflet-overlay-pane canvas {
+            mix-blend-mode: multiply;
+            opacity: 0.7;
+        }
+        
+        /* Glassmorphic floating header */
         #header {
             position: fixed;
             top: 16px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(26, 26, 26, 0.85);
             backdrop-filter: blur(20px);
             border-radius: 50px;
             padding: 12px 24px;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.3), 0 0 0 1px rgba(59, 130, 246, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             gap: 16px;
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         #header h1 {
             font-size: 20px;
             font-weight: 700;
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            text-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            margin: 0;
         }
         
         .header-btn {
@@ -65,39 +70,39 @@
         }
         
         .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
             color: white;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 4px 12px rgba(249, 115, 22, 0.4);
         }
         
         .btn-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 0 30px rgba(59, 130, 246, 0.7);
+            box-shadow: 0 6px 16px rgba(249, 115, 22, 0.5);
         }
         
         .btn-secondary {
-            background: rgba(59, 130, 246, 0.1);
-            color: #3b82f6;
-            border: 1px solid rgba(59, 130, 246, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        /* Seva Panel */
+        /* Seva Feed Panel */
         #seva-panel {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
             z-index: 999;
-            background: rgba(0, 0, 0, 0.95);
+            background: rgba(26, 26, 26, 0.95);
             backdrop-filter: blur(20px);
             border-radius: 24px 24px 0 0;
-            box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.3);
             transform: translateY(calc(100% - 80px));
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-height: 80vh;
             display: flex;
             flex-direction: column;
-            border-top: 1px solid rgba(59, 130, 246, 0.2);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         #seva-panel.expanded { transform: translateY(0); }
@@ -105,16 +110,15 @@
         .panel-handle {
             width: 40px;
             height: 5px;
-            background: rgba(59, 130, 246, 0.4);
+            background: rgba(255, 255, 255, 0.3);
             border-radius: 3px;
             margin: 12px auto 8px;
             cursor: pointer;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
         }
         
         .panel-header {
             padding: 12px 24px;
-            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -128,29 +132,12 @@
         }
         
         .seva-item {
-            background: rgba(59, 130, 246, 0.05);
-            border: 1px solid rgba(59, 130, 246, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
             color: white;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
-        }
-        
-        /* Leaflet controls */
-        .leaflet-control-zoom {
-            border: none !important;
-            box-shadow: 0 0 20px rgba(59, 130, 246, 0.3) !important;
-        }
-        
-        .leaflet-control-zoom a {
-            background: rgba(0, 0, 0, 0.8) !important;
-            border: 1px solid rgba(59, 130, 246, 0.3) !important;
-            color: #3b82f6 !important;
-        }
-        
-        .leaflet-control-zoom a:hover {
-            background: rgba(59, 130, 246, 0.2) !important;
         }
         
         @media (max-width: 768px) {
@@ -159,26 +146,37 @@
             .header-btn { padding: 6px 12px; font-size: 12px; }
         }
         
-        /* Glowing particle animation */
-        @keyframes particle-pulse {
+        /* Bhadrak 3D boundary with dramatic glow */
+        .bhadrak-boundary {
+            stroke: #f97316 !important;
+            stroke-width: 6px !important;
+            fill: none !important;
+            filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.8))
+                    drop-shadow(0 0 40px rgba(249, 115, 22, 0.6))
+                    drop-shadow(0 0 60px rgba(249, 115, 22, 0.4));
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes glow-pulse {
             0%, 100% { 
-                opacity: 0.8;
-                transform: scale(1);
+                filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.8))
+                        drop-shadow(0 0 40px rgba(249, 115, 22, 0.6))
+                        drop-shadow(0 0 60px rgba(249, 115, 22, 0.4));
             }
             50% { 
-                opacity: 1;
-                transform: scale(1.2);
+                filter: drop-shadow(0 0 30px rgba(249, 115, 22, 1))
+                        drop-shadow(0 0 60px rgba(249, 115, 22, 0.8))
+                        drop-shadow(0 0 90px rgba(249, 115, 22, 0.6));
             }
         }
         
-        @keyframes glow-breathe {
+        /* Custom marker pulse */
+        @keyframes marker-pulse {
             0%, 100% { 
-                filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.8)) 
-                        drop-shadow(0 0 16px rgba(59, 130, 246, 0.6));
+                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7), 0 2px 8px rgba(249, 115, 22, 0.6);
             }
             50% { 
-                filter: drop-shadow(0 0 16px rgba(59, 130, 246, 1)) 
-                        drop-shadow(0 0 32px rgba(59, 130, 246, 0.8));
+                box-shadow: 0 0 0 12px rgba(249, 115, 22, 0), 0 2px 8px rgba(249, 115, 22, 0.8);
             }
         }
     </style>
@@ -187,19 +185,20 @@
     <!-- Header -->
     <div id="header">
         <h1>🕉️ Seva Atlas</h1>
-        <span style="color: rgba(59, 130, 246, 0.8); font-size: 14px;">📍 Bhadrak</span>
+        <span style="color: rgba(255,255,255,0.7); font-size: 14px;">📍 Bhadrak</span>
         <button class="header-btn btn-primary" onclick="toggleSevaPanel()">🔥 Seva Feed</button>
         <a href="/doctors" class="header-btn btn-secondary" style="text-decoration: none;">👨‍⚕️ Doctors</a>
     </div>
 
+    <!-- Map Container -->
     <div id="map"></div>
 
-    <!-- Seva Panel -->
+    <!-- Seva Feed Panel -->
     <div id="seva-panel">
         <div class="panel-handle" onclick="toggleSevaPanel()"></div>
         <div class="panel-header">
             <h2 style="font-size: 18px; font-weight: 700; margin: 0;">Active Seva Requests</h2>
-            <span id="seva-count" style="background: linear-gradient(135deg, #3b82f6, #06b6d4); color: white; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600; box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);">0</span>
+            <span id="seva-count" style="background: #f97316; color: white; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600;">0</span>
         </div>
         <div id="seva-feed" class="panel-content">
             <p style="color: rgba(255,255,255,0.6);">Loading seva activities...</p>
@@ -207,30 +206,39 @@
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
-        // Initialize dark map
+        // Initialize map
         const map = L.map('map', {
             center: [21.05, 86.52],
             zoom: 10,
-            minZoom: 6,
-            maxZoom: 15,
+            minZoom: 5,
+            maxZoom: 16,
             zoomControl: false,
             maxBounds: [[6, 68], [36, 98]],
             maxBoundsViscosity: 0.9
         });
 
+        // Add zoom control
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // Very dark base layer (CartoDB Dark Matter with extra darkness)
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '© CARTO',
-            maxZoom: 19
+        // Use OpenTopoMap for terrain
+        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenTopoMap',
+            maxZoom: 17
+        }).addTo(map);
+
+        // Add Esri World Hillshade for 3D relief
+        const hillshadeLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Hillshade/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri',
+            maxZoom: 16,
+            opacity: 0.65
         }).addTo(map);
 
         let bhadrakPolygonCoords = null;
-        let villages = [];
+        let bhadrakBoundary = null;
 
-        // Load Bhadrak boundary
+        // Load Bhadrak boundary with dramatic 3D styling
         fetch('/static/geojson/bhadrak_boundary.geojson')
             .then(res => res.json())
             .then(data => {
@@ -239,166 +247,135 @@
                     bhadrakPolygonCoords = Array.isArray(coords[0][0]) ? coords[0] : coords;
                 }
                 
-                map.fitBounds(L.geoJSON(data).getBounds(), { padding: [50, 50] });
+                // Add Bhadrak boundary with custom styling
+                bhadrakBoundary = L.geoJSON(data, {
+                    style: {
+                        color: '#f97316',
+                        weight: 6,
+                        opacity: 1,
+                        fillColor: '#f97316',
+                        fillOpacity: 0.1,
+                        className: 'bhadrak-boundary',
+                        dashArray: '20, 10',
+                        lineCap: 'round',
+                        lineJoin: 'round'
+                    }
+                }).addTo(map);
                 
-                // Load villages after boundary is loaded
-                loadVillages();
+                // Add hypsometric elevation overlay (canvas-based)
+                addElevationOverlay();
+                
+                // Zoom to Bhadrak
+                map.fitBounds(bhadrakBoundary.getBounds(), { padding: [50, 50] });
             });
 
-        function loadVillages() {
-            fetch('/api/villages')
-                .then(res => res.json())
-                .then(data => {
-                    villages = data.filter(v => v.lat && v.lng);
-                    createNightViewVisualization();
-                });
-        }
-
-        function createNightViewVisualization() {
-            // Create canvas overlay for glowing effects
-            const GlowCanvas = L.Layer.extend({
+        // Add custom elevation color overlay
+        function addElevationOverlay() {
+            const ElevationOverlay = L.Layer.extend({
                 onAdd: function(map) {
                     this._map = map;
                     this._canvas = L.DomUtil.create('canvas');
                     this._canvas.style.position = 'absolute';
-                    this._canvas.style.top = '0';
-                    this._canvas.style.left = '0';
                     this._canvas.style.pointerEvents = 'none';
                     
                     const pane = map.getPanes().overlayPane;
                     pane.appendChild(this._canvas);
                     
-                    map.on('moveend zoom viewreset', this._redraw, this);
-                    this._redraw();
-                    
-                    // Animate
-                    this._animate();
+                    map.on('moveend zoom viewreset', this._update, this);
+                    this._update();
                 },
                 
-                _redraw: function() {
-                    if (!bhadrakPolygonCoords || villages.length === 0) return;
+                _update: function() {
+                    if (!bhadrakPolygonCoords) return;
                     
                     const size = this._map.getSize();
+                    const bounds = this._map.getBounds();
+                    
                     this._canvas.width = size.x;
                     this._canvas.height = size.y;
                     
                     const ctx = this._canvas.getContext('2d');
                     ctx.clearRect(0, 0, size.x, size.y);
                     
-                    // Draw Bhadrak boundary glow
-                    const boundaryPoints = bhadrakPolygonCoords.map(coord => {
+                    // Convert Bhadrak polygon to pixels
+                    const pixelPoints = bhadrakPolygonCoords.map(coord => {
                         return this._map.latLngToContainerPoint([coord[1], coord[0]]);
                     });
                     
-                    // Outer glow for boundary
-                    ctx.strokeStyle = 'rgba(59, 130, 246, 0.05)';
-                    ctx.lineWidth = 40;
-                    ctx.lineJoin = 'round';
-                    ctx.lineCap = 'round';
+                    // Create Bhadrak region clip
+                    ctx.save();
                     ctx.beginPath();
-                    boundaryPoints.forEach((p, i) => {
-                        if (i === 0) ctx.moveTo(p.x, p.y);
-                        else ctx.lineTo(p.x, p.y);
+                    pixelPoints.forEach((point, i) => {
+                        if (i === 0) ctx.moveTo(point.x, point.y);
+                        else ctx.lineTo(point.x, point.y);
                     });
                     ctx.closePath();
-                    ctx.stroke();
+                    ctx.clip();
                     
-                    // Mid glow
-                    ctx.strokeStyle = 'rgba(59, 130, 246, 0.15)';
-                    ctx.lineWidth = 20;
+                    // Draw elevation gradient (green->yellow->orange->brown)
+                    const gradient = ctx.createLinearGradient(0, size.y, 0, 0);
+                    gradient.addColorStop(0, 'rgba(76, 175, 80, 0.3)');    // Green - low elevation
+                    gradient.addColorStop(0.4, 'rgba(255, 235, 59, 0.25)'); // Yellow
+                    gradient.addColorStop(0.7, 'rgba(255, 152, 0, 0.3)');   // Orange
+                    gradient.addColorStop(1, 'rgba(121, 85, 72, 0.4)');     // Brown - high elevation
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, size.x, size.y);
+                    
+                    ctx.restore();
+                    
+                    // Darken surrounding areas dramatically
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+                    ctx.fillRect(0, 0, size.x, size.y);
+                    
+                    // Cut out Bhadrak again
+                    ctx.globalCompositeOperation = 'destination-out';
                     ctx.beginPath();
-                    boundaryPoints.forEach((p, i) => {
-                        if (i === 0) ctx.moveTo(p.x, p.y);
-                        else ctx.lineTo(p.x, p.y);
+                    pixelPoints.forEach((point, i) => {
+                        if (i === 0) ctx.moveTo(point.x, point.y);
+                        else ctx.lineTo(point.x, point.y);
                     });
                     ctx.closePath();
-                    ctx.stroke();
-                    
-                    // Inner boundary line
-                    ctx.strokeStyle = 'rgba(59, 130, 246, 0.6)';
-                    ctx.lineWidth = 3;
-                    ctx.beginPath();
-                    boundaryPoints.forEach((p, i) => {
-                        if (i === 0) ctx.moveTo(p.x, p.y);
-                        else ctx.lineTo(p.x, p.y);
-                    });
-                    ctx.closePath();
-                    ctx.stroke();
-                    
-                    // Draw village light points
-                    villages.forEach(village => {
-                        const point = this._map.latLngToContainerPoint([village.lat, village.lng]);
-                        
-                        // Large outer glow
-                        const gradient1 = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, 25);
-                        gradient1.addColorStop(0, 'rgba(59, 130, 246, 0.15)');
-                        gradient1.addColorStop(0.5, 'rgba(59, 130, 246, 0.05)');
-                        gradient1.addColorStop(1, 'rgba(59, 130, 246, 0)');
-                        ctx.fillStyle = gradient1;
-                        ctx.beginPath();
-                        ctx.arc(point.x, point.y, 25, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        // Medium glow
-                        const gradient2 = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, 12);
-                        gradient2.addColorStop(0, 'rgba(59, 130, 246, 0.4)');
-                        gradient2.addColorStop(0.5, 'rgba(59, 130, 246, 0.2)');
-                        gradient2.addColorStop(1, 'rgba(59, 130, 246, 0)');
-                        ctx.fillStyle = gradient2;
-                        ctx.beginPath();
-                        ctx.arc(point.x, point.y, 12, 0, Math.PI * 2);
-                        ctx.fill();
-                        
-                        // Bright core
-                        const gradient3 = ctx.createRadialGradient(point.x, point.y, 0, point.x, point.y, 4);
-                        gradient3.addColorStop(0, 'rgba(255, 255, 255, 0.9)');
-                        gradient3.addColorStop(0.5, 'rgba(59, 130, 246, 0.8)');
-                        gradient3.addColorStop(1, 'rgba(59, 130, 246, 0.3)');
-                        ctx.fillStyle = gradient3;
-                        ctx.beginPath();
-                        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
-                        ctx.fill();
-                    });
-                },
-                
-                _animate: function() {
-                    this._animFrame = this._animFrame || 0;
-                    this._animFrame++;
-                    
-                    // Pulse effect every 60 frames
-                    if (this._animFrame % 60 === 0) {
-                        this._redraw();
-                    }
-                    
-                    requestAnimationFrame(this._animate.bind(this));
+                    ctx.fill();
                 }
             });
             
-            new GlowCanvas().addTo(map);
-            
-            // Add invisible markers for popups
-            villages.forEach(v => {
-                const marker = L.circleMarker([v.lat, v.lng], {
-                    radius: 8,
-                    fillColor: '#3b82f6',
-                    fillOpacity: 0,
-                    color: 'transparent',
-                    weight: 0
-                });
-                
-                marker.bindPopup(`
-                    <div style="background: rgba(0,0,0,0.9); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 12px; color: white;">
-                        <strong style="color: #3b82f6;">${v.name}</strong><br>
-                        <span style="color: rgba(255,255,255,0.7); font-size: 13px;">Block: ${v.block || 'N/A'}</span>
-                    </div>
-                `, {
-                    className: 'custom-popup',
-                    closeButton: false
-                });
-                
-                marker.addTo(map);
-            });
+            new ElevationOverlay().addTo(map);
         }
+
+        // Load villages with custom markers
+        const markers = L.markerClusterGroup({
+            maxClusterRadius: 50,
+            spiderfyOnMaxZoom: true,
+            showCoverageOnHover: false,
+            iconCreateFunction: function(cluster) {
+                const count = cluster.getChildCount();
+                return L.divIcon({
+                    html: `<div style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.5);">${count}</div>`,
+                    className: '',
+                    iconSize: [40, 40]
+                });
+            }
+        });
+
+        fetch('/api/villages')
+            .then(res => res.json())
+            .then(villages => {
+                villages.forEach(v => {
+                    if (v.lat && v.lng) {
+                        const icon = L.divIcon({
+                            html: '<div style="background: #f97316; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.7); animation: marker-pulse 2s infinite;"></div>',
+                            className: '',
+                            iconSize: [14, 14]
+                        });
+
+                        const marker = L.marker([v.lat, v.lng], { icon });
+                        marker.bindPopup(`<strong>${v.name}</strong><br>Block: ${v.block || 'N/A'}`);
+                        markers.addLayer(marker);
+                    }
+                });
+                map.addLayer(markers);
+            });
 
         // Load seva feed
         function loadSevaFeed() {
@@ -408,7 +385,7 @@
                     const feed = document.getElementById('seva-feed');
                     const count = document.getElementById('seva-count');
                     
-                    if (!Array.isArray(data) || data.length === 0) {
+                    if (data.length === 0) {
                         feed.innerHTML = '<p style="color: rgba(255,255,255,0.6);">No active seva requests at the moment.</p>';
                         count.textContent = '0';
                         return;
@@ -420,8 +397,8 @@
                             return `
                                 <div class="seva-item">
                                     <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                        <strong style="color: #3b82f6;">${item.title}</strong>
-                                        <span style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; padding: 2px 8px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(59, 130, 246, 0.3);">${item.status}</span>
+                                        <strong>${item.title}</strong>
+                                        <span style="background: rgba(249, 115, 22, 0.2); color: #f97316; padding: 2px 8px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(249, 115, 22, 0.3);">${item.status}</span>
                                     </div>
                                     <p style="color: rgba(255, 255, 255, 0.7); font-size: 14px; margin: 8px 0;">${item.description}</p>
                                     <div style="font-size: 12px; color: rgba(255, 255, 255, 0.5); margin-top: 8px;">
@@ -432,9 +409,6 @@
                         }
                         return '';
                     }).join('');
-                })
-                .catch(err => {
-                    console.error('Error loading seva feed:', err);
                 });
         }
 
