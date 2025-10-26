@@ -524,11 +524,12 @@
                 mapSettings = settings;
                 console.log('✅ Map settings loaded:', settings);
                 
-                // Create color scale with admin-selected scheme (use 0.4-0.95 range for saturated visible colors)
+                // Create HEATMAP color scale - smooth gradient from light to dark (admin-selected color)
+                // Full range 0.2 to 1.0 for beautiful light-to-deep heatmap effect
                 const interpolator = colorSchemes[settings.color_scheme] || d3.interpolateBlues;
                 colorScale = d3.scaleSequential()
                     .domain([1000, 20000])
-                    .interpolator(t => interpolator(0.4 + t * 0.55));
+                    .interpolator(t => interpolator(0.2 + t * 0.8)); // Light to deep heatmap
                 
                 // Legend removed, skip gradient update
                 
