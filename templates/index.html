@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * { box-sizing: border-box; }
@@ -17,6 +18,43 @@
             height: 100vh; 
             width: 100%; 
             position: relative;
+        }
+        
+        /* Glass overlay for non-Bhadrak areas */
+        .glass-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, 
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.4) 30%,
+                rgba(255, 255, 255, 0.6) 60%,
+                rgba(255, 255, 255, 0.75) 100%
+            );
+            pointer-events: none;
+            z-index: 400;
+            backdrop-filter: blur(1px);
+            mix-blend-mode: lighten;
+        }
+        
+        /* 3D Bhadrak boundary - elevated effect */
+        .bhadrak-3d {
+            filter: drop-shadow(0 4px 12px rgba(249, 115, 22, 0.5)) 
+                    drop-shadow(0 8px 24px rgba(249, 115, 22, 0.3))
+                    drop-shadow(0 -2px 6px rgba(255, 255, 255, 0.4))
+                    brightness(1.15) contrast(1.1);
+        }
+        
+        /* Pulsing glow for Bhadrak */
+        @keyframes bhadrak-glow {
+            0%, 100% { 
+                filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.6)) brightness(1.15);
+            }
+            50% { 
+                filter: drop-shadow(0 0 40px rgba(249, 115, 22, 0.8)) brightness(1.25);
+            }
         }
         
         /* Glassmorphic floating header */
@@ -361,45 +399,146 @@
         // Add zoom control to bottom right
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // Topographical layer
+        // Base topographical layer
         const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenTopoMap',
-            maxZoom: 17
+            maxZoom: 17,
+            opacity: 1.0
         });
 
-        // Street layer
-        const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap',
-            maxZoom: 19
+        // Hillshade layer for 3D terrain effect
+        const hillshadeLayer = L.tileLayer('https://tiles.wmflabs.org/hillshading/{z}/{x}/{y}.png', {
+            attribution: 'Hillshading',
+            maxZoom: 17,
+            opacity: 0.4
         });
 
+        // Add layers
         topoLayer.addTo(map);
-        L.control.layers({
-            "Terrain": topoLayer,
-            "Street": streetLayer
-        }, null, { position: 'bottomright' }).addTo(map);
+        hillshadeLayer.addTo(map);
 
-        // Load and highlight Bhadrak district boundary
+        // Load and highlight Bhadrak district boundary with 3D effects
         let bhadrakBoundary = null;
+        let bhadrakMask = null;
+        
         fetch('/static/geojson/bhadrak_boundary.geojson')
             .then(res => res.json())
             .then(data => {
                 // Store polygon coordinates for point-in-polygon check
                 if (data.features && data.features[0] && data.features[0].geometry) {
-                    bhadrakPolygonCoords = data.features[0].geometry.coordinates[0];
+                    const coords = data.features[0].geometry.coordinates[0];
+                    if (Array.isArray(coords[0][0])) {
+                        // MultiPolygon or nested array
+                        bhadrakPolygonCoords = coords[0];
+                    } else {
+                        bhadrakPolygonCoords = coords;
+                    }
                 }
                 
+                // Create dramatic 3D boundary for Bhadrak
                 bhadrakBoundary = L.geoJSON(data, {
                     style: {
-                        className: 'bhadrak-highlight',
-                        fillColor: '#f97316',
-                        fillOpacity: 0.15,
+                        fillColor: 'transparent',
+                        fillOpacity: 0,
                         color: '#f97316',
-                        weight: 3,
-                        dashArray: '10, 5'
+                        weight: 5,
+                        opacity: 1,
+                        dashArray: '15, 10',
+                        className: 'bhadrak-3d'
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Add pulsing animation
+                        const element = layer.getElement();
+                        if (element) {
+                            element.style.animation = 'bhadrak-glow 3s ease-in-out infinite';
+                            element.style.strokeLinecap = 'round';
+                            element.style.strokeLinejoin = 'round';
+                        }
                     }
                 }).addTo(map);
+                
+                // Create inverse mask for glass overlay (glass everywhere EXCEPT Bhadrak)
+                createGlassMask(data);
+                
+                // Zoom to Bhadrak bounds with padding
+                map.fitBounds(bhadrakBoundary.getBounds(), {
+                    padding: [50, 50],
+                    maxZoom: 10
+                });
             });
+        
+        // Create SVG clipping mask for glass overlay
+        function createGlassMask(bhadrakData) {
+            const svg = d3.select(map.getPanes().overlayPane)
+                .append('svg')
+                .attr('class', 'glass-mask-layer')
+                .style('position', 'absolute')
+                .style('top', 0)
+                .style('left', 0)
+                .style('width', '100%')
+                .style('height', '100%')
+                .style('pointer-events', 'none')
+                .style('z-index', 401);
+            
+            const g = svg.append('g').attr('class', 'leaflet-zoom-hide');
+            
+            function updateMask() {
+                const bounds = map.getBounds();
+                const topLeft = map.latLngToLayerPoint(bounds.getNorthWest());
+                const bottomRight = map.latLngToLayerPoint(bounds.getSouthEast());
+                
+                svg.attr('width', bottomRight.x - topLeft.x)
+                   .attr('height', bottomRight.y - topLeft.y)
+                   .style('left', topLeft.x + 'px')
+                   .style('top', topLeft.y + 'px');
+                
+                g.attr('transform', `translate(${-topLeft.x},${-topLeft.y})`);
+                
+                // Draw full screen rectangle
+                const worldRect = [[bounds.getNorth(), bounds.getWest()],
+                                  [bounds.getSouth(), bounds.getEast()]];
+                
+                // Convert Bhadrak polygon to screen coordinates
+                const bhadrakPoints = bhadrakPolygonCoords.map(coord => {
+                    const point = map.latLngToLayerPoint([coord[1], coord[0]]);
+                    return [point.x, point.y];
+                });
+                
+                // Create path with hole (glass everywhere except Bhadrak)
+                g.selectAll('*').remove();
+                
+                const path = g.append('path')
+                    .datum({
+                        outer: worldRect,
+                        hole: bhadrakPoints
+                    })
+                    .attr('d', d => {
+                        const outerTopLeft = map.latLngToLayerPoint(d.outer[0]);
+                        const outerBottomRight = map.latLngToLayerPoint(d.outer[1]);
+                        
+                        // Outer rectangle (whole screen)
+                        let pathStr = `M ${outerTopLeft.x} ${outerTopLeft.y} `;
+                        pathStr += `L ${outerBottomRight.x} ${outerTopLeft.y} `;
+                        pathStr += `L ${outerBottomRight.x} ${outerBottomRight.y} `;
+                        pathStr += `L ${outerTopLeft.x} ${outerBottomRight.y} Z `;
+                        
+                        // Inner hole (Bhadrak polygon)
+                        pathStr += `M ${d.hole[0][0]} ${d.hole[0][1]} `;
+                        for (let i = 1; i < d.hole.length; i++) {
+                            pathStr += `L ${d.hole[i][0]} ${d.hole[i][1]} `;
+                        }
+                        pathStr += 'Z';
+                        
+                        return pathStr;
+                    })
+                    .attr('fill', 'rgba(255, 255, 255, 0.65)')
+                    .attr('fill-rule', 'evenodd')
+                    .style('backdrop-filter', 'blur(2px)');
+            }
+            
+            map.on('zoomend moveend', updateMask);
+            updateMask();
+        }
 
         // Coming Soon Modal Functions
         function showComingSoonModal() {
