@@ -186,3 +186,21 @@ class Testimonial(SQLModel, table=True):
     # Relationships
     village: Optional[Village] = Relationship()
     seva_request: Optional[SevaRequest] = Relationship(back_populates="testimonials")
+
+
+class BlockSettings(SQLModel, table=True):
+    """Administrative block visual settings for map display"""
+    __tablename__ = "block_settings"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    block_name: str = Field(unique=True, index=True)
+    
+    # Visual properties
+    color: str = Field(default="#00FFFF")  # Hex color
+    fill_opacity: float = Field(default=0.15)  # 0.0 to 1.0
+    border_width: int = Field(default=2)  # pixels
+    glow_intensity: int = Field(default=80)  # 0-100
+    show_boundary: bool = Field(default=True)
+    
+    # Timestamps
+    updated_at: datetime = Field(default_factory=datetime.utcnow)

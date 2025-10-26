@@ -12,7 +12,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from db import init_db, get_session
-from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial
+from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings
 from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PASSWORD
 
 
@@ -113,6 +113,25 @@ async def get_village_details(village_name: str, session: AsyncSession = Depends
         "pin_notes": village.pin_notes,
         "show_pin": village.show_pin
     }
+
+
+@app.get("/api/blocks/colors")
+async def get_block_colors(session: AsyncSession = Depends(get_session)):
+    """Get visual settings for all blocks"""
+    result = await session.execute(select(BlockSettings))
+    blocks = result.scalars().all()
+    
+    colors = {}
+    for block in blocks:
+        colors[block.block_name] = {
+            "color": block.color,
+            "fillOpacity": block.fill_opacity,
+            "borderWidth": block.border_width,
+            "glowIntensity": block.glow_intensity,
+            "showBoundary": block.show_boundary
+        }
+    
+    return colors
 
 
 @app.get("/api/members")
@@ -630,6 +649,63 @@ async def export_villages(
     } for v in villages]
     
     return JSONResponse(content=data)
+
+
+@app.post("/admin/api/blocks/update")
+async def update_block_settings(
+    request: Request,
+    admin=Depends(get_current_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Update block visual settings"""
+    data = await request.json()
+    block_name = data.get('block_name')
+    
+    # Find block
+    result = await session.execute(select(BlockSettings).where(BlockSettings.block_name == block_name))
+    block = result.scalar_one_or_none()
+    
+    if not block:
+        raise HTTPException(status_code=404, detail="Block not found")
+    
+    # Update fields
+    if 'color' in data:
+        block.color = data['color']
+    if 'fill_opacity' in data:
+        block.fill_opacity = float(data['fill_opacity'])
+    if 'border_width' in data:
+        block.border_width = int(data['border_width'])
+    if 'glow_intensity' in data:
+        block.glow_intensity = int(data['glow_intensity'])
+    if 'show_boundary' in data:
+        block.show_boundary = bool(data['show_boundary'])
+    
+    block.updated_at = datetime.utcnow()
+    await session.commit()
+    
+    # Audit log
+    audit = Audit(
+        table_name="block_settings",
+        row_id=block.id,
+        action="update_block_visual_settings",
+        changed_by=admin["email"]
+    )
+    session.add(audit)
+    await session.commit()
+    
+    return {"status": "success", "block_name": block_name}
+
+
+@app.get("/admin/settings/blocks", response_class=HTMLResponse)
+async def admin_blocks_page(
+    request: Request,
+    admin=Depends(get_current_admin)
+):
+    """Admin page for managing block color settings"""
+    return templates.TemplateResponse("admin_blocks.html", {
+        "request": request,
+        "admin": admin
+    })
 
 
 @app.get("/admin/doctors", response_class=HTMLResponse)

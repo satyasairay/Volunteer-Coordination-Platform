@@ -222,190 +222,79 @@
         // Add zoom control
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // Use clean CartoDB Positron (no roads, railways, etc.)
-        const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-            attribution: '© OpenStreetMap, © CartoDB',
+        // Use Stamen Terrain (elevation colors, NO roads/railways/labels)
+        const baseLayer = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', {
+            attribution: '© Stadia Maps, © OpenMapTiles, © OpenStreetMap',
             maxZoom: 18
         }).addTo(map);
 
-        let bhadrakPolygonCoords = null;
-        let bhadrakBoundary = null;
-
-        // Load village-level boundaries
-        let villagesLayer = null;
-        fetch('/static/geojson/bhadrak_villages.geojson')
+        // Dynamic block colors from database
+        let blockColors = {};
+        
+        // Fetch block colors from API
+        fetch('/api/blocks/colors')
             .then(res => res.json())
-            .then(data => {
-                // Extract district boundary from villages
-                const allCoords = [];
-                data.features.forEach(f => {
-                    if (f.geometry.coordinates && f.geometry.coordinates[0]) {
-                        allCoords.push(...f.geometry.coordinates[0]);
-                    }
-                });
-                bhadrakPolygonCoords = allCoords;
-                
-                // Add village boundaries with block colors
-                villagesLayer = L.geoJSON(data, {
-                    style: feature => {
-                        const block = feature.properties.SUB_DIST || '';
-                        return {
-                            fillColor: getBlockColor(block),
-                            fillOpacity: 0.25,
-                            color: '#444',
-                            weight: 0.5,
-                            opacity: 0.6
-                        };
-                    },
-                    onEachFeature: (feature, layer) => {
-                        const props = feature.properties;
-                        
-                        // Hover effect
-                        layer.on('mouseover', function() {
-                            this.setStyle({
-                                weight: 2,
-                                color: '#f97316',
-                                fillOpacity: 0.5
-                            });
-                        });
-                        
-                        layer.on('mouseout', function() {
-                            villagesLayer.resetStyle(this);
-                        });
-                        
-                        // Click to zoom
-                        layer.on('click', function(e) {
-                            L.DomEvent.stopPropagation(e);
-                            map.fitBounds(layer.getBounds(), { 
-                                maxZoom: 14,
-                                padding: [50, 50]
-                            });
-                        });
-                        
-                        // Click to show modal
-                        layer.on('click', function(e) {
-                            L.DomEvent.stopPropagation(e);
-                            showVillageModal(props.NAME, props.SUB_DIST);
-                        });
-                    }
-                }).addTo(map);
-                
-                // Add district outer boundary (orange glow)
-                bhadrakBoundary = L.geoJSON(data, {
-                    style: {
-                        color: '#f97316',
-                        weight: 6,
-                        opacity: 1,
-                        fill: false,
-                        className: 'bhadrak-boundary',
-                        dashArray: '20, 10',
-                        lineCap: 'round',
-                        lineJoin: 'round'
-                    }
-                }).addTo(map);
-                
-                // Add hypsometric elevation overlay (canvas-based)
-                addElevationOverlay();
-                
-                // Zoom to all villages
-                map.fitBounds(villagesLayer.getBounds(), { padding: [50, 50] });
+            .then(colors => {
+                blockColors = colors;
+                console.log('✅ Loaded block colors:', blockColors);
+            })
+            .catch(err => {
+                console.error('Failed to load block colors:', err);
+                // Fallback colors
+                blockColors = {
+                    'Bhadrak': { color: '#00FFFF' },
+                    'Basudevpur': { color: '#FF00FF' },
+                    'Chandabali': { color: '#FFD700' },
+                    'Dhamnagar': { color: '#9D00FF' },
+                    'Tihidi': { color: '#FF3D00' },
+                    'Bhandaripokhari': { color: '#00FF00' },
+                    'Bonth': { color: '#FF6B9D' }
+                };
             });
         
-        // Get block color
+        // Get block color from database settings
         function getBlockColor(block) {
-            const colors = {
-                'Bhadrak': '#f97316',
-                'Basudevpur': '#3b82f6',
-                'Chandabali': '#10b981',
-                'Dhamnagar': '#a855f7',
-                'Dhamanagar': '#a855f7',
-                'Tihidi': '#ef4444',
-                'Bhandaripokhari': '#eab308',
-                'Bonth': '#ec4899',
-                'Bant': '#ec4899'
-            };
-            for (let key in colors) {
-                if (block && block.toLowerCase().includes(key.toLowerCase())) {
-                    return colors[key];
+            if (!block) return '#9ca3af';
+            
+            // Try exact match first
+            if (blockColors[block]) {
+                return blockColors[block].color;
+            }
+            
+            // Try case-insensitive match
+            for (let key in blockColors) {
+                if (block.toLowerCase() === key.toLowerCase()) {
+                    return blockColors[key].color;
                 }
             }
+            
+            // Fallback
             return '#9ca3af';
         }
-
-        // Add custom elevation color overlay
-        function addElevationOverlay() {
-            const ElevationOverlay = L.Layer.extend({
-                onAdd: function(map) {
-                    this._map = map;
-                    this._canvas = L.DomUtil.create('canvas');
-                    this._canvas.style.position = 'absolute';
-                    this._canvas.style.pointerEvents = 'none';
-                    
-                    const pane = map.getPanes().overlayPane;
-                    pane.appendChild(this._canvas);
-                    
-                    map.on('moveend zoom viewreset', this._update, this);
-                    this._update();
-                },
-                
-                _update: function() {
-                    if (!bhadrakPolygonCoords) return;
-                    
-                    const size = this._map.getSize();
-                    const bounds = this._map.getBounds();
-                    
-                    this._canvas.width = size.x;
-                    this._canvas.height = size.y;
-                    
-                    const ctx = this._canvas.getContext('2d');
-                    ctx.clearRect(0, 0, size.x, size.y);
-                    
-                    // Convert Bhadrak polygon to pixels
-                    const pixelPoints = bhadrakPolygonCoords.map(coord => {
-                        return this._map.latLngToContainerPoint([coord[1], coord[0]]);
-                    });
-                    
-                    // Create Bhadrak region clip
-                    ctx.save();
-                    ctx.beginPath();
-                    pixelPoints.forEach((point, i) => {
-                        if (i === 0) ctx.moveTo(point.x, point.y);
-                        else ctx.lineTo(point.x, point.y);
-                    });
-                    ctx.closePath();
-                    ctx.clip();
-                    
-                    // Draw elevation gradient (green->yellow->orange->brown)
-                    const gradient = ctx.createLinearGradient(0, size.y, 0, 0);
-                    gradient.addColorStop(0, 'rgba(76, 175, 80, 0.3)');    // Green - low elevation
-                    gradient.addColorStop(0.4, 'rgba(255, 235, 59, 0.25)'); // Yellow
-                    gradient.addColorStop(0.7, 'rgba(255, 152, 0, 0.3)');   // Orange
-                    gradient.addColorStop(1, 'rgba(121, 85, 72, 0.4)');     // Brown - high elevation
-                    
-                    ctx.fillStyle = gradient;
-                    ctx.fillRect(0, 0, size.x, size.y);
-                    
-                    ctx.restore();
-                    
-                    // Darken surrounding areas dramatically
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-                    ctx.fillRect(0, 0, size.x, size.y);
-                    
-                    // Cut out Bhadrak again
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.beginPath();
-                    pixelPoints.forEach((point, i) => {
-                        if (i === 0) ctx.moveTo(point.x, point.y);
-                        else ctx.lineTo(point.x, point.y);
-                    });
-                    ctx.closePath();
-                    ctx.fill();
-                }
-            });
-            
-            // Elevation overlay disabled for performance
-            // new ElevationOverlay().addTo(map);
-        }
+        
+        // Hardcoded Bhadrak district boundary (lightweight)
+        // Approximate boundary coordinates (clockwise from north)
+        const bhadrakBoundaryCoords = [
+            [21.20, 86.50],  // North
+            [21.15, 86.75],  // Northeast
+            [21.05, 86.80],  // East
+            [20.85, 86.75],  // Southeast
+            [20.80, 86.50],  // South
+            [20.85, 86.25],  // Southwest
+            [20.95, 86.20],  // West
+            [21.10, 86.30],  // Northwest
+            [21.20, 86.50]   // Close polygon
+        ];
+        
+        // Add glassmorphic district boundary
+        const bhadrakBoundary = L.polygon(bhadrakBoundaryCoords, {
+            color: '#00FFFF',
+            weight: 3,
+            opacity: 0.8,
+            fill: false,
+            dashArray: '10, 5',
+            className: 'district-boundary'
+        }).addTo(map);
 
         // Load villages with custom markers
         const markers = L.markerClusterGroup({

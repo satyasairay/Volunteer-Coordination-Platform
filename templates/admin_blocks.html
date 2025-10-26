@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Color Settings - Seva Atlas Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .neon-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 0 20px currentColor;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body class="p-8">
+    <div class="max-w-6xl mx-auto">
+        <div class="glass rounded-2xl p-8 shadow-2xl">
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-white mb-2">🎨 Block Color Settings</h1>
+                    <p class="text-white/70">Manage neon glassmorphic colors for all 7 blocks</p>
+                </div>
+                <a href="/admin" class="bg-white/20 hover:bg-white/30 text-white px-6 py-3 rounded-xl transition">
+                    ← Back to Admin
+                </a>
+            </div>
+
+            <div id="blocks-container" class="space-y-6">
+                <!-- Blocks will be loaded here -->
+            </div>
+
+            <div class="mt-8 flex gap-4">
+                <button onclick="saveAllSettings()" class="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all">
+                    💾 Save All Changes
+                </button>
+                <button onclick="resetDefaults()" class="bg-white/20 hover:bg-white/30 text-white px-8 py-4 rounded-xl font-bold transition-all">
+                    🔄 Reset to Defaults
+                </button>
+            </div>
+
+            <div id="message" class="mt-4 p-4 rounded-xl hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        let blocksData = {};
+
+        // Default neon colors
+        const DEFAULTS = {
+            'Bhadrak': '#00FFFF',
+            'Basudevpur': '#FF00FF',
+            'Bhandaripokhari': '#00FF00',
+            'Bonth': '#FF6B9D',
+            'Chandabali': '#FFD700',
+            'Dhamnagar': '#9D00FF',
+            'Tihidi': '#FF3D00'
+        };
+
+        // Load block settings
+        function loadBlocks() {
+            fetch('/api/blocks/colors')
+                .then(res => res.json())
+                .then(data => {
+                    blocksData = data;
+                    renderBlocks();
+                })
+                .catch(err => {
+                    console.error('Failed to load blocks:', err);
+                    showMessage('Failed to load block settings', 'error');
+                });
+        }
+
+        function renderBlocks() {
+            const container = document.getElementById('blocks-container');
+            container.innerHTML = '';
+
+            Object.keys(blocksData).forEach(blockName => {
+                const block = blocksData[blockName];
+                const card = `
+                    <div class="glass rounded-xl p-6 hover:bg-white/15 transition-all">
+                        <div class="flex items-center gap-6">
+                            <div class="neon-preview" id="preview-${blockName}" style="background-color: ${block.color}; color: ${block.color};"></div>
+                            
+                            <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-white/80 text-sm mb-2 font-bold">${blockName}</label>
+                                    <input type="color" value="${block.color}" 
+                                           onchange="updateBlock('${blockName}', 'color', this.value)"
+                                           class="w-full h-12 rounded-lg cursor-pointer">
+                                </div>
+
+                                <div>
+                                    <label class="block text-white/80 text-sm mb-2">Fill Opacity</label>
+                                    <input type="range" min="0" max="1" step="0.05" value="${block.fillOpacity}" 
+                                           onchange="updateBlock('${blockName}', 'fillOpacity', this.value)"
+                                           class="w-full">
+                                    <span class="text-white/60 text-sm" id="opacity-${blockName}">${Math.round(block.fillOpacity * 100)}%</span>
+                                </div>
+
+                                <div>
+                                    <label class="block text-white/80 text-sm mb-2">Glow Intensity</label>
+                                    <input type="range" min="0" max="100" value="${block.glowIntensity}" 
+                                           onchange="updateBlock('${blockName}', 'glowIntensity', this.value)"
+                                           class="w-full">
+                                    <span class="text-white/60 text-sm" id="glow-${blockName}">${block.glowIntensity}%</span>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" ${block.showBoundary ? 'checked' : ''} 
+                                           onchange="updateBlock('${blockName}', 'showBoundary', this.checked)"
+                                           class="w-5 h-5 rounded">
+                                    <span class="text-white/80 text-sm">Show Boundary</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += card;
+            });
+        }
+
+        function updateBlock(blockName, field, value) {
+            blocksData[blockName][field] = field === 'showBoundary' ? value : (field === 'fillOpacity' ? parseFloat(value) : (field === 'glowIntensity' ? parseInt(value) : value));
+            
+            // Update preview
+            if (field === 'color') {
+                document.getElementById(`preview-${blockName}`).style.backgroundColor = value;
+                document.getElementById(`preview-${blockName}`).style.color = value;
+            }
+            
+            // Update labels
+            if (field === 'fillOpacity') {
+                document.getElementById(`opacity-${blockName}`).textContent = Math.round(value * 100) + '%';
+            }
+            if (field === 'glowIntensity') {
+                document.getElementById(`glow-${blockName}`).textContent = value + '%';
+            }
+        }
+
+        async function saveAllSettings() {
+            const promises = [];
+            
+            Object.keys(blocksData).forEach(blockName => {
+                const data = {
+                    block_name: blockName,
+                    color: blocksData[blockName].color,
+                    fill_opacity: blocksData[blockName].fillOpacity,
+                    border_width: blocksData[blockName].borderWidth,
+                    glow_intensity: blocksData[blockName].glowIntensity,
+                    show_boundary: blocksData[blockName].showBoundary
+                };
+                
+                promises.push(
+                    fetch('/admin/api/blocks/update', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(data)
+                    }).then(async res => {
+                        if (!res.ok) {
+                            const error = await res.text();
+                            throw new Error(`Failed to update ${blockName}: ${error}`);
+                        }
+                        return res.json();
+                    })
+                );
+            });
+
+            try {
+                await Promise.all(promises);
+                showMessage('✅ All block settings saved successfully!', 'success');
+                setTimeout(() => location.reload(), 1500);
+            } catch (err) {
+                showMessage('❌ Failed to save settings: ' + err.message, 'error');
+                console.error(err);
+            }
+        }
+
+        function resetDefaults() {
+            if (!confirm('Reset all blocks to default neon colors?')) return;
+            
+            Object.keys(blocksData).forEach(blockName => {
+                if (DEFAULTS[blockName]) {
+                    blocksData[blockName].color = DEFAULTS[blockName];
+                }
+            });
+            
+            renderBlocks();
+            showMessage('⚠️ Reset to defaults. Click "Save All Changes" to apply.', 'warning');
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = 'mt-4 p-4 rounded-xl ' + 
+                (type === 'success' ? 'bg-green-500/30 text-green-100 border border-green-500/50' :
+                 type === 'error' ? 'bg-red-500/30 text-red-100 border border-red-500/50' :
+                 'bg-yellow-500/30 text-yellow-100 border border-yellow-500/50');
+            msg.classList.remove('hidden');
+            
+            if (type === 'success') {
+                setTimeout(() => msg.classList.add('hidden'), 3000);
+            }
+        }
+
+        // Load on page load
+        loadBlocks();
+    </script>
+</body>
+</html>
