@@ -222,10 +222,13 @@
         // Add zoom control
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // Use Stamen Terrain (elevation colors, NO roads/railways/labels)
-        const baseLayer = L.tileLayer('https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}{r}.png', {
-            attribution: '© Stadia Maps, © OpenMapTiles, © OpenStreetMap',
-            maxZoom: 18
+        // Use Mapbox Outdoors (terrain colors, elevation visible, clean administrative style)
+        const mapboxToken = "{{ mapbox_token }}";
+        const baseLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=' + mapboxToken, {
+            attribution: '© Mapbox, © OpenStreetMap',
+            maxZoom: 18,
+            tileSize: 512,
+            zoomOffset: -1
         }).addTo(map);
 
         // Dynamic block colors from database

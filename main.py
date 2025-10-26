@@ -8,6 +8,7 @@ from typing import Optional, List
 import csv
 import io
 import json
+import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
@@ -39,7 +40,11 @@ templates = Jinja2Templates(directory="templates")
 
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    mapbox_token = os.getenv("MAPBOX_ACCESS_TOKEN", "")
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "mapbox_token": mapbox_token
+    })
 
 
 @app.get("/doctors", response_class=HTMLResponse)
