@@ -105,6 +105,139 @@
         
         svg { width: 100%; height: 100%; }
         
+        /* Village pins */
+        .village-pin {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .village-pin circle {
+            filter: drop-shadow(0 0 3px rgba(33, 150, 243, 0.8));
+        }
+        
+        .village-pin:hover circle {
+            filter: drop-shadow(0 0 8px rgba(33, 150, 243, 1));
+        }
+        
+        .village-pin.active circle {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 2000;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-overlay.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .modal-header {
+            font-size: 24px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+        }
+        
+        .modal-subheader {
+            color: #666;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+        
+        .modal-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: #f5f5f5;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2196f3;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .modal-details {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 14px;
+        }
+        
+        .detail-label {
+            color: #666;
+        }
+        
+        .detail-value {
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        
         /* District boundary */
         .district-boundary {
             fill: none;
@@ -304,6 +437,18 @@
         <svg id="map"></svg>
         <div class="tooltip" id="tooltip"></div>
     </div>
+    
+    <!-- Village Details Modal -->
+    <div class="modal-overlay" id="villageModal">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header" id="modalVillageName"></div>
+            <div class="modal-subheader" id="modalVillageBlock"></div>
+            
+            <div class="modal-stats" id="modalStats"></div>
+            
+            <div class="modal-details" id="modalDetails"></div>
+        </div>
+    </div>
 
     <script>
         const width = window.innerWidth;
@@ -320,8 +465,9 @@
         
         let g = svg.append("g");
         let projection, path;
-        let colorScale;
+        let colorScale, pinColorScale;
         let mapSettings = {};
+        let customLabels = {};
         
         // Color scheme mappings
         const colorSchemes = {
@@ -365,29 +511,34 @@
         
         async function loadMap() {
             try {
+                // Load custom labels
+                const labelsRes = await fetch('/api/custom-labels');
+                const labels = await labelsRes.json();
+                customLabels = labels.reduce((acc, label) => {
+                    acc[label.key] = label;
+                    return acc;
+                }, {});
+                
                 // Step 1: Load and draw boundary first
                 updateProgress('Loading district boundary...');
                 const boundaryRes = await fetch('/static/geojson/bhadrak_boundary.geojson');
                 const boundary = await boundaryRes.json();
                 
-                // DEBUG: Don't create projection yet, wait for villages
-                // We'll create it after loading villages
                 updateProgress('Boundary loaded');
                 
-                // Don't draw boundary yet - wait for projection from villages
+                // Step 2: Load ALL villages with pin data
+                const villagesRes = await fetch('/api/villages/pins');
+                const villagesData = await villagesRes.json();
+                const villages = villagesData;
                 
-                // Step 2: Load ALL villages (API returns cached data)
-                const villagesRes = await fetch('/api/villages/choropleth');
-                const villages = await villagesRes.json();
-                
-                console.log(`✅ Loaded ${villages.features.length} villages`);
+                console.log(`✅ Loaded ${villages.features.length} villages with pin data`);
                 
                 // Create projection - fit to VILLAGES (not boundary!)
                 projection = d3.geoMercator()
                     .fitExtent([[50, 50], [width - 50, height - 50]], villages);
                 path = d3.geoPath().projection(projection);
                 
-                //  Now draw boundary with the villages-fitted projection
+                // Now draw boundary with the villages-fitted projection
                 g.append("path")
                     .datum(boundary)
                     .attr("class", "district-boundary")
@@ -395,9 +546,7 @@
                 
                 updateProgress(`Rendering ${villages.features.length} villages...`);
                 
-                // Step 3: Draw ALL 1,315 village polygons
-                updateProgress(`Rendering all ${villages.features.length} villages...`);
-                
+                // Step 3: Draw ALL 1,315 village polygons (choropleth base layer)
                 const villagePaths = g.selectAll(".village-polygon")
                     .data(villages.features)
                     .enter()
@@ -406,17 +555,45 @@
                     .attr("d", path)
                     .attr("fill", d => colorScale(d.properties.population || 5000))
                     .attr("stroke", "#fff")
-                    .attr("stroke-width", 0.3)
-                    .on("mouseover", showVillageTooltip)
-                    .on("mouseout", hideTooltip)
-                    .on("click", zoomToVillage);
+                    .attr("stroke-width", 0.3);
                 
                 console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
+                
+                // Step 4: Add shining pin markers for villages with field workers or UK centers
+                const villagesWithData = villages.features.filter(f => 
+                    f.properties.field_worker_count > 0 || f.properties.uk_center_count > 0
+                );
+                
+                // Create color scale for pins based on field worker count
+                pinColorScale = d3.scaleSequential()
+                    .domain([0, 15])
+                    .interpolator(t => d3.interpolateBlues(0.4 + t * 0.55));
+                
+                const pins = g.selectAll(".village-pin")
+                    .data(villagesWithData)
+                    .enter()
+                    .append("g")
+                    .attr("class", "village-pin active")
+                    .attr("transform", d => {
+                        const centroid = path.centroid(d);
+                        return `translate(${centroid[0]}, ${centroid[1]})`;
+                    })
+                    .on("mouseover", showPinTooltip)
+                    .on("mouseout", hideTooltip)
+                    .on("click", showVillageModal);
+                
+                // Add shining circle for each pin
+                pins.append("circle")
+                    .attr("r", d => 4 + Math.min(d.properties.field_worker_count / 2, 6))
+                    .attr("fill", d => pinColorScale(d.properties.field_worker_count))
+                    .attr("opacity", 0.9);
+                
+                console.log(`✅ Added ${pins.size()} shining pins`);
                 
                 // Show legend and hide loading
                 document.getElementById('legend').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
-                console.log('✅ Choropleth map complete!');
+                console.log('✅ Map with pins complete!');
                 
             } catch (error) {
                 console.error('Error loading map:', error);
@@ -431,12 +608,23 @@
             }
         }
         
-        function showVillageTooltip(event, d) {
+        function showPinTooltip(event, d) {
+            event.stopPropagation();
             const tooltip = d3.select("#tooltip");
+            const props = d.properties;
+            
+            const fieldWorkersLabel = customLabels.field_workers?.value || 'Field Workers';
+            const ukLabel = customLabels.uk_centers?.value || 'UK Centers';
+            const fieldWorkersIcon = customLabels.field_workers?.icon || '👥';
+            const ukIcon = customLabels.uk_centers?.icon || '🏢';
+            
             tooltip.html(`
-                <strong>${d.properties.name}</strong><br>
-                Block: ${d.properties.block}<br>
-                Population: ${d.properties.population?.toLocaleString() || 'N/A'}
+                <strong>${props.name}</strong><br>
+                <small>Block: ${props.block}</small><br>
+                <hr style="margin: 8px 0; border: none; border-top: 1px solid #e0e0e0;">
+                ${fieldWorkersIcon} <strong>${props.field_worker_count}</strong> ${fieldWorkersLabel}<br>
+                ${ukIcon} <strong>${props.uk_center_count}</strong> ${ukLabel}<br>
+                <small style="color: #999; margin-top: 4px; display: block;">Click for details</small>
             `)
             .style("left", (event.pageX + 10) + "px")
             .style("top", (event.pageY - 10) + "px")
@@ -446,6 +634,65 @@
         function hideTooltip() {
             d3.select("#tooltip").classed("show", false);
         }
+        
+        async function showVillageModal(event, d) {
+            event.stopPropagation();
+            const props = d.properties;
+            
+            const fieldWorkersLabel = customLabels.field_workers?.value || 'Field Workers';
+            const ukLabel = customLabels.uk_centers?.value || 'UK Centers';
+            const fieldWorkersIcon = customLabels.field_workers?.icon || '👥';
+            const ukIcon = customLabels.uk_centers?.icon || '🏢';
+            
+            // Update modal content
+            document.getElementById('modalVillageName').textContent = props.name;
+            document.getElementById('modalVillageBlock').textContent = `Block: ${props.block}`;
+            
+            // Stats cards
+            document.getElementById('modalStats').innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${props.field_worker_count}</div>
+                    <div class="stat-label">${fieldWorkersIcon} ${fieldWorkersLabel}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${props.uk_center_count}</div>
+                    <div class="stat-label">${ukIcon} ${ukLabel}</div>
+                </div>
+            `;
+            
+            // Details
+            document.getElementById('modalDetails').innerHTML = `
+                <div class="detail-row">
+                    <span class="detail-label">📊 Population</span>
+                    <span class="detail-value">${props.population?.toLocaleString() || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">🗺️ Block</span>
+                    <span class="detail-value">${props.block}</span>
+                </div>
+            `;
+            
+            // Show modal
+            document.getElementById('villageModal').classList.add('show');
+        }
+        
+        function closeModal() {
+            document.getElementById('villageModal').classList.remove('show');
+        }
+        
+        // Click anywhere outside modal to close
+        document.getElementById('villageModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+        
+        // ESC key to close modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
         
         function zoomed(event) {
             g.attr("transform", event.transform);
@@ -461,20 +708,6 @@
         
         function resetZoom() {
             svg.transition().call(zoom.transform, d3.zoomIdentity);
-        }
-        
-        function zoomToVillage(event, d) {
-            const bounds = path.bounds(d);
-            const dx = bounds[1][0] - bounds[0][0];
-            const dy = bounds[1][1] - bounds[0][1];
-            const x = (bounds[0][0] + bounds[1][0]) / 2;
-            const y = (bounds[0][1] + bounds[1][1]) / 2;
-            const scale = 0.9 / Math.max(dx / width, dy / height);
-            const translate = [width / 2 - scale * x, height / 2 - scale * y];
-            
-            svg.transition()
-                .duration(750)
-                .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
         }
     </script>
     
