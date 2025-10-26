@@ -505,6 +505,94 @@ async def verify_member(
     return {"status": "success"}
 
 
+@app.get("/admin/villages", response_class=HTMLResponse)
+async def admin_villages_page(
+    request: Request,
+    admin=Depends(get_current_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    result = await session.execute(select(Village))
+    villages = result.scalars().all()
+    
+    villages_data = [{
+        "id": v.id,
+        "name": v.name,
+        "block": v.block,
+        "lat": v.lat,
+        "lng": v.lng
+    } for v in villages]
+    
+    return templates.TemplateResponse("admin_villages.html", {
+        "request": request,
+        "villages": villages_data,
+        "admin": admin
+    })
+
+
+@app.post("/admin/api/villages/update")
+async def update_village_coords(
+    request: Request,
+    admin=Depends(get_current_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    data = await request.json()
+    village_id = data.get('id')
+    name = data.get('name')
+    block = data.get('block')
+    lat = data.get('lat')
+    lng = data.get('lng')
+    
+    # Find or create village
+    if village_id:
+        result = await session.execute(select(Village).where(Village.id == int(village_id)))
+        village = result.scalar_one_or_none()
+    else:
+        result = await session.execute(select(Village).where(Village.name == name))
+        village = result.scalar_one_or_none()
+    
+    if not village:
+        village = Village(name=name, block=block)
+        session.add(village)
+    
+    village.lat = lat
+    village.lng = lng
+    village.block = block
+    village.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    audit = Audit(
+        table_name="villages",
+        row_id=village.id,
+        action="update_coords",
+        changed_by=admin["email"]
+    )
+    session.add(audit)
+    await session.commit()
+    
+    return {"status": "success", "village_id": village.id}
+
+
+@app.get("/admin/api/villages/export")
+async def export_villages(
+    admin=Depends(get_current_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    result = await session.execute(select(Village))
+    villages = result.scalars().all()
+    
+    data = [{
+        "id": v.id,
+        "name": v.name,
+        "block": v.block,
+        "lat": v.lat,
+        "lng": v.lng,
+        "population": v.population
+    } for v in villages]
+    
+    return JSONResponse(content=data)
+
+
 @app.get("/admin/doctors", response_class=HTMLResponse)
 async def admin_doctors_page(
     request: Request,

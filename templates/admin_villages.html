@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Village Management - Seva Atlas Admin</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        #map { height: 500px; }
+        .conflict { background-color: #fee2e2; }
+        .valid { background-color: #dcfce7; }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-white shadow">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold text-gray-900">Village Management</h1>
+                        <p class="text-sm text-gray-600">Manage village boundaries and coordinates</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="showImportModal()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                            Import GeoJSON
+                        </button>
+                        <button onclick="exportVillages()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700">
+                            Export Data
+                        </button>
+                        <a href="/admin" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700">
+                            Back to Admin
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-sm text-gray-600">Total Villages</div>
+                    <div id="total-villages" class="text-3xl font-bold text-gray-900">{{ villages|length }}</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-sm text-gray-600">With Coordinates</div>
+                    <div id="with-coords" class="text-3xl font-bold text-green-600">-</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-sm text-gray-600">Conflicts Detected</div>
+                    <div id="conflicts" class="text-3xl font-bold text-red-600">-</div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow">
+                    <div class="text-sm text-gray-600">Blocks</div>
+                    <div id="blocks-count" class="text-3xl font-bold text-blue-600">-</div>
+                </div>
+            </div>
+
+            <!-- Map View -->
+            <div class="bg-white p-6 rounded-lg shadow mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">Village Boundaries Map</h2>
+                    <div class="flex gap-2">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="show-labels" checked onchange="toggleLabels()">
+                            <span class="text-sm">Show Labels</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" id="show-conflicts" onchange="highlightConflicts()">
+                            <span class="text-sm">Highlight Conflicts</span>
+                        </label>
+                    </div>
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <!-- Village List & Editor -->
+            <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold">Village List</h2>
+                    <div class="flex gap-2">
+                        <input type="text" id="search-village" placeholder="Search villages..." 
+                               class="px-4 py-2 border rounded-lg" onkeyup="filterVillages()">
+                        <select id="filter-block" class="px-4 py-2 border rounded-lg" onchange="filterVillages()">
+                            <option value="">All Blocks</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="villages-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Village Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Block</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lat</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lng</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="villages-tbody" class="bg-white divide-y divide-gray-200">
+                            <!-- Populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Village Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <h3 class="text-xl font-bold mb-4">Edit Village</h3>
+            <form id="edit-form" onsubmit="saveVillage(event)">
+                <input type="hidden" id="edit-id">
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Village Name</label>
+                        <input type="text" id="edit-name" required class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Block</label>
+                        <input type="text" id="edit-block" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Latitude</label>
+                        <input type="number" step="0.000001" id="edit-lat" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Longitude</label>
+                        <input type="number" step="0.000001" id="edit-lng" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
+                </div>
+                <div class="flex justify-end gap-2">
+                    <button type="button" onclick="closeEditModal()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let map, villagesLayer, villagesData = [], dbVillages = {{ villages|tojson }};
+
+        // Initialize map
+        map = L.map('map').setView([21.05, 86.42], 10);
+        L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenTopoMap'
+        }).addTo(map);
+
+        // Load village GeoJSON
+        fetch('/static/geojson/bhadrak_villages.geojson')
+            .then(res => res.json())
+            .then(data => {
+                villagesData = data.features;
+                updateStats();
+                renderMap();
+                populateTable();
+                populateBlockFilter();
+            });
+
+        function updateStats() {
+            const withCoords = dbVillages.filter(v => v.lat && v.lng).length;
+            const blocks = new Set(villagesData.map(v => v.properties.SUB_DIST)).size;
+            
+            document.getElementById('with-coords').textContent = withCoords;
+            document.getElementById('blocks-count').textContent = blocks;
+            document.getElementById('conflicts').textContent = '0'; // TODO: Detect conflicts
+        }
+
+        function renderMap() {
+            if (villagesLayer) map.removeLayer(villagesLayer);
+            
+            villagesLayer = L.geoJSON({type: 'FeatureCollection', features: villagesData}, {
+                style: feature => ({
+                    fillColor: getBlockColor(feature.properties.SUB_DIST),
+                    fillOpacity: 0.3,
+                    color: '#666',
+                    weight: 1
+                }),
+                onEachFeature: (feature, layer) => {
+                    const props = feature.properties;
+                    layer.bindPopup(`
+                        <strong>${props.NAME}</strong><br>
+                        Block: ${props.SUB_DIST || 'N/A'}<br>
+                        <button onclick="zoomToVillage('${props.NAME}')" class="text-blue-600 text-sm">Zoom In</button>
+                        <button onclick="editVillage('${props.NAME}')" class="text-green-600 text-sm ml-2">Edit</button>
+                    `);
+                }
+            }).addTo(map);
+
+            map.fitBounds(villagesLayer.getBounds());
+        }
+
+        function getBlockColor(block) {
+            const colors = {
+                'Bhadrak': '#f97316',
+                'Basudevpur': '#3b82f6',
+                'Chandabali': '#10b981',
+                'Dhamnagar': '#a855f7',
+                'Tihidi': '#ef4444',
+                'Bhandaripokhari': '#eab308',
+                'Bonth': '#ec4899'
+            };
+            for (let key in colors) {
+                if (block && block.includes(key)) return colors[key];
+            }
+            return '#9ca3af';
+        }
+
+        function populateTable() {
+            const tbody = document.getElementById('villages-tbody');
+            tbody.innerHTML = villagesData.slice(0, 50).map((feature, idx) => {
+                const props = feature.properties;
+                const dbVillage = dbVillages.find(v => v.name === props.NAME);
+                const hasCoords = dbVillage && dbVillage.lat && dbVillage.lng;
+                
+                return `
+                    <tr class="${hasCoords ? 'valid' : ''}">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${props.NAME}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${props.SUB_DIST || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dbVillage?.lat?.toFixed(6) || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${dbVillage?.lng?.toFixed(6) || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-2 py-1 text-xs rounded-full ${hasCoords ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                ${hasCoords ? 'Complete' : 'Missing Coords'}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <button onclick="zoomToVillage('${props.NAME}')" class="text-blue-600 hover:text-blue-900 mr-2">View</button>
+                            <button onclick="editVillage('${props.NAME}')" class="text-green-600 hover:text-green-900">Edit</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function populateBlockFilter() {
+            const blocks = [...new Set(villagesData.map(v => v.properties.SUB_DIST))].sort();
+            const select = document.getElementById('filter-block');
+            blocks.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block;
+                option.textContent = block;
+                select.appendChild(option);
+            });
+        }
+
+        function zoomToVillage(name) {
+            const feature = villagesData.find(v => v.properties.NAME === name);
+            if (feature) {
+                const layer = L.geoJSON(feature);
+                map.fitBounds(layer.getBounds(), { maxZoom: 14 });
+            }
+        }
+
+        function editVillage(name) {
+            const feature = villagesData.find(v => v.properties.NAME === name);
+            const dbVillage = dbVillages.find(v => v.name === name);
+            
+            if (feature) {
+                document.getElementById('edit-id').value = dbVillage?.id || '';
+                document.getElementById('edit-name').value = feature.properties.NAME;
+                document.getElementById('edit-block').value = feature.properties.SUB_DIST || '';
+                document.getElementById('edit-lat').value = dbVillage?.lat || '';
+                document.getElementById('edit-lng').value = dbVillage?.lng || '';
+                document.getElementById('edit-modal').classList.remove('hidden');
+            }
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.add('hidden');
+        }
+
+        async function saveVillage(event) {
+            event.preventDefault();
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('edit-name').value;
+            const block = document.getElementById('edit-block').value;
+            const lat = parseFloat(document.getElementById('edit-lat').value);
+            const lng = parseFloat(document.getElementById('edit-lng').value);
+
+            try {
+                const response = await fetch('/admin/api/villages/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, name, block, lat, lng })
+                });
+
+                if (response.ok) {
+                    alert('Village updated successfully!');
+                    location.reload();
+                } else {
+                    alert('Error updating village');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error updating village');
+            }
+        }
+
+        function filterVillages() {
+            // TODO: Implement filtering
+        }
+
+        function toggleLabels() {
+            // TODO: Implement label toggle
+        }
+
+        function highlightConflicts() {
+            // TODO: Implement conflict highlighting
+        }
+
+        function showImportModal() {
+            // TODO: Implement import modal
+        }
+
+        function exportVillages() {
+            window.location.href = '/admin/api/villages/export';
+        }
+    </script>
+</body>
+</html>

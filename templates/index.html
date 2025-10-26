@@ -238,23 +238,77 @@
         let bhadrakPolygonCoords = null;
         let bhadrakBoundary = null;
 
-        // Load Bhadrak boundary with dramatic 3D styling
-        fetch('/static/geojson/bhadrak_boundary.geojson')
+        // Load village-level boundaries
+        let villagesLayer = null;
+        fetch('/static/geojson/bhadrak_villages.geojson')
             .then(res => res.json())
             .then(data => {
-                if (data.features && data.features[0] && data.features[0].geometry) {
-                    const coords = data.features[0].geometry.coordinates[0];
-                    bhadrakPolygonCoords = Array.isArray(coords[0][0]) ? coords[0] : coords;
-                }
+                // Extract district boundary from villages
+                const allCoords = [];
+                data.features.forEach(f => {
+                    if (f.geometry.coordinates && f.geometry.coordinates[0]) {
+                        allCoords.push(...f.geometry.coordinates[0]);
+                    }
+                });
+                bhadrakPolygonCoords = allCoords;
                 
-                // Add Bhadrak boundary with custom styling
+                // Add village boundaries with block colors
+                villagesLayer = L.geoJSON(data, {
+                    style: feature => {
+                        const block = feature.properties.SUB_DIST || '';
+                        return {
+                            fillColor: getBlockColor(block),
+                            fillOpacity: 0.25,
+                            color: '#444',
+                            weight: 0.5,
+                            opacity: 0.6
+                        };
+                    },
+                    onEachFeature: (feature, layer) => {
+                        const props = feature.properties;
+                        
+                        // Hover effect
+                        layer.on('mouseover', function() {
+                            this.setStyle({
+                                weight: 2,
+                                color: '#f97316',
+                                fillOpacity: 0.5
+                            });
+                        });
+                        
+                        layer.on('mouseout', function() {
+                            villagesLayer.resetStyle(this);
+                        });
+                        
+                        // Click to zoom
+                        layer.on('click', function(e) {
+                            L.DomEvent.stopPropagation(e);
+                            map.fitBounds(layer.getBounds(), { 
+                                maxZoom: 14,
+                                padding: [50, 50]
+                            });
+                        });
+                        
+                        // Popup with village info
+                        layer.bindPopup(`
+                            <div style="font-family: system-ui;">
+                                <strong style="font-size: 16px; color: #1f2937;">${props.NAME}</strong><br>
+                                <span style="color: #6b7280; font-size: 14px;">📍 Block: ${props.SUB_DIST || 'N/A'}</span><br>
+                                <span style="color: #6b7280; font-size: 12px;">Type: ${props.TYPE}</span>
+                            </div>
+                        `, {
+                            maxWidth: 250
+                        });
+                    }
+                }).addTo(map);
+                
+                // Add district outer boundary (orange glow)
                 bhadrakBoundary = L.geoJSON(data, {
                     style: {
                         color: '#f97316',
                         weight: 6,
                         opacity: 1,
-                        fillColor: '#f97316',
-                        fillOpacity: 0.1,
+                        fill: false,
                         className: 'bhadrak-boundary',
                         dashArray: '20, 10',
                         lineCap: 'round',
@@ -265,9 +319,30 @@
                 // Add hypsometric elevation overlay (canvas-based)
                 addElevationOverlay();
                 
-                // Zoom to Bhadrak
-                map.fitBounds(bhadrakBoundary.getBounds(), { padding: [50, 50] });
+                // Zoom to all villages
+                map.fitBounds(villagesLayer.getBounds(), { padding: [50, 50] });
             });
+        
+        // Get block color
+        function getBlockColor(block) {
+            const colors = {
+                'Bhadrak': '#f97316',
+                'Basudevpur': '#3b82f6',
+                'Chandabali': '#10b981',
+                'Dhamnagar': '#a855f7',
+                'Dhamanagar': '#a855f7',
+                'Tihidi': '#ef4444',
+                'Bhandaripokhari': '#eab308',
+                'Bonth': '#ec4899',
+                'Bant': '#ec4899'
+            };
+            for (let key in colors) {
+                if (block && block.toLowerCase().includes(key.toLowerCase())) {
+                    return colors[key];
+                }
+            }
+            return '#9ca3af';
+        }
 
         // Add custom elevation color overlay
         function addElevationOverlay() {
