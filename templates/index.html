@@ -311,13 +311,11 @@
         fetch('/static/geojson/bhadrak_blocks.geojson')
             .then(res => res.json())
             .then(blocks => {
-                // Create projection
-                projection = d3.geoMercator()
-                    .center([86.4, 21.05])
-                    .scale(35000)
-                    .translate([width / 2, height / 2]);
-                
+                // Create projection - fit Bhadrak to viewport using D3's fitSize
+                projection = d3.geoMercator().fitSize([width * 0.9, height * 0.9], blocks);
                 path = d3.geoPath().projection(projection);
+                
+                console.log('✅ Map projection configured');
                 
                 // Draw blocks
                 g.selectAll(".block")
