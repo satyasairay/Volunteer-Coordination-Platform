@@ -186,6 +186,14 @@
             transform: translate(-50%, -50%);
             font-size: 18px;
             color: #666;
+            text-align: center;
+        }
+        
+        .loading-progress {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #f97316;
+            font-weight: 600;
         }
         
         /* Mobile responsive */
@@ -243,7 +251,10 @@
     </nav>
     
     <div id="map-container">
-        <div class="loading" id="loading">Loading Bhadrak map...</div>
+        <div class="loading" id="loading">
+            Loading Bhadrak map...
+            <div class="loading-progress" id="loading-progress"></div>
+        </div>
         
         <div class="legend" id="legend" style="display: none;">
             <h3>Population</h3>
@@ -324,15 +335,10 @@
         
         async function loadMap() {
             try {
-                // Load Bhadrak boundary
+                // Step 1: Load and draw boundary first
+                updateProgress('Loading district boundary...');
                 const boundaryRes = await fetch('/static/geojson/bhadrak_boundary.geojson');
                 const boundary = await boundaryRes.json();
-                
-                // Load simplified villages
-                const villagesRes = await fetch('/api/villages/choropleth');
-                const villages = await villagesRes.json();
-                
-                console.log(`✅ Loaded ${villages.features.length} villages`);
                 
                 // Create projection - fit to boundary
                 projection = d3.geoMercator().fitSize([width * 0.9, height * 0.9], boundary);
@@ -344,25 +350,59 @@
                     .attr("class", "district-boundary")
                     .attr("d", path);
                 
-                // Draw village polygons with choropleth colors
-                g.selectAll(".village")
-                    .data(villages.features)
-                    .enter()
-                    .append("path")
-                    .attr("class", "village-polygon")
-                    .attr("d", path)
-                    .attr("fill", d => colorScale(d.properties.population || 5000))
-                    .on("mouseover", showVillageTooltip)
-                    .on("mouseout", hideTooltip)
-                    .on("click", zoomToVillage);
+                updateProgress('Boundary loaded! Loading villages...');
                 
-                // Show legend
+                // Step 2: Load ALL villages (API returns cached data)
+                const villagesRes = await fetch('/api/villages/choropleth');
+                const villages = await villagesRes.json();
+                
+                console.log(`✅ Loaded ${villages.features.length} villages`);
+                updateProgress(`Rendering ${villages.features.length} villages...`);
+                
+                // Step 3: Draw village polygons progressively
+                const batchSize = 500;
+                const batches = Math.ceil(villages.features.length / batchSize);
+                
+                for (let i = 0; i < batches; i++) {
+                    const start = i * batchSize;
+                    const end = Math.min(start + batchSize, villages.features.length);
+                    const batch = villages.features.slice(start, end);
+                    
+                    updateProgress(`Rendering villages ${start + 1}-${end} of ${villages.features.length}...`);
+                    
+                    // Render batch
+                    g.selectAll(`.village-batch-${i}`)
+                        .data(batch)
+                        .enter()
+                        .append("path")
+                        .attr("class", "village-polygon")
+                        .attr("d", path)
+                        .attr("fill", d => colorScale(d.properties.population || 5000))
+                        .on("mouseover", showVillageTooltip)
+                        .on("mouseout", hideTooltip)
+                        .on("click", zoomToVillage);
+                    
+                    // Small delay for progressive rendering
+                    if (i < batches - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 10));
+                    }
+                }
+                
+                // Show legend and hide loading
                 document.getElementById('legend').style.display = 'block';
                 document.getElementById('loading').style.display = 'none';
+                console.log('✅ Choropleth map complete!');
                 
             } catch (error) {
                 console.error('Error loading map:', error);
-                document.getElementById('loading').textContent = 'Error loading map';
+                document.getElementById('loading').innerHTML = `Error loading map<br><small>${error.message}</small>`;
+            }
+        }
+        
+        function updateProgress(message) {
+            const progress = document.getElementById('loading-progress');
+            if (progress) {
+                progress.textContent = message;
             }
         }
         
