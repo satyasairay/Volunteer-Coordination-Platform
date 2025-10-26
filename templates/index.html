@@ -210,13 +210,13 @@
     <script>
         // Initialize map
         const map = L.map('map', {
-            center: [21.05, 86.52],
+            center: [21.05, 86.42], // Shifted west to avoid ocean
             zoom: 10,
-            minZoom: 5,
+            minZoom: 9,
             maxZoom: 16,
             zoomControl: false,
-            maxBounds: [[6, 68], [36, 98]],
-            maxBoundsViscosity: 0.9
+            maxBounds: [[20.7, 86.0], [21.4, 86.9]], // Tight bounds around Bhadrak land area
+            maxBoundsViscosity: 1.0
         });
 
         // Add zoom control

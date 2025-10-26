@@ -1,0 +1,117 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bhadrak",
+        "block_code": "BDK",
+        "population": 250000,
+        "villages": 25,
+        "color": "#f97316"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.45, 21.10], [86.55, 21.10], [86.55, 21.00], [86.45, 21.00], [86.45, 21.10]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Basudevpur",
+        "block_code": "BDP",
+        "population": 220000,
+        "villages": 30,
+        "color": "#3b82f6"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.55, 21.20], [86.70, 21.20], [86.70, 21.05], [86.55, 21.05], [86.55, 21.20]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Chandabali",
+        "block_code": "CHB",
+        "population": 190000,
+        "villages": 22,
+        "color": "#10b981"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.40, 20.95], [86.55, 20.95], [86.55, 20.80], [86.40, 20.80], [86.40, 20.95]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+        "properties": {
+        "name": "Dhamnagar",
+        "block_code": "DMN",
+        "population": 180000,
+        "villages": 28,
+        "color": "#a855f7"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.25, 21.15], [86.40, 21.15], [86.40, 21.00], [86.25, 21.00], [86.25, 21.15]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Tihidi",
+        "block_code": "THD",
+        "population": 200000,
+        "villages": 26,
+        "color": "#ef4444"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.30, 21.30], [86.45, 21.30], [86.45, 21.15], [86.30, 21.15], [86.30, 21.30]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bhandaripokhari",
+        "block_code": "BHP",
+        "population": 175000,
+        "villages": 24,
+        "color": "#eab308"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.10, 21.05], [86.25, 21.05], [86.25, 20.90], [86.10, 20.90], [86.10, 21.05]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bonth",
+        "block_code": "BNT",
+        "population": 165000,
+        "villages": 20,
+        "color": "#ec4899"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [86.15, 21.25], [86.30, 21.25], [86.30, 21.10], [86.15, 21.10], [86.15, 21.25]
+        ]]
+      }
+    }
+  ]
+}
