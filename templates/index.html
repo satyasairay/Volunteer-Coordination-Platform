@@ -3,32 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Seva Atlas - Bhadrak 3D Terrain</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+    <title>Seva Atlas - Bhadrak District</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/topojson.v3.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; overflow: hidden; background: #1a1a1a; }
+        body { margin: 0; overflow: hidden; }
         
         /* Full screen map */
-        #map { 
+        #map-container { 
             height: 100vh; 
             width: 100%; 
             position: relative;
-            background: linear-gradient(180deg, #2c3e50 0%, #3d5a80 50%, #98c1d9 100%);
+            background: radial-gradient(ellipse at center, #7fb685 0%, #5a8a5f 50%, #3d6b42 100%);
         }
         
-        /* 3D elevation color overlay */
-        .leaflet-tile-pane {
+        /* Topography texture overlay */
+        #map-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        svg { 
+            width: 100%; 
+            height: 100%; 
             position: relative;
+            z-index: 2;
         }
         
-        /* Hypsometric tinting - elevation colors */
-        .leaflet-overlay-pane canvas {
-            mix-blend-mode: multiply;
-            opacity: 0.7;
+        /* Block styling - neon fills */
+        .block-path {
+            stroke: #ffffff;
+            stroke-width: 2;
+            stroke-linejoin: round;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .block-path:hover {
+            opacity: 1;
+            stroke-width: 3;
+            filter: brightness(1.2) drop-shadow(0 0 20px currentColor);
+        }
+        
+        /* District boundary */
+        .district-boundary {
+            fill: none;
+            stroke: #00ffff;
+            stroke-width: 3;
+            stroke-dasharray: 15, 10;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 10px #00ffff);
+        }
+        
+        /* Village pins */
+        .village-pin {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .village-pin:hover {
+            transform: scale(1.3);
+        }
+        
+        /* Block labels */
+        .block-label {
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            fill: #ffffff;
+            text-anchor: middle;
+            pointer-events: none;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.6);
         }
         
         /* Glassmorphic floating header */
@@ -86,6 +143,26 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .tooltip.show {
+            opacity: 1;
+        }
+        
         /* Seva Feed Panel */
         #seva-panel {
             position: fixed;
@@ -133,378 +210,228 @@
         
         .seva-item {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .seva-item h3 {
             color: white;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 8px 0;
         }
         
-        @media (max-width: 768px) {
-            #header { padding: 10px 16px; gap: 8px; }
-            #header h1 { font-size: 16px; }
-            .header-btn { padding: 6px 12px; font-size: 12px; }
-        }
-        
-        /* Bhadrak 3D boundary with dramatic glow */
-        .bhadrak-boundary {
-            stroke: #f97316 !important;
-            stroke-width: 6px !important;
-            fill: none !important;
-            filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.8))
-                    drop-shadow(0 0 40px rgba(249, 115, 22, 0.6))
-                    drop-shadow(0 0 60px rgba(249, 115, 22, 0.4));
-            animation: glow-pulse 3s ease-in-out infinite;
-        }
-        
-        @keyframes glow-pulse {
-            0%, 100% { 
-                filter: drop-shadow(0 0 20px rgba(249, 115, 22, 0.8))
-                        drop-shadow(0 0 40px rgba(249, 115, 22, 0.6))
-                        drop-shadow(0 0 60px rgba(249, 115, 22, 0.4));
-            }
-            50% { 
-                filter: drop-shadow(0 0 30px rgba(249, 115, 22, 1))
-                        drop-shadow(0 0 60px rgba(249, 115, 22, 0.8))
-                        drop-shadow(0 0 90px rgba(249, 115, 22, 0.6));
-            }
-        }
-        
-        /* Custom marker pulse */
-        @keyframes marker-pulse {
-            0%, 100% { 
-                box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7), 0 2px 8px rgba(249, 115, 22, 0.6);
-            }
-            50% { 
-                box-shadow: 0 0 0 12px rgba(249, 115, 22, 0), 0 2px 8px rgba(249, 115, 22, 0.8);
-            }
+        .seva-item p {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin: 0;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
     <div id="header">
         <h1>🕉️ Seva Atlas</h1>
-        <span style="color: rgba(255,255,255,0.7); font-size: 14px;">📍 Bhadrak</span>
+        <span style="color: rgba(255,255,255,0.6); font-size: 14px;">📍 Bhadrak</span>
         <button class="header-btn btn-primary" onclick="toggleSevaPanel()">🔥 Seva Feed</button>
-        <a href="/doctors" class="header-btn btn-secondary" style="text-decoration: none;">👨‍⚕️ Doctors</a>
+        <button class="header-btn btn-secondary" onclick="window.location.href='/doctors'">👨‍⚕️ Doctors</button>
     </div>
-
-    <!-- Map Container -->
-    <div id="map"></div>
-
-    <!-- Seva Feed Panel -->
+    
+    <div id="map-container">
+        <svg id="map"></svg>
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+    
     <div id="seva-panel">
         <div class="panel-handle" onclick="toggleSevaPanel()"></div>
         <div class="panel-header">
-            <h2 style="font-size: 18px; font-weight: 700; margin: 0;">Active Seva Requests</h2>
-            <span id="seva-count" style="background: #f97316; color: white; padding: 4px 12px; border-radius: 12px; font-size: 14px; font-weight: 600;">0</span>
+            <h2 style="margin:0; font-size: 18px; font-weight: 700;">🔥 Active Seva Requests</h2>
+            <button onclick="toggleSevaPanel()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer;">×</button>
         </div>
-        <div id="seva-feed" class="panel-content">
-            <p style="color: rgba(255,255,255,0.6);">Loading seva activities...</p>
+        <div class="panel-content" id="seva-content">
+            <p style="color: rgba(255,255,255,0.5);">Loading...</p>
         </div>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
     <script>
-        // Initialize map
-        const map = L.map('map', {
-            center: [21.05, 86.42], // Shifted west to avoid ocean
-            zoom: 10,
-            minZoom: 9,
-            maxZoom: 16,
-            zoomControl: false,
-            maxBounds: [[20.7, 86.0], [21.4, 86.9]], // Tight bounds around Bhadrak land area
-            maxBoundsViscosity: 1.0
-        });
-
-        // Add zoom control
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-        // Use Mapbox Outdoors (terrain colors, elevation visible, clean administrative style)
-        const mapboxToken = "{{ mapbox_token }}";
-        const baseLayer = L.tileLayer('https://api.mapbox.com/styles/v1/mapbox/outdoors-v12/tiles/{z}/{x}/{y}?access_token=' + mapboxToken, {
-            attribution: '© Mapbox, © OpenStreetMap',
-            maxZoom: 18,
-            tileSize: 512,
-            zoomOffset: -1
-        }).addTo(map);
-
-        // Dynamic block colors from database
-        let blockColors = {};
+        const width = window.innerWidth;
+        const height = window.innerHeight;
         
-        // Fetch block colors from API
+        const svg = d3.select("#map")
+            .attr("viewBox", `0 0 ${width} ${height}`);
+        
+        let blockColors = {};
+        let villages = [];
+        
+        // Fetch block colors from database
         fetch('/api/blocks/colors')
             .then(res => res.json())
             .then(colors => {
                 blockColors = colors;
                 console.log('✅ Loaded block colors:', blockColors);
-            })
-            .catch(err => {
-                console.error('Failed to load block colors:', err);
-                // Fallback colors
-                blockColors = {
-                    'Bhadrak': { color: '#00FFFF' },
-                    'Basudevpur': { color: '#FF00FF' },
-                    'Chandabali': { color: '#FFD700' },
-                    'Dhamnagar': { color: '#9D00FF' },
-                    'Tihidi': { color: '#FF3D00' },
-                    'Bhandaripokhari': { color: '#00FF00' },
-                    'Bonth': { color: '#FF6B9D' }
-                };
+                loadMap();
             });
         
-        // Get block color from database settings
-        function getBlockColor(block) {
-            if (!block) return '#9ca3af';
+        // Load villages
+        fetch('/api/villages')
+            .then(res => res.json())
+            .then(data => {
+                villages = data;
+                renderVillages();
+            });
+        
+        function loadMap() {
+            fetch('/static/geojson/bhadrak_blocks.geojson')
+                .then(res => res.json())
+                .then(geojson => {
+                    // Create projection centered on Bhadrak
+                    const projection = d3.geoMercator()
+                        .fitSize([width, height], geojson);
+                    
+                    const path = d3.geoPath().projection(projection);
+                    
+                    // Draw blocks with neon fills
+                    svg.selectAll(".block")
+                        .data(geojson.features)
+                        .enter()
+                        .append("path")
+                        .attr("class", "block-path")
+                        .attr("d", path)
+                        .attr("fill", d => getBlockColor(d.properties.name))
+                        .on("mouseover", function(event, d) {
+                            const tooltip = d3.select("#tooltip");
+                            tooltip.html(`
+                                <strong>${d.properties.name}</strong><br>
+                                Population: ${d.properties.population?.toLocaleString() || 'N/A'}<br>
+                                Villages: ${d.properties.villages || 'N/A'}
+                            `)
+                            .style("left", (event.pageX + 10) + "px")
+                            .style("top", (event.pageY - 10) + "px")
+                            .classed("show", true);
+                        })
+                        .on("mouseout", function() {
+                            d3.select("#tooltip").classed("show", false);
+                        });
+                    
+                    // Add block labels
+                    svg.selectAll(".block-label")
+                        .data(geojson.features)
+                        .enter()
+                        .append("text")
+                        .attr("class", "block-label")
+                        .attr("transform", d => {
+                            const centroid = path.centroid(d);
+                            return `translate(${centroid[0]}, ${centroid[1]})`;
+                        })
+                        .text(d => d.properties.name);
+                    
+                    // Load district boundary
+                    fetch('/static/geojson/bhadrak_boundary.geojson')
+                        .then(res => res.json())
+                        .then(boundary => {
+                            svg.append("path")
+                                .datum(boundary)
+                                .attr("class", "district-boundary")
+                                .attr("d", path);
+                        });
+                    
+                    // Store projection for village pins
+                    window.mapProjection = projection;
+                    renderVillages();
+                });
+        }
+        
+        function renderVillages() {
+            if (!window.mapProjection || villages.length === 0) return;
             
-            // Try exact match first
-            if (blockColors[block]) {
-                return blockColors[block].color;
+            const projection = window.mapProjection;
+            
+            // Create village pin group
+            const pinsGroup = svg.append("g").attr("class", "villages");
+            
+            villages.forEach(v => {
+                if (v.lat && v.lng && v.show_pin !== false) {
+                    const [x, y] = projection([v.lng, v.lat]);
+                    const blockColor = getBlockColor(v.block);
+                    
+                    // Create pin with neon glow
+                    const pin = pinsGroup.append("g")
+                        .attr("class", "village-pin")
+                        .attr("transform", `translate(${x}, ${y})`)
+                        .on("mouseover", function(event) {
+                            d3.select("#tooltip")
+                                .html(`<strong>${v.name}</strong><br>Block: ${v.block}`)
+                                .style("left", (event.pageX + 10) + "px")
+                                .style("top", (event.pageY - 10) + "px")
+                                .classed("show", true);
+                        })
+                        .on("mouseout", function() {
+                            d3.select("#tooltip").classed("show", false);
+                        });
+                    
+                    // Pin shape with glow
+                    pin.append("circle")
+                        .attr("r", 6)
+                        .attr("fill", blockColor)
+                        .attr("stroke", "#ffffff")
+                        .attr("stroke-width", 2)
+                        .attr("filter", `drop-shadow(0 0 6px ${blockColor})`);
+                    
+                    pin.append("circle")
+                        .attr("r", 2.5)
+                        .attr("fill", "#ffffff");
+                }
+            });
+        }
+        
+        function getBlockColor(blockName) {
+            if (!blockName) return '#9ca3af';
+            
+            // Try exact match
+            if (blockColors[blockName]) {
+                return blockColors[blockName].color;
             }
             
-            // Try case-insensitive match
+            // Try case-insensitive
             for (let key in blockColors) {
-                if (block.toLowerCase() === key.toLowerCase()) {
+                if (blockName.toLowerCase() === key.toLowerCase()) {
                     return blockColors[key].color;
                 }
             }
             
-            // Fallback
             return '#9ca3af';
         }
         
-        // Hardcoded Bhadrak district boundary (lightweight)
-        // Approximate boundary coordinates (clockwise from north)
-        const bhadrakBoundaryCoords = [
-            [21.20, 86.50],  // North
-            [21.15, 86.75],  // Northeast
-            [21.05, 86.80],  // East
-            [20.85, 86.75],  // Southeast
-            [20.80, 86.50],  // South
-            [20.85, 86.25],  // Southwest
-            [20.95, 86.20],  // West
-            [21.10, 86.30],  // Northwest
-            [21.20, 86.50]   // Close polygon
-        ];
-        
-        // Add glassmorphic district boundary
-        const bhadrakBoundary = L.polygon(bhadrakBoundaryCoords, {
-            color: '#00FFFF',
-            weight: 3,
-            opacity: 0.8,
-            fill: false,
-            dashArray: '10, 5',
-            className: 'district-boundary'
-        }).addTo(map);
-
-        // Load villages with custom markers
-        const markers = L.markerClusterGroup({
-            maxClusterRadius: 50,
-            spiderfyOnMaxZoom: true,
-            showCoverageOnHover: false,
-            iconCreateFunction: function(cluster) {
-                const count = cluster.getChildCount();
-                return L.divIcon({
-                    html: `<div style="background: linear-gradient(135deg, #f97316, #ea580c); color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-weight: 700; box-shadow: 0 4px 12px rgba(249, 115, 22, 0.5);">${count}</div>`,
-                    className: '',
-                    iconSize: [40, 40]
-                });
-            }
-        });
-
-        fetch('/api/villages')
-            .then(res => res.json())
-            .then(villages => {
-                villages.forEach(v => {
-                    if (v.lat && v.lng && v.show_pin !== false) {
-                        // Get block color
-                        const blockColor = getBlockColor(v.block);
-                        
-                        // Create vibrant glowing pin marker
-                        const icon = L.divIcon({
-                            html: `
-                                <div style="position: relative; width: 32px; height: 40px; cursor: pointer;" title="${v.name}">
-                                    <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 8px ${blockColor}) drop-shadow(0 4px 12px rgba(0,0,0,0.6));">
-                                        <defs>
-                                            <radialGradient id="glow-${v.id}" cx="50%" cy="30%">
-                                                <stop offset="0%" style="stop-color:white;stop-opacity:1" />
-                                                <stop offset="50%" style="stop-color:${blockColor};stop-opacity:1" />
-                                                <stop offset="100%" style="stop-color:${blockColor};stop-opacity:0.9" />
-                                            </radialGradient>
-                                        </defs>
-                                        <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 20 12 20s12-11 12-20c0-6.627-5.373-12-12-12z" 
-                                              fill="url(#glow-${v.id})" 
-                                              stroke="${blockColor}" 
-                                              stroke-width="2"
-                                              style="paint-order: stroke;"/>
-                                        <circle cx="12" cy="11" r="3.5" fill="white" opacity="1"/>
-                                    </svg>
-                                </div>
-                            `,
-                            className: 'village-pin-marker',
-                            iconSize: [32, 40],
-                            iconAnchor: [16, 40],
-                            popupAnchor: [0, -40]
-                        });
-
-                        const marker = L.marker([v.lat, v.lng], { icon });
-                        
-                        // Click to show modal
-                        marker.on('click', function() {
-                            showVillageModal(v.name, v.block);
-                        });
-                        
-                        markers.addLayer(marker);
-                    }
-                });
-                map.addLayer(markers);
-            });
-
-        // Load seva feed
-        function loadSevaFeed() {
-            fetch('/api/seva/feed?limit=20')
-                .then(res => res.json())
-                .then(response => {
-                    const feed = document.getElementById('seva-feed');
-                    const count = document.getElementById('seva-count');
-                    
-                    // Handle both array and object responses
-                    const data = Array.isArray(response) ? response : (response.feed || response.requests || []);
-                    
-                    if (data.length === 0) {
-                        feed.innerHTML = '<p style="color: rgba(255,255,255,0.6);">No active seva requests at the moment.</p>';
-                        count.textContent = '0';
-                        return;
-                    }
-
-                    count.textContent = data.length;
-                    feed.innerHTML = data.map(item => {
-                        if (item.type === 'seva_request') {
-                            return `
-                                <div class="seva-item">
-                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-                                        <strong>${item.title}</strong>
-                                        <span style="background: rgba(249, 115, 22, 0.2); color: #f97316; padding: 2px 8px; border-radius: 8px; font-size: 12px; border: 1px solid rgba(249, 115, 22, 0.3);">${item.status}</span>
-                                    </div>
-                                    <p style="color: rgba(255, 255, 255, 0.7); font-size: 14px; margin: 8px 0;">${item.description}</p>
-                                    <div style="font-size: 12px; color: rgba(255, 255, 255, 0.5); margin-top: 8px;">
-                                        📍 ${item.village} | 📅 ${new Date(item.created_at).toLocaleDateString()}
-                                    </div>
-                                </div>
-                            `;
-                        }
-                        return '';
-                    }).join('');
-                });
-        }
-
-        loadSevaFeed();
-        setInterval(loadSevaFeed, 30000);
-
         function toggleSevaPanel() {
             document.getElementById('seva-panel').classList.toggle('expanded');
         }
-
-        // Show village details modal
-        async function showVillageModal(villageName, block) {
-            try {
-                // Fetch village details from API
-                const response = await fetch(`/api/village/${encodeURIComponent(villageName)}`);
-                const village = await response.json();
+        
+        // Load seva feed
+        fetch('/api/seva/feed?limit=20')
+            .then(res => res.json())
+            .then(data => {
+                const content = document.getElementById('seva-content');
+                if (data.length === 0) {
+                    content.innerHTML = '<p style="color: rgba(255,255,255,0.5);">No active requests</p>';
+                    return;
+                }
                 
-                const modalHTML = `
-                    <div id="village-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(10px);" onclick="closeVillageModal()">
-                        <div style="background: linear-gradient(135deg, rgba(30,30,40,0.95) 0%, rgba(20,20,30,0.98) 100%); padding: 32px; border-radius: 24px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1); backdrop-filter: blur(20px);" onclick="event.stopPropagation()">
-                            
-                            <!-- Header with Block Color -->
-                            <div style="display: flex; align-items: start; gap: 16px; margin-bottom: 24px;">
-                                <div style="width: 12px; height: 60px; background: ${getBlockColor(block)}; border-radius: 8px; box-shadow: 0 4px 12px ${getBlockColor(block)}40;"></div>
-                                <div style="flex: 1;">
-                                    <h2 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700; color: #fff;">${villageName}</h2>
-                                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                                        <span style="background: ${getBlockColor(block)}20; color: ${getBlockColor(block)}; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; border: 1px solid ${getBlockColor(block)}40;">${block || 'N/A'}</span>
-                                        ${village.population ? `<span style="color: rgba(255,255,255,0.6); font-size: 13px;">👥 ${village.population.toLocaleString()}</span>` : ''}
-                                    </div>
-                                </div>
-                                <button onclick="closeVillageModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">×</button>
-                            </div>
-
-                            <!-- Description -->
-                            ${village.pin_description ? `
-                                <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 20px; border-left: 3px solid ${getBlockColor(block)};">
-                                    <p style="margin: 0; color: rgba(255,255,255,0.85); line-height: 1.6; font-size: 14px;">${village.pin_description}</p>
-                                </div>
-                            ` : ''}
-
-                            <!-- Contact Info -->
-                            ${village.pin_contact_name || village.pin_contact_phone ? `
-                                <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
-                                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Contact Information</h3>
-                                    ${village.pin_contact_name ? `<div style="margin-bottom: 8px; color: rgba(255,255,255,0.9);"><span style="color: rgba(255,255,255,0.6);">👤</span> ${village.pin_contact_name}</div>` : ''}
-                                    ${village.pin_contact_phone ? `<div style="color: rgba(255,255,255,0.9);"><span style="color: rgba(255,255,255,0.6);">📞</span> <a href="tel:${village.pin_contact_phone}" style="color: ${getBlockColor(block)}; text-decoration: none;">${village.pin_contact_phone}</a></div>` : ''}
-                                </div>
-                            ` : ''}
-
-                            <!-- Coordinates -->
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-                                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
-                                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Latitude</div>
-                                    <div style="font-size: 16px; color: rgba(255,255,255,0.95); font-family: 'Courier New', monospace;">${village.lat?.toFixed(6)}</div>
-                                </div>
-                                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
-                                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Longitude</div>
-                                    <div style="font-size: 16px; color: rgba(255,255,255,0.95); font-family: 'Courier New', monospace;">${village.lng?.toFixed(6)}</div>
-                                </div>
-                            </div>
-
-                            <!-- Notes -->
-                            ${village.pin_notes ? `
-                                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 20px;">
-                                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Notes</div>
-                                    <div style="color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.5;">${village.pin_notes}</div>
-                                </div>
-                            ` : ''}
-
-                            <!-- Actions -->
-                            <div style="display: flex; gap: 12px; margin-top: 24px;">
-                                <button onclick="zoomToVillageFromModal('${villageName}')" style="flex: 1; background: linear-gradient(135deg, ${getBlockColor(block)}, ${getBlockColor(block)}dd); color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 12px ${getBlockColor(block)}40;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px ${getBlockColor(block)}60'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${getBlockColor(block)}40'">
-                                    📍 Zoom to Village
-                                </button>
-                            </div>
-                        </div>
+                content.innerHTML = data.map(seva => `
+                    <div class="seva-item">
+                        <h3>${seva.title}</h3>
+                        <p><strong>Village:</strong> ${seva.village}</p>
+                        <p>${seva.description}</p>
+                        <p style="margin-top: 8px; font-size: 12px; color: rgba(255,255,255,0.5);">
+                            ${new Date(seva.created_at).toLocaleDateString()}
+                        </p>
                     </div>
-                `;
-                
-                document.body.insertAdjacentHTML('beforeend', modalHTML);
-            } catch (error) {
-                console.error('Error loading village details:', error);
-                alert('Unable to load village details');
-            }
-        }
-
-        function closeVillageModal() {
-            const modal = document.getElementById('village-modal');
-            if (modal) modal.remove();
-        }
-
-        function zoomToVillageFromModal(villageName) {
-            closeVillageModal();
-            const feature = villagesLayer.getLayers().find(l => 
-                l.feature && l.feature.properties.NAME === villageName
-            );
-            if (feature) {
-                map.fitBounds(feature.getBounds(), { 
-                    maxZoom: 15,
-                    padding: [50, 50]
-                });
-            }
-        }
-
-        // Close modal on ESC key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') closeVillageModal();
+                `).join('');
+            });
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            location.reload();
         });
     </script>
 </body>
