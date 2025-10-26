@@ -929,7 +929,11 @@ async def get_map_settings(session: AsyncSession = Depends(get_session)):
             "color_scheme": "Blues",
             "show_villages": True,
             "show_blocks": True,
-            "village_point_color": "#e63946"
+            "village_point_color": "#e63946",
+            "pin_style": "mappin",
+            "pin_color_scheme": "Blues",
+            "pin_color_metric": "field_workers",
+            "show_pins": True
         }
     
     return {
@@ -937,8 +941,55 @@ async def get_map_settings(session: AsyncSession = Depends(get_session)):
         "color_scheme": settings.color_scheme,
         "show_villages": settings.show_villages,
         "show_blocks": settings.show_blocks,
-        "village_point_color": settings.village_point_color
+        "village_point_color": settings.village_point_color,
+        "pin_style": settings.pin_style,
+        "pin_color_scheme": settings.pin_color_scheme,
+        "pin_color_metric": settings.pin_color_metric,
+        "show_pins": settings.show_pins
     }
+
+
+@app.put("/api/map-settings")
+async def update_map_settings(
+    request: Request,
+    session: AsyncSession = Depends(get_session)
+):
+    """Update map visualization settings (used by admin panel)"""
+    data = await request.json()
+    
+    # Get or create settings
+    result = await session.execute(select(MapSettings))
+    settings = result.scalar_one_or_none()
+    
+    if not settings:
+        settings = MapSettings()
+        session.add(settings)
+    
+    # Update fields if provided
+    if "metric_name" in data:
+        settings.metric_name = data["metric_name"]
+    if "color_scheme" in data:
+        settings.color_scheme = data["color_scheme"]
+    if "show_villages" in data:
+        settings.show_villages = data["show_villages"]
+    if "show_blocks" in data:
+        settings.show_blocks = data["show_blocks"]
+    if "village_point_color" in data:
+        settings.village_point_color = data["village_point_color"]
+    if "pin_style" in data:
+        settings.pin_style = data["pin_style"]
+    if "pin_color_scheme" in data:
+        settings.pin_color_scheme = data["pin_color_scheme"]
+    if "pin_color_metric" in data:
+        settings.pin_color_metric = data["pin_color_metric"]
+    if "show_pins" in data:
+        settings.show_pins = data["show_pins"]
+    
+    settings.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"status": "success", "message": "Settings updated successfully"}
 
 
 @app.post("/admin/settings/map")
