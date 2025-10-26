@@ -289,15 +289,10 @@
                             });
                         });
                         
-                        // Popup with village info
-                        layer.bindPopup(`
-                            <div style="font-family: system-ui;">
-                                <strong style="font-size: 16px; color: #1f2937;">${props.NAME}</strong><br>
-                                <span style="color: #6b7280; font-size: 14px;">📍 Block: ${props.SUB_DIST || 'N/A'}</span><br>
-                                <span style="color: #6b7280; font-size: 12px;">Type: ${props.TYPE}</span>
-                            </div>
-                        `, {
-                            maxWidth: 250
+                        // Click to show modal
+                        layer.on('click', function(e) {
+                            L.DomEvent.stopPropagation(e);
+                            showVillageModal(props.NAME, props.SUB_DIST);
                         });
                     }
                 }).addTo(map);
@@ -437,15 +432,36 @@
             .then(res => res.json())
             .then(villages => {
                 villages.forEach(v => {
-                    if (v.lat && v.lng) {
+                    if (v.lat && v.lng && v.show_pin !== false) {
+                        // Get block color
+                        const blockColor = getBlockColor(v.block);
+                        
+                        // Create styled pin marker
                         const icon = L.divIcon({
-                            html: '<div style="background: #f97316; width: 14px; height: 14px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 8px rgba(249, 115, 22, 0.7); animation: marker-pulse 2s infinite;"></div>',
-                            className: '',
-                            iconSize: [14, 14]
+                            html: `
+                                <div style="position: relative; width: 28px; height: 36px; cursor: pointer;" title="${v.name}">
+                                    <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));">
+                                        <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 20 12 20s12-11 12-20c0-6.627-5.373-12-12-12z" 
+                                              fill="${blockColor}" 
+                                              stroke="white" 
+                                              stroke-width="1.5"/>
+                                        <circle cx="12" cy="12" r="4" fill="white" opacity="0.95"/>
+                                    </svg>
+                                </div>
+                            `,
+                            className: 'village-pin-marker',
+                            iconSize: [28, 36],
+                            iconAnchor: [14, 36],
+                            popupAnchor: [0, -36]
                         });
 
                         const marker = L.marker([v.lat, v.lng], { icon });
-                        marker.bindPopup(`<strong>${v.name}</strong><br>Block: ${v.block || 'N/A'}`);
+                        
+                        // Click to show modal
+                        marker.on('click', function() {
+                            showVillageModal(v.name, v.block);
+                        });
+                        
                         markers.addLayer(marker);
                     }
                 });
@@ -496,6 +512,106 @@
         function toggleSevaPanel() {
             document.getElementById('seva-panel').classList.toggle('expanded');
         }
+
+        // Show village details modal
+        async function showVillageModal(villageName, block) {
+            try {
+                // Fetch village details from API
+                const response = await fetch(`/api/village/${encodeURIComponent(villageName)}`);
+                const village = await response.json();
+                
+                const modalHTML = `
+                    <div id="village-modal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 10000; backdrop-filter: blur(10px);" onclick="closeVillageModal()">
+                        <div style="background: linear-gradient(135deg, rgba(30,30,40,0.95) 0%, rgba(20,20,30,0.98) 100%); padding: 32px; border-radius: 24px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.1); backdrop-filter: blur(20px);" onclick="event.stopPropagation()">
+                            
+                            <!-- Header with Block Color -->
+                            <div style="display: flex; align-items: start; gap: 16px; margin-bottom: 24px;">
+                                <div style="width: 12px; height: 60px; background: ${getBlockColor(block)}; border-radius: 8px; box-shadow: 0 4px 12px ${getBlockColor(block)}40;"></div>
+                                <div style="flex: 1;">
+                                    <h2 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 700; color: #fff;">${villageName}</h2>
+                                    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                                        <span style="background: ${getBlockColor(block)}20; color: ${getBlockColor(block)}; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-weight: 600; border: 1px solid ${getBlockColor(block)}40;">${block || 'N/A'}</span>
+                                        ${village.population ? `<span style="color: rgba(255,255,255,0.6); font-size: 13px;">👥 ${village.population.toLocaleString()}</span>` : ''}
+                                    </div>
+                                </div>
+                                <button onclick="closeVillageModal()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">×</button>
+                            </div>
+
+                            <!-- Description -->
+                            ${village.pin_description ? `
+                                <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 20px; border-left: 3px solid ${getBlockColor(block)};">
+                                    <p style="margin: 0; color: rgba(255,255,255,0.85); line-height: 1.6; font-size: 14px;">${village.pin_description}</p>
+                                </div>
+                            ` : ''}
+
+                            <!-- Contact Info -->
+                            ${village.pin_contact_name || village.pin_contact_phone ? `
+                                <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; margin-bottom: 20px;">
+                                    <h3 style="margin: 0 0 12px 0; font-size: 14px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: 600;">Contact Information</h3>
+                                    ${village.pin_contact_name ? `<div style="margin-bottom: 8px; color: rgba(255,255,255,0.9);"><span style="color: rgba(255,255,255,0.6);">👤</span> ${village.pin_contact_name}</div>` : ''}
+                                    ${village.pin_contact_phone ? `<div style="color: rgba(255,255,255,0.9);"><span style="color: rgba(255,255,255,0.6);">📞</span> <a href="tel:${village.pin_contact_phone}" style="color: ${getBlockColor(block)}; text-decoration: none;">${village.pin_contact_phone}</a></div>` : ''}
+                                </div>
+                            ` : ''}
+
+                            <!-- Coordinates -->
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
+                                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Latitude</div>
+                                    <div style="font-size: 16px; color: rgba(255,255,255,0.95); font-family: 'Courier New', monospace;">${village.lat?.toFixed(6)}</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px;">
+                                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">Longitude</div>
+                                    <div style="font-size: 16px; color: rgba(255,255,255,0.95); font-family: 'Courier New', monospace;">${village.lng?.toFixed(6)}</div>
+                                </div>
+                            </div>
+
+                            <!-- Notes -->
+                            ${village.pin_notes ? `
+                                <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 12px; margin-bottom: 20px;">
+                                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Notes</div>
+                                    <div style="color: rgba(255,255,255,0.7); font-size: 13px; line-height: 1.5;">${village.pin_notes}</div>
+                                </div>
+                            ` : ''}
+
+                            <!-- Actions -->
+                            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                                <button onclick="zoomToVillageFromModal('${villageName}')" style="flex: 1; background: linear-gradient(135deg, ${getBlockColor(block)}, ${getBlockColor(block)}dd); color: white; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 12px ${getBlockColor(block)}40;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px ${getBlockColor(block)}60'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${getBlockColor(block)}40'">
+                                    📍 Zoom to Village
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.insertAdjacentHTML('beforeend', modalHTML);
+            } catch (error) {
+                console.error('Error loading village details:', error);
+                alert('Unable to load village details');
+            }
+        }
+
+        function closeVillageModal() {
+            const modal = document.getElementById('village-modal');
+            if (modal) modal.remove();
+        }
+
+        function zoomToVillageFromModal(villageName) {
+            closeVillageModal();
+            const feature = villagesLayer.getLayers().find(l => 
+                l.feature && l.feature.properties.NAME === villageName
+            );
+            if (feature) {
+                map.fitBounds(feature.getBounds(), { 
+                    maxZoom: 15,
+                    padding: [50, 50]
+                });
+            }
+        }
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeVillageModal();
+        });
     </script>
 </body>
 </html>

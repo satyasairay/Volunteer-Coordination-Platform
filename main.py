@@ -87,8 +87,32 @@ async def get_villages(session: AsyncSession = Depends(get_session)):
         "block": v.block,
         "lat": v.lat,
         "lng": v.lng,
-        "bbox": [v.south, v.west, v.north, v.east]
+        "bbox": [v.south, v.west, v.north, v.east],
+        "show_pin": v.show_pin
     } for v in villages]
+
+
+@app.get("/api/village/{village_name}")
+async def get_village_details(village_name: str, session: AsyncSession = Depends(get_session)):
+    result = await session.execute(select(Village).where(Village.name == village_name))
+    village = result.scalar_one_or_none()
+    
+    if not village:
+        raise HTTPException(status_code=404, detail="Village not found")
+    
+    return {
+        "id": village.id,
+        "name": village.name,
+        "block": village.block,
+        "lat": village.lat,
+        "lng": village.lng,
+        "population": village.population,
+        "pin_description": village.pin_description,
+        "pin_contact_name": village.pin_contact_name,
+        "pin_contact_phone": village.pin_contact_phone,
+        "pin_notes": village.pin_notes,
+        "show_pin": village.show_pin
+    }
 
 
 @app.get("/api/members")
@@ -542,6 +566,14 @@ async def update_village_coords(
     lat = data.get('lat')
     lng = data.get('lng')
     
+    # Pin details
+    pin_description = data.get('pin_description')
+    pin_contact_name = data.get('pin_contact_name')
+    pin_contact_phone = data.get('pin_contact_phone')
+    pin_notes = data.get('pin_notes')
+    show_pin = data.get('show_pin', True)
+    population = data.get('population')
+    
     # Find or create village
     if village_id:
         result = await session.execute(select(Village).where(Village.id == int(village_id)))
@@ -557,6 +589,13 @@ async def update_village_coords(
     village.lat = lat
     village.lng = lng
     village.block = block
+    village.pin_description = pin_description
+    village.pin_contact_name = pin_contact_name
+    village.pin_contact_phone = pin_contact_phone
+    village.pin_notes = pin_notes
+    village.show_pin = show_pin
+    if population:
+        village.population = int(population)
     village.updated_at = datetime.utcnow()
     
     await session.commit()
@@ -564,7 +603,7 @@ async def update_village_coords(
     audit = Audit(
         table_name="villages",
         row_id=village.id,
-        action="update_coords",
+        action="update_village_details",
         changed_by=admin["email"]
     )
     session.add(audit)

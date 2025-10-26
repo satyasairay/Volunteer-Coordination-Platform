@@ -19,6 +19,17 @@ class Village(SQLModel, table=True):
     east: float
     code_2011: Optional[str] = None
     
+    # Pin details for map display
+    population: Optional[int] = None
+    pin_description: Optional[str] = None
+    pin_contact_name: Optional[str] = None
+    pin_contact_phone: Optional[str] = None
+    pin_notes: Optional[str] = None
+    show_pin: bool = Field(default=True)
+    
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
     members: List["Member"] = Relationship(back_populates="village")
 
 

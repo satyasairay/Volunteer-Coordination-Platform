@@ -117,6 +117,9 @@
             <h3 class="text-xl font-bold mb-4">Edit Village</h3>
             <form id="edit-form" onsubmit="saveVillage(event)">
                 <input type="hidden" id="edit-id">
+                
+                <!-- Basic Info -->
+                <h4 class="text-md font-semibold mb-3">Basic Information</h4>
                 <div class="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <label class="block text-sm font-medium mb-2">Village Name</label>
@@ -134,8 +137,45 @@
                         <label class="block text-sm font-medium mb-2">Longitude</label>
                         <input type="number" step="0.000001" id="edit-lng" class="w-full px-3 py-2 border rounded-lg">
                     </div>
+                    <div class="col-span-2">
+                        <label class="block text-sm font-medium mb-2">Population</label>
+                        <input type="number" id="edit-population" class="w-full px-3 py-2 border rounded-lg">
+                    </div>
                 </div>
-                <div class="flex justify-end gap-2">
+
+                <!-- Pin Display Details -->
+                <h4 class="text-md font-semibold mb-3 mt-4">Pin Details (shown on map)</h4>
+                <div class="mb-4">
+                    <label class="flex items-center gap-2 mb-3">
+                        <input type="checkbox" id="edit-show-pin" checked class="rounded">
+                        <span class="text-sm font-medium">Show pin on map</span>
+                    </label>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Description</label>
+                        <textarea id="edit-description" rows="3" class="w-full px-3 py-2 border rounded-lg" placeholder="Brief description of this village..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <h4 class="text-md font-semibold mb-3 mt-4">Contact Information</h4>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Contact Name</label>
+                        <input type="text" id="edit-contact-name" class="w-full px-3 py-2 border rounded-lg" placeholder="Village head, coordinator...">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Contact Phone</label>
+                        <input type="tel" id="edit-contact-phone" class="w-full px-3 py-2 border rounded-lg" placeholder="+91 xxxxx xxxxx">
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Additional Notes</label>
+                    <textarea id="edit-notes" rows="2" class="w-full px-3 py-2 border rounded-lg" placeholder="Any additional information..."></textarea>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-6">
                     <button type="button" onclick="closeEditModal()" class="px-4 py-2 border rounded-lg hover:bg-gray-50">Cancel</button>
                     <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Save Changes</button>
                 </div>
@@ -321,16 +361,33 @@
             }
         }
 
-        function editVillage(name) {
+        async function editVillage(name) {
             const feature = villagesData.find(v => v.properties.NAME === name);
-            const dbVillage = dbVillages.find(v => v.name === name);
             
-            if (feature) {
-                document.getElementById('edit-id').value = dbVillage?.id || '';
-                document.getElementById('edit-name').value = feature.properties.NAME;
+            // Fetch full village details from API
+            try {
+                const response = await fetch(`/api/village/${encodeURIComponent(name)}`);
+                const village = await response.json();
+                
+                document.getElementById('edit-id').value = village.id || '';
+                document.getElementById('edit-name').value = name;
                 document.getElementById('edit-block').value = feature.properties.SUB_DIST || '';
-                document.getElementById('edit-lat').value = dbVillage?.lat || '';
-                document.getElementById('edit-lng').value = dbVillage?.lng || '';
+                document.getElementById('edit-lat').value = village.lat || '';
+                document.getElementById('edit-lng').value = village.lng || '';
+                document.getElementById('edit-population').value = village.population || '';
+                document.getElementById('edit-show-pin').checked = village.show_pin !== false;
+                document.getElementById('edit-description').value = village.pin_description || '';
+                document.getElementById('edit-contact-name').value = village.pin_contact_name || '';
+                document.getElementById('edit-contact-phone').value = village.pin_contact_phone || '';
+                document.getElementById('edit-notes').value = village.pin_notes || '';
+                
+                document.getElementById('edit-modal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading village details:', error);
+                // Fallback to basic info
+                document.getElementById('edit-id').value = '';
+                document.getElementById('edit-name').value = name;
+                document.getElementById('edit-block').value = feature.properties.SUB_DIST || '';
                 document.getElementById('edit-modal').classList.remove('hidden');
             }
         }
@@ -346,12 +403,21 @@
             const block = document.getElementById('edit-block').value;
             const lat = parseFloat(document.getElementById('edit-lat').value);
             const lng = parseFloat(document.getElementById('edit-lng').value);
+            const population = document.getElementById('edit-population').value;
+            const show_pin = document.getElementById('edit-show-pin').checked;
+            const pin_description = document.getElementById('edit-description').value;
+            const pin_contact_name = document.getElementById('edit-contact-name').value;
+            const pin_contact_phone = document.getElementById('edit-contact-phone').value;
+            const pin_notes = document.getElementById('edit-notes').value;
 
             try {
                 const response = await fetch('/admin/api/villages/update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, name, block, lat, lng })
+                    body: JSON.stringify({ 
+                        id, name, block, lat, lng, population, show_pin,
+                        pin_description, pin_contact_name, pin_contact_phone, pin_notes
+                    })
                 });
 
                 if (response.ok) {
