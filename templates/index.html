@@ -96,13 +96,26 @@
             font-weight: 600;
         }
         
-        /* Map container with FOREST BACKGROUND & LOTUS OVERLAY */
+        /* Map container with BRIGHT FOREST BACKGROUND & LOTUS OVERLAY */
         #map-container {
             height: calc(100vh - 60px - 40px);
             width: 100%;
             position: relative;
-            background: #1a2a1a url('/static/stock_images/dense_green_forest_t_d196a377.jpg') center/cover no-repeat;
-            background-blend-mode: multiply;
+            background: url('/static/stock_images/bright_sunlit_green__fd4a9d7d.jpg') center/cover no-repeat;
+            background-blend-mode: normal;
+        }
+        
+        /* 3D EDGE BLUR EFFECT - Fade/blur outside borders for depth */
+        #map-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            box-shadow: inset 0 0 80px 40px rgba(0, 0, 0, 0.4);
+            pointer-events: none;
+            z-index: 5;
         }
         
         #map-container::before {
@@ -432,9 +445,8 @@
     <nav>
         <div style="display: flex; align-items: center;">
             <div class="nav-brand">
-                DP Works - Bhadrak
+                DP Works 📍 Bhadrak
             </div>
-            <span class="nav-location">📍 Bhadrak</span>
         </div>
         <div class="nav-tabs">
             <a href="/" class="nav-tab active">Map</a>
@@ -442,46 +454,50 @@
         </div>
     </nav>
     
-    <!-- PHASE 2: Block Selector Sidebar - MODERN SPIRITUAL DESIGN -->
-    <div id="block-sidebar" style="position: fixed; left: 0; top: 60px; width: 300px; height: calc(100vh - 60px); background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(249,250,251,0.95) 100%); border-right: none; box-shadow: 4px 0 24px rgba(0,0,0,0.1); overflow-y: auto; z-index: 100; transition: transform 0.3s ease; backdrop-filter: blur(20px);">
-        <div style="padding: 20px; border-bottom: 2px solid rgba(249,115,22,0.2); background: linear-gradient(135deg, rgba(249,115,22,0.05) 0%, rgba(251,146,60,0.02) 100%);">
-            <h3 style="margin: 0 0 14px 0; font-size: 18px; font-weight: 700; color: #1f2937; display: flex; align-items: center; gap: 8px;">
-                🏞️ <span>Blocks (7)</span>
-            </h3>
-            <input type="text" id="block-search" placeholder="🔍 Search blocks..." style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 12px; font-size: 14px; transition: all 0.2s; background: white;">
-        </div>
+    <!-- MINIMAL UI - Search Box + Dropdown Button -->
+    <div style="position: fixed; top: 70px; left: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 280px;">
+        <!-- Search Box for Villages -->
+        <input type="text" id="village-search" placeholder="🔍 Search villages, blocks..." 
+               style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; font-size: 14px; 
+                      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+                      transition: all 0.2s;">
         
-        <!-- PHASE 3: Heat Map Toggle - NATURE THEMED -->
-        <div style="padding: 16px 20px; border-bottom: 2px solid rgba(16,185,129,0.15); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(52,211,153,0.02) 100%);">
-            <div style="font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 10px; letter-spacing: 0.5px;">🌿 HEAT MAP OVERLAYS</div>
-            <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;">
-                <input type="checkbox" id="heatmap-seva" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                <span style="font-size: 14px; font-weight: 500;">🔥 Seva Activity</span>
-            </label>
-            <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 8px; transition: background 0.2s;">
-                <input type="checkbox" id="heatmap-population" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                <span style="font-size: 14px; font-weight: 500;">👥 Population Density</span>
-            </label>
-        </div>
+        <!-- Show Blocks Dropdown Button -->
+        <button id="toggle-blocks-panel" 
+                style="width: 100%; padding: 12px 16px; border: 2px solid rgba(249,115,22,0.3); border-radius: 12px; font-size: 14px; font-weight: 600;
+                       background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+                       cursor: pointer; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center;
+                       color: #1f2937;">
+            <span>Show Blocks & Overlays</span>
+            <span id="dropdown-arrow" style="transition: transform 0.3s;">▼</span>
+        </button>
         
-        <div id="block-list" style="padding: 12px 16px;">
-            <!-- Block items will be populated here -->
+        <!-- Collapsible Panel -->
+        <div id="blocks-panel" style="display: none; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); 
+                                       border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden;
+                                       max-height: 70vh; overflow-y: auto;">
+            <!-- Heat Map Toggles -->
+            <div style="padding: 16px; border-bottom: 2px solid rgba(16,185,129,0.15); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(52,211,153,0.02) 100%);">
+                <div style="font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 10px; letter-spacing: 0.5px;">🌿 HEAT MAP OVERLAYS</div>
+                <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer; padding: 8px; border-radius: 8px;">
+                    <input type="checkbox" id="heatmap-seva" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 14px; font-weight: 500;">🔥 Seva Activity</span>
+                </label>
+                <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 8px;">
+                    <input type="checkbox" id="heatmap-population" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+                    <span style="font-size: 14px; font-weight: 500;">👥 Population Density</span>
+                </label>
+            </div>
+            
+            <!-- Block List -->
+            <div style="padding: 16px;">
+                <div style="font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 12px; letter-spacing: 0.5px;">🏞️ BLOCKS (7)</div>
+                <div id="block-list"></div>
+            </div>
         </div>
     </div>
     
-    <!-- PHASE 2: Block Dropdown (Mobile) -->
-    <div id="block-dropdown" style="position: fixed; top: 60px; left: 0; right: 0; background: white; border-bottom: 2px solid #e5e7eb; z-index: 99; display: none; padding: 12px;">
-        <select id="block-select-mobile" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
-            <option value="">All Blocks</option>
-        </select>
-    </div>
-    
-    <!-- Toggle Sidebar Button (Mobile) -->
-    <button id="toggle-sidebar" style="position: fixed; top: 70px; left: 10px; z-index: 101; background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 14px; cursor: pointer; display: none;">
-        ☰ Blocks
-    </button>
-    
-    <div id="map-container" style="margin-left: 300px; transition: margin-left 0.3s ease;">
+    <div id="map-container" style="margin-left: 0; transition: margin-left 0.3s ease;">
         <div class="loading" id="loading">
             Loading Bhadrak map...
             <div class="loading-progress" id="loading-progress"></div>
@@ -771,7 +787,8 @@
                     .attr("fill", "none")
                     .attr("stroke", d => d.properties.color || "#f97316")
                     .attr("stroke-width", 2)
-                    .attr("stroke-opacity", 0.6)
+                    .attr("stroke-opacity", 0) // HIDDEN per user request
+                    .style("display", "none") // HIDDEN temporarily
                     .attr("cursor", "pointer")
                     .on("mouseover", function(event, d) {
                         d3.select(this)
@@ -1128,60 +1145,54 @@
         }
         
         // ============================================================
-        // RESPONSIVE LAYOUT (Phase 2 - Mobile Support)
+        // MINIMAL UI - Toggle Blocks Panel
         // ============================================================
         
-        function updateLayout() {
-            const isMobile = window.innerWidth < 768;
-            const sidebar = document.getElementById('block-sidebar');
-            const mapContainer = document.getElementById('map-container');
-            const toggleBtn = document.getElementById('toggle-sidebar');
-            const dropdown = document.getElementById('block-dropdown');
-            
-            if (isMobile) {
-                // Mobile: Hide sidebar, show dropdown and toggle button
-                sidebar.style.transform = 'translateX(-100%)';
-                mapContainer.style.marginLeft = '0';
-                toggleBtn.style.display = 'block';
-                dropdown.style.display = 'block';
-            } else {
-                // Desktop: Show sidebar, hide dropdown and toggle
-                sidebar.style.transform = 'translateX(0)';
-                mapContainer.style.marginLeft = '300px';
-                toggleBtn.style.display = 'none';
-                dropdown.style.display = 'none';
-            }
-        }
+        let panelOpen = false;
+        const toggleBtn = document.getElementById('toggle-blocks-panel');
+        const panel = document.getElementById('blocks-panel');
+        const arrow = document.getElementById('dropdown-arrow');
         
-        // Toggle sidebar on mobile
-        let sidebarOpen = false;
-        document.getElementById('toggle-sidebar').onclick = function() {
-            const sidebar = document.getElementById('block-sidebar');
-            sidebarOpen = !sidebarOpen;
+        toggleBtn.onclick = function() {
+            panelOpen = !panelOpen;
             
-            if (sidebarOpen) {
-                sidebar.style.transform = 'translateX(0)';
-                this.textContent = '✕ Close';
+            if (panelOpen) {
+                panel.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+                toggleBtn.style.borderColor = 'rgba(249,115,22,0.6)';
             } else {
-                sidebar.style.transform = 'translateX(-100%)';
-                this.textContent = '☰ Blocks';
+                panel.style.display = 'none';
+                arrow.style.transform = 'rotate(0deg)';
+                toggleBtn.style.borderColor = 'rgba(249,115,22,0.3)';
             }
         };
         
-        // Block search functionality
-        document.getElementById('block-search').oninput = function(e) {
+        // Village/Block search functionality
+        document.getElementById('village-search').oninput = function(e) {
             const searchTerm = e.target.value.toLowerCase();
+            
+            // Search in block list
             const blockItems = document.getElementById('block-list').children;
+            let hasResults = false;
             
             Array.from(blockItems).forEach(item => {
                 const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                    hasResults = true;
+                } else {
+                    item.style.display = 'none';
+                }
             });
+            
+            // Auto-open panel if searching and has results
+            if (searchTerm && hasResults && !panelOpen) {
+                panelOpen = true;
+                panel.style.display = 'block';
+                arrow.style.transform = 'rotate(180deg)';
+                toggleBtn.style.borderColor = 'rgba(249,115,22,0.6)';
+            }
         };
-        
-        // Initialize responsive layout
-        updateLayout();
-        window.addEventListener('resize', updateLayout);
     </script>
     
     <div class="footer">
