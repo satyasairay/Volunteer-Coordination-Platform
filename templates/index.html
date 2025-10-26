@@ -88,15 +88,17 @@
         /* Villages */
         .village-polygon {
             stroke: #ffffff;
-            stroke-width: 0.5;
+            stroke-width: 0.3;
             cursor: pointer;
             transition: all 0.2s;
+            opacity: 0.9;
         }
         
         .village-polygon:hover {
             stroke: #333;
-            stroke-width: 2;
-            filter: brightness(0.9);
+            stroke-width: 1.5;
+            filter: brightness(0.8);
+            opacity: 1;
         }
         
         /* Legend */
@@ -311,11 +313,11 @@
                 mapSettings = settings;
                 console.log('✅ Map settings loaded:', settings);
                 
-                // Create color scale with admin-selected scheme
+                // Create color scale with admin-selected scheme (use 0.4-0.95 range for saturated visible colors)
                 const interpolator = colorSchemes[settings.color_scheme] || d3.interpolateBlues;
                 colorScale = d3.scaleSequential()
                     .domain([1000, 20000])
-                    .interpolator(interpolator);
+                    .interpolator(t => interpolator(0.4 + t * 0.55));
                 
                 // Update legend gradient
                 updateLegend();
@@ -340,53 +342,65 @@
                 const boundaryRes = await fetch('/static/geojson/bhadrak_boundary.geojson');
                 const boundary = await boundaryRes.json();
                 
-                // Create projection - fit to boundary
-                projection = d3.geoMercator().fitSize([width * 0.9, height * 0.9], boundary);
-                path = d3.geoPath().projection(projection);
+                // DEBUG: Don't create projection yet, wait for villages
+                // We'll create it after loading villages
+                updateProgress('Boundary loaded');
                 
-                // Draw district boundary
-                g.append("path")
-                    .datum(boundary)
-                    .attr("class", "district-boundary")
-                    .attr("d", path);
-                
-                updateProgress('Boundary loaded! Loading villages...');
+                // Don't draw boundary yet - wait for projection from villages
                 
                 // Step 2: Load ALL villages (API returns cached data)
                 const villagesRes = await fetch('/api/villages/choropleth');
                 const villages = await villagesRes.json();
                 
                 console.log(`✅ Loaded ${villages.features.length} villages`);
+                
+                // Create projection - fit to VILLAGES (not boundary!)
+                projection = d3.geoMercator()
+                    .fitExtent([[50, 50], [width - 50, height - 50]], villages);
+                path = d3.geoPath().projection(projection);
+                
+                //  Now draw boundary with the villages-fitted projection
+                g.append("path")
+                    .datum(boundary)
+                    .attr("class", "district-boundary")
+                    .attr("d", path);
+                
                 updateProgress(`Rendering ${villages.features.length} villages...`);
                 
-                // Step 3: Draw village polygons progressively
-                const batchSize = 500;
-                const batches = Math.ceil(villages.features.length / batchSize);
+                // Step 3: Draw ALL village polygons at once (D3 handles efficiently)
+                updateProgress(`Rendering all ${villages.features.length} villages...`);
                 
-                for (let i = 0; i < batches; i++) {
-                    const start = i * batchSize;
-                    const end = Math.min(start + batchSize, villages.features.length);
-                    const batch = villages.features.slice(start, end);
-                    
-                    updateProgress(`Rendering villages ${start + 1}-${end} of ${villages.features.length}...`);
-                    
-                    // Render batch
-                    g.selectAll(`.village-batch-${i}`)
-                        .data(batch)
-                        .enter()
-                        .append("path")
-                        .attr("class", "village-polygon")
-                        .attr("d", path)
-                        .attr("fill", d => colorScale(d.properties.population || 5000))
-                        .on("mouseover", showVillageTooltip)
-                        .on("mouseout", hideTooltip)
-                        .on("click", zoomToVillage);
-                    
-                    // Small delay for progressive rendering
-                    if (i < batches - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 10));
-                    }
-                }
+                const villagePaths = g.selectAll(".village-polygon")
+                    .data(villages.features)
+                    .enter()
+                    .append("path")
+                    .attr("class", "village-polygon")
+                    .attr("d", d => {
+                        const p = path(d);
+                        if (!p) console.warn('No path for village:', d.properties.name);
+                        return p;
+                    })
+                    .attr("fill", d => {
+                        const color = colorScale(d.properties.population || 5000);
+                        return color;
+                    })
+                    .attr("stroke", "#333")
+                    .attr("stroke-width", 0.2)
+                    .on("mouseover", showVillageTooltip)
+                    .on("mouseout", hideTooltip)
+                    .on("click", zoomToVillage);
+                
+                console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
+                
+                // Debug: Check if paths are being drawn
+                const sampleVillage = villages.features[0];
+                console.log('Sample village:', sampleVillage.properties.name);
+                console.log('Sample path:', path(sampleVillage));
+                console.log('Sample color:', colorScale(sampleVillage.properties.population));
+                
+                // Count actual path elements in SVG
+                const pathCount = document.querySelectorAll('.village-polygon').length;
+                console.log(`DOM has ${pathCount} village path elements`);
                 
                 // Show legend and hide loading
                 document.getElementById('legend').style.display = 'block';

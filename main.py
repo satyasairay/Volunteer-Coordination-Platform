@@ -120,8 +120,8 @@ async def get_villages_choropleth():
             features.append({
                 "type": "Feature",
                 "properties": {
-                    "name": props.get('name', props.get('NAME', f'Village_{i}')),
-                    "block": props.get('block', props.get('BLOCK', 'Unknown')),
+                    "name": props.get('NAME', props.get('name', f'Village_{i}')),
+                    "block": props.get('SUB_DIST', props.get('block', 'Unknown')),
                     "population": props.get('population', props.get('POP', 1000 + (i * 10))),
                 },
                 "geometry": feature['geometry']
