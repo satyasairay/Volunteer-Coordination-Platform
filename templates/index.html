@@ -222,17 +222,10 @@
         // Add zoom control
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // Use OpenTopoMap for terrain
-        const topoLayer = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenTopoMap',
-            maxZoom: 17
-        }).addTo(map);
-
-        // Add Esri World Hillshade for 3D relief
-        const hillshadeLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Hillshade/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '© Esri',
-            maxZoom: 16,
-            opacity: 0.65
+        // Use clean CartoDB Positron (no roads, railways, etc.)
+        const baseLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '© OpenStreetMap, © CartoDB',
+            maxZoom: 18
         }).addTo(map);
 
         let bhadrakPolygonCoords = null;
