@@ -47,6 +47,12 @@ async def index(request: Request):
     })
 
 
+@app.get("/sample", response_class=HTMLResponse)
+async def sample_choropleth(request: Request):
+    """Sample village-level choropleth demonstration"""
+    return templates.TemplateResponse("sample_village_choropleth.html", {"request": request})
+
+
 @app.get("/doctors", response_class=HTMLResponse)
 async def doctors_page(
     request: Request,

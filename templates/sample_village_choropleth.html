@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAMPLE: Village-Level Choropleth - Bhadrak</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * { box-sizing: border-box; }
+        body { margin: 0; background: #f8f9fa; font-family: -apple-system, sans-serif; }
+        
+        #map-container { 
+            height: 100vh; 
+            width: 100%; 
+            position: relative;
+            background: #ffffff;
+        }
+        
+        svg { width: 100%; height: 100%; }
+        
+        /* Village polygons */
+        .village-path {
+            stroke: #ffffff;
+            stroke-width: 0.5;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .village-path:hover {
+            stroke: #000;
+            stroke-width: 2;
+            filter: brightness(0.9);
+        }
+        
+        /* Controls */
+        .controls {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        .controls h2 {
+            margin: 0 0 15px 0;
+            font-size: 18px;
+            font-weight: 700;
+            color: #333;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .control-group select,
+        .control-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .color-scheme {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        
+        .color-box {
+            width: 30px;
+            height: 20px;
+            border-radius: 3px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 999;
+        }
+        
+        .legend h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .legend-gradient {
+            width: 200px;
+            height: 15px;
+            border-radius: 3px;
+            margin: 10px 0;
+        }
+        
+        .legend-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #666;
+        }
+        
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1001;
+        }
+        
+        .tooltip.show { opacity: 1; }
+        
+        /* Zoom controls */
+        .zoom-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            z-index: 999;
+        }
+        
+        .zoom-btn {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            cursor: pointer;
+            font-size: 20px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .zoom-btn:hover {
+            background: #f0f0f0;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <h2>🎨 Choropleth Controls</h2>
+        
+        <div class="control-group">
+            <label>Data Metric</label>
+            <select id="metric-select" onchange="updateMap()">
+                <option value="population">Population</option>
+                <option value="seva_count">Seva Activity</option>
+                <option value="literacy">Literacy Rate</option>
+                <option value="development">Development Index</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Color Scheme</label>
+            <select id="color-select" onchange="updateMap()">
+                <option value="blues">Blues (Professional)</option>
+                <option value="greens">Greens (Nature)</option>
+                <option value="reds">Reds (Heat)</option>
+                <option value="purples">Purples (Royal)</option>
+                <option value="oranges">Oranges (Vibrant)</option>
+                <option value="viridis">Viridis (Rainbow)</option>
+                <option value="turbo">Turbo (Multi-color)</option>
+            </select>
+            <div class="color-scheme" id="color-preview"></div>
+        </div>
+        
+        <div class="control-group">
+            <label>Village Filter</label>
+            <input type="text" id="search-input" placeholder="Search village..." onkeyup="filterVillages()">
+        </div>
+        
+        <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #eee; font-size: 12px; color: #666;">
+            <strong>Sample Data:</strong> This demo uses random data to show color variations. In production, use real metrics from database.
+        </div>
+    </div>
+    
+    <div class="legend">
+        <h3 id="legend-title">Population</h3>
+        <div class="legend-gradient" id="legend-gradient"></div>
+        <div class="legend-labels">
+            <span id="legend-min">Low</span>
+            <span id="legend-max">High</span>
+        </div>
+    </div>
+    
+    <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn" onclick="resetZoom()" style="font-size: 16px;">⟲</button>
+    </div>
+    
+    <div id="map-container">
+        <svg id="map"></svg>
+        <div class="tooltip" id="tooltip"></div>
+    </div>
+
+    <script>
+        // Color schemes (D3 interpolators)
+        const colorSchemes = {
+            blues: d3.interpolateBlues,
+            greens: d3.interpolateGreens,
+            reds: d3.interpolateReds,
+            purples: d3.interpolatePurples,
+            oranges: d3.interpolateOranges,
+            viridis: d3.interpolateViridis,
+            turbo: d3.interpolateTurbo
+        };
+        
+        // Generate dummy data for demonstration
+        function generateDummyData(count) {
+            const data = {};
+            for (let i = 0; i < count; i++) {
+                data[i] = {
+                    population: Math.floor(Math.random() * 5000) + 1000,
+                    seva_count: Math.floor(Math.random() * 50),
+                    literacy: Math.floor(Math.random() * 40) + 60,
+                    development: Math.random()
+                };
+            }
+            return data;
+        }
+        
+        const dummyData = generateDummyData(100); // 100 sample villages
+        
+        let currentMetric = 'population';
+        let currentScheme = 'blues';
+        let zoom = d3.zoom().scaleExtent([1, 50]).on("zoom", zoomed);
+        let g, projection, path;
+        
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+        
+        const svg = d3.select("#map")
+            .attr("viewBox", `0 0 ${width} ${height}`)
+            .call(zoom);
+        
+        g = svg.append("g");
+        
+        // Create sample village grid (since actual GeoJSON is 380K lines)
+        function createSampleVillages() {
+            const villages = [];
+            const gridSize = 10;
+            const blockWidth = (86.7 - 86.1) / gridSize;
+            const blockHeight = (21.3 - 20.8) / gridSize;
+            
+            let id = 0;
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const minX = 86.1 + i * blockWidth;
+                    const minY = 20.8 + j * blockHeight;
+                    villages.push({
+                        type: "Feature",
+                        id: id,
+                        properties: {
+                            name: `Village ${id + 1}`,
+                            block: ["Bhadrak", "Basudevpur", "Chandabali"][id % 3]
+                        },
+                        geometry: {
+                            type: "Polygon",
+                            coordinates: [[
+                                [minX, minY],
+                                [minX + blockWidth, minY],
+                                [minX + blockWidth, minY + blockHeight],
+                                [minX, minY + blockHeight],
+                                [minX, minY]
+                            ]]
+                        }
+                    });
+                    id++;
+                }
+            }
+            return { type: "FeatureCollection", features: villages };
+        }
+        
+        function initMap() {
+            const geojson = createSampleVillages();
+            
+            projection = d3.geoMercator()
+                .center([86.4, 21.05])
+                .scale(35000)
+                .translate([width / 2, height / 2]);
+            
+            path = d3.geoPath().projection(projection);
+            
+            // Draw villages
+            g.selectAll(".village")
+                .data(geojson.features)
+                .enter()
+                .append("path")
+                .attr("class", "village-path")
+                .attr("d", path)
+                .attr("data-id", d => d.id)
+                .attr("data-name", d => d.properties.name)
+                .on("mouseover", showTooltip)
+                .on("mouseout", hideTooltip)
+                .on("click", zoomToVillage);
+            
+            updateMap();
+        }
+        
+        function updateMap() {
+            currentMetric = document.getElementById('metric-select').value;
+            currentScheme = document.getElementById('color-select').value;
+            
+            const interpolator = colorSchemes[currentScheme];
+            const values = Object.values(dummyData).map(d => d[currentMetric]);
+            const extent = d3.extent(values);
+            
+            const colorScale = d3.scaleSequential()
+                .domain(extent)
+                .interpolator(interpolator);
+            
+            // Update villages
+            g.selectAll(".village-path")
+                .transition()
+                .duration(500)
+                .attr("fill", d => {
+                    const value = dummyData[d.id]?.[currentMetric] || extent[0];
+                    return colorScale(value);
+                });
+            
+            // Update legend
+            document.getElementById('legend-title').textContent = 
+                currentMetric.charAt(0).toUpperCase() + currentMetric.slice(1).replace('_', ' ');
+            document.getElementById('legend-gradient').style.background = 
+                `linear-gradient(to right, ${interpolator(0)}, ${interpolator(0.5)}, ${interpolator(1)})`;
+            document.getElementById('legend-min').textContent = Math.round(extent[0]);
+            document.getElementById('legend-max').textContent = Math.round(extent[1]);
+            
+            // Update color preview
+            const preview = document.getElementById('color-preview');
+            preview.innerHTML = '';
+            for (let i = 0; i <= 1; i += 0.2) {
+                const box = document.createElement('div');
+                box.className = 'color-box';
+                box.style.background = interpolator(i);
+                preview.appendChild(box);
+            }
+        }
+        
+        function showTooltip(event, d) {
+            const data = dummyData[d.id] || {};
+            const tooltip = d3.select("#tooltip");
+            tooltip.html(`
+                <strong>${d.properties.name}</strong><br>
+                Block: ${d.properties.block}<br>
+                ${currentMetric}: ${Math.round(data[currentMetric] || 0)}
+            `)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px")
+            .classed("show", true);
+        }
+        
+        function hideTooltip() {
+            d3.select("#tooltip").classed("show", false);
+        }
+        
+        function zoomed(event) {
+            g.attr("transform", event.transform);
+        }
+        
+        function zoomIn() {
+            svg.transition().call(zoom.scaleBy, 1.5);
+        }
+        
+        function zoomOut() {
+            svg.transition().call(zoom.scaleBy, 0.67);
+        }
+        
+        function resetZoom() {
+            svg.transition().call(zoom.transform, d3.zoomIdentity);
+        }
+        
+        function zoomToVillage(event, d) {
+            const bounds = path.bounds(d);
+            const dx = bounds[1][0] - bounds[0][0];
+            const dy = bounds[1][1] - bounds[0][1];
+            const x = (bounds[0][0] + bounds[1][0]) / 2;
+            const y = (bounds[0][1] + bounds[1][1]) / 2;
+            const scale = Math.max(1, Math.min(40, 0.9 / Math.max(dx / width, dy / height)));
+            const translate = [width / 2 - scale * x, height / 2 - scale * y];
+            
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+        }
+        
+        function filterVillages() {
+            const search = document.getElementById('search-input').value.toLowerCase();
+            g.selectAll(".village-path")
+                .style("opacity", function() {
+                    const name = this.getAttribute('data-name').toLowerCase();
+                    return name.includes(search) ? 1 : 0.2;
+                });
+        }
+        
+        // Initialize
+        initMap();
+    </script>
+</body>
+</html>
