@@ -221,5 +221,56 @@ class MapSettings(SQLModel, table=True):
     show_blocks: bool = Field(default=True)
     village_point_color: str = Field(default="#e63946")  # Red dots
     
+    # Pin settings
+    pin_style: str = Field(default="shining")  # shining, pointer, star
+    pin_color_scheme: str = Field(default="Blues")  # Blues, Oranges, Greens
+    pin_color_metric: str = Field(default="field_workers")  # field_workers, uk_centers, population, custom
+    show_pins: bool = Field(default=True)
+    
+    # Timestamps
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class VillagePin(SQLModel, table=True):
+    """Village pin data - field workers, UK centers, custom metrics"""
+    __tablename__ = "village_pins"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    village_id: int = Field(foreign_key="villages.id", index=True, unique=True)
+    
+    # Core metrics
+    field_worker_count: int = Field(default=0)
+    uk_center_count: int = Field(default=0)
+    
+    # Custom fields (flexible JSON storage)
+    custom_data: Optional[str] = Field(default="{}")  # JSON string for custom fields
+    
+    # Pin appearance
+    pin_color: Optional[str] = None  # Override color for this specific village
+    is_active: bool = Field(default=True)
+    
+    # Modal quick links (JSON array of {label, url, icon})
+    quick_links: Optional[str] = Field(default="[]")
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class CustomLabel(SQLModel, table=True):
+    """Customizable labels for UI elements (admin can change anytime)"""
+    __tablename__ = "custom_labels"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    label_key: str = Field(unique=True, index=True)  # field_workers, uk_centers, etc.
+    label_value: str  # "Field Workers", "Upayojana Kendra", etc.
+    label_singular: Optional[str] = None  # "Field Worker", "UK"
+    label_icon: Optional[str] = Field(default="👥")  # Emoji or icon class
+    
+    # Display settings
+    show_in_tooltip: bool = Field(default=True)
+    show_in_modal: bool = Field(default=True)
+    display_order: int = Field(default=0)
+    
     # Timestamps
     updated_at: datetime = Field(default_factory=datetime.utcnow)

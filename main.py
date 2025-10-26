@@ -13,13 +13,64 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from db import init_db, get_session
-from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings
+from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel
 from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PASSWORD
+
+
+async def seed_default_labels(session: AsyncSession):
+    """Initialize default custom labels if they don't exist"""
+    default_labels = [
+        {
+            "label_key": "field_workers",
+            "label_value": "Field Workers",
+            "label_singular": "Field Worker",
+            "label_icon": "👥",
+            "show_in_tooltip": True,
+            "show_in_modal": True,
+            "display_order": 1
+        },
+        {
+            "label_key": "uk_centers",
+            "label_value": "Upayojana Kendras",
+            "label_singular": "UK",
+            "label_icon": "🏢",
+            "show_in_tooltip": True,
+            "show_in_modal": True,
+            "display_order": 2
+        },
+        {
+            "label_key": "population",
+            "label_value": "Population",
+            "label_singular": "Population",
+            "label_icon": "📊",
+            "show_in_tooltip": True,
+            "show_in_modal": True,
+            "display_order": 3
+        }
+    ]
+    
+    for label_data in default_labels:
+        result = await session.execute(
+            select(CustomLabel).where(CustomLabel.label_key == label_data["label_key"])
+        )
+        existing = result.scalar_one_or_none()
+        
+        if not existing:
+            label = CustomLabel(**label_data)
+            session.add(label)
+    
+    await session.commit()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await init_db()
+    
+    # Seed default labels
+    from db import async_session_maker
+    async with async_session_maker() as session:
+        await seed_default_labels(session)
+    
     print("\n" + "="*60)
     print("🕉️  SATSANGEE SEVA ATLAS - Ready to Serve")
     print("="*60)
@@ -156,6 +207,120 @@ async def get_village_details(village_name: str, session: AsyncSession = Depends
         "pin_notes": village.pin_notes,
         "show_pin": village.show_pin
     }
+
+
+@app.get("/api/villages/pins")
+async def get_village_pins(session: AsyncSession = Depends(get_session)):
+    """Get pin data for all villages with field workers and UK centers"""
+    # Load full village data with geometries
+    with open('static/geojson/bhadrak_villages.geojson', 'r') as f:
+        villages_data = json.load(f)
+    
+    # Get all village pins from database
+    result = await session.execute(select(VillagePin))
+    pins_dict = {pin.village_id: pin for pin in result.scalars().all()}
+    
+    # Get custom labels for display
+    labels_result = await session.execute(
+        select(CustomLabel).order_by(CustomLabel.display_order)
+    )
+    labels = {label.label_key: label for label in labels_result.scalars().all()}
+    
+    # Enrich village data with pin information
+    features = []
+    for i, feature in enumerate(villages_data['features']):
+        props = feature['properties']
+        village_name = props.get('NAME', f'Village_{i}')
+        
+        # Get or create default pin data
+        pin_data = pins_dict.get(i + 1, None)  # village_id starts at 1
+        
+        features.append({
+            "type": "Feature",
+            "properties": {
+                "id": i + 1,
+                "name": village_name,
+                "block": props.get('SUB_DIST', 'Unknown'),
+                "population": props.get('population', props.get('POP', 1000 + (i * 10))),
+                "field_worker_count": pin_data.field_worker_count if pin_data else 0,
+                "uk_center_count": pin_data.uk_center_count if pin_data else 0,
+                "custom_data": json.loads(pin_data.custom_data) if pin_data and pin_data.custom_data else {},
+                "pin_color": pin_data.pin_color if pin_data else None,
+                "is_active": pin_data.is_active if pin_data else True,
+            },
+            "geometry": feature['geometry']
+        })
+    
+    return {
+        "type": "FeatureCollection",
+        "features": features,
+        "labels": {
+            key: {
+                "value": label.label_value,
+                "singular": label.label_singular,
+                "icon": label.label_icon
+            }
+            for key, label in labels.items()
+        }
+    }
+
+
+@app.get("/api/villages/{village_id}/details")
+async def get_village_pin_details(village_id: int, session: AsyncSession = Depends(get_session)):
+    """Get detailed village info for modal"""
+    # Get village basic info
+    result = await session.execute(select(Village).where(Village.id == village_id))
+    village = result.scalar_one_or_none()
+    
+    if not village:
+        raise HTTPException(status_code=404, detail="Village not found")
+    
+    # Get pin data
+    pin_result = await session.execute(
+        select(VillagePin).where(VillagePin.village_id == village_id)
+    )
+    pin = pin_result.scalar_one_or_none()
+    
+    # Get custom labels
+    labels_result = await session.execute(
+        select(CustomLabel).order_by(CustomLabel.display_order)
+    )
+    labels = {label.label_key: label for label in labels_result.scalars().all()}
+    
+    return {
+        "id": village.id,
+        "name": village.name,
+        "block": village.block,
+        "population": village.population,
+        "field_worker_count": pin.field_worker_count if pin else 0,
+        "uk_center_count": pin.uk_center_count if pin else 0,
+        "custom_data": json.loads(pin.custom_data) if pin and pin.custom_data else {},
+        "quick_links": json.loads(pin.quick_links) if pin and pin.quick_links else [],
+        "labels": {
+            key: {
+                "value": label.label_value,
+                "singular": label.label_singular,
+                "icon": label.label_icon
+            }
+            for key, label in labels.items() if label.show_in_modal
+        }
+    }
+
+
+@app.get("/api/custom-labels")
+async def get_custom_labels(session: AsyncSession = Depends(get_session)):
+    """Get all customizable labels for UI"""
+    result = await session.execute(select(CustomLabel).order_by(CustomLabel.display_order))
+    labels = result.scalars().all()
+    
+    return [{
+        "key": label.label_key,
+        "value": label.label_value,
+        "singular": label.label_singular,
+        "icon": label.label_icon,
+        "show_in_tooltip": label.show_in_tooltip,
+        "show_in_modal": label.show_in_modal
+    } for label in labels]
 
 
 @app.get("/api/blocks/colors")
