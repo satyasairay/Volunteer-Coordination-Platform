@@ -933,7 +933,8 @@ async def get_map_settings(session: AsyncSession = Depends(get_session)):
             "pin_style": "mappin",
             "pin_color_scheme": "Blues",
             "pin_color_metric": "field_workers",
-            "show_pins": True
+            "show_pins": True,
+            "dot_style": "neon_glow"
         }
     
     return {
@@ -945,7 +946,8 @@ async def get_map_settings(session: AsyncSession = Depends(get_session)):
         "pin_style": settings.pin_style,
         "pin_color_scheme": settings.pin_color_scheme,
         "pin_color_metric": settings.pin_color_metric,
-        "show_pins": settings.show_pins
+        "show_pins": settings.show_pins,
+        "dot_style": settings.dot_style
     }
 
 
@@ -984,6 +986,8 @@ async def update_map_settings(
         settings.pin_color_metric = data["pin_color_metric"]
     if "show_pins" in data:
         settings.show_pins = data["show_pins"]
+    if "dot_style" in data:
+        settings.dot_style = data["dot_style"]
     
     settings.updated_at = datetime.utcnow()
     
