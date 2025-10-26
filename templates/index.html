@@ -6,86 +6,57 @@
     <title>Seva Atlas - Bhadrak District</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="https://d3js.org/topojson.v3.min.js"></script>
     <style>
         * { box-sizing: border-box; }
-        body { margin: 0; overflow: hidden; }
+        body { margin: 0; overflow: hidden; background: #f8f9fa; }
         
         /* Full screen map */
         #map-container { 
             height: 100vh; 
             width: 100%; 
             position: relative;
-            background: radial-gradient(ellipse at center, #7fb685 0%, #5a8a5f 50%, #3d6b42 100%);
-        }
-        
-        /* Topography texture overlay */
-        #map-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-image: 
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px),
-                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px);
-            pointer-events: none;
-            z-index: 1;
+            background: #ffffff;
         }
         
         svg { 
             width: 100%; 
             height: 100%; 
-            position: relative;
-            z-index: 2;
         }
         
-        /* Block styling - neon fills */
+        /* Block styling - USA choropleth blue gradient */
         .block-path {
             stroke: #ffffff;
-            stroke-width: 2;
+            stroke-width: 1.5;
             stroke-linejoin: round;
-            opacity: 0.9;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             cursor: pointer;
         }
         
         .block-path:hover {
-            opacity: 1;
-            stroke-width: 3;
-            filter: brightness(1.2) drop-shadow(0 0 20px currentColor);
+            stroke: #333;
+            stroke-width: 2.5;
+            filter: brightness(0.95);
         }
         
-        /* District boundary */
-        .district-boundary {
-            fill: none;
-            stroke: #00ffff;
-            stroke-width: 3;
-            stroke-dasharray: 15, 10;
-            opacity: 0.9;
-            filter: drop-shadow(0 0 10px #00ffff);
+        /* Block labels */
+        .block-label {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            fill: #ffffff;
+            text-anchor: middle;
+            pointer-events: none;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.4);
         }
         
-        /* Village pins */
+        /* Village pins - subtle */
         .village-pin {
             cursor: pointer;
             transition: all 0.2s;
         }
         
         .village-pin:hover {
-            transform: scale(1.3);
-        }
-        
-        /* Block labels */
-        .block-label {
-            font-family: system-ui, -apple-system, sans-serif;
-            font-size: 14px;
-            font-weight: 700;
-            fill: #ffffff;
-            text-anchor: middle;
-            pointer-events: none;
-            text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.6);
+            transform: scale(1.4);
         }
         
         /* Glassmorphic floating header */
@@ -99,7 +70,7 @@
             backdrop-filter: blur(20px);
             border-radius: 50px;
             padding: 12px 24px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             gap: 16px;
@@ -161,6 +132,42 @@
         
         .tooltip.show {
             opacity: 1;
+        }
+        
+        /* Legend */
+        .legend {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            z-index: 999;
+        }
+        
+        .legend h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 6px 0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .legend-color {
+            width: 30px;
+            height: 18px;
+            margin-right: 8px;
+            border: 1px solid rgba(0,0,0,0.1);
+            border-radius: 3px;
         }
         
         /* Seva Feed Panel */
@@ -238,6 +245,11 @@
         <button class="header-btn btn-secondary" onclick="window.location.href='/doctors'">👨‍⚕️ Doctors</button>
     </div>
     
+    <div class="legend">
+        <h3>Blocks (Population)</h3>
+        <div id="legend-items"></div>
+    </div>
+    
     <div id="map-container">
         <svg id="map"></svg>
         <div class="tooltip" id="tooltip"></div>
@@ -261,24 +273,19 @@
         const svg = d3.select("#map")
             .attr("viewBox", `0 0 ${width} ${height}`);
         
-        let blockColors = {};
         let villages = [];
         
-        // Fetch block colors from database
-        fetch('/api/blocks/colors')
-            .then(res => res.json())
-            .then(colors => {
-                blockColors = colors;
-                console.log('✅ Loaded block colors:', blockColors);
-                loadMap();
-            });
+        // USA choropleth style - blue gradient color scale
+        // Light blue to dark blue based on population
+        const colorScale = d3.scaleSequential()
+            .domain([160000, 260000]) // Population range
+            .interpolator(d3.interpolateBlues);
         
         // Load villages
         fetch('/api/villages')
             .then(res => res.json())
             .then(data => {
                 villages = data;
-                renderVillages();
             });
         
         function loadMap() {
@@ -287,18 +294,23 @@
                 .then(geojson => {
                     // Create projection centered on Bhadrak
                     const projection = d3.geoMercator()
-                        .fitSize([width, height], geojson);
+                        .center([86.4, 21.05]) // Center of Bhadrak
+                        .scale(35000)
+                        .translate([width / 2, height / 2]);
                     
                     const path = d3.geoPath().projection(projection);
                     
-                    // Draw blocks with neon fills
+                    // Draw blocks with USA choropleth style
                     svg.selectAll(".block")
                         .data(geojson.features)
                         .enter()
                         .append("path")
                         .attr("class", "block-path")
                         .attr("d", path)
-                        .attr("fill", d => getBlockColor(d.properties.name))
+                        .attr("fill", d => {
+                            const pop = d.properties.population || 200000;
+                            return colorScale(pop);
+                        })
                         .on("mouseover", function(event, d) {
                             const tooltip = d3.select("#tooltip");
                             tooltip.html(`
@@ -326,15 +338,21 @@
                         })
                         .text(d => d.properties.name);
                     
-                    // Load district boundary
-                    fetch('/static/geojson/bhadrak_boundary.geojson')
-                        .then(res => res.json())
-                        .then(boundary => {
-                            svg.append("path")
-                                .datum(boundary)
-                                .attr("class", "district-boundary")
-                                .attr("d", path);
-                        });
+                    // Create legend
+                    const legendItems = geojson.features
+                        .sort((a, b) => (b.properties.population || 0) - (a.properties.population || 0));
+                    
+                    const legendHTML = legendItems.map(d => {
+                        const color = colorScale(d.properties.population || 200000);
+                        return `
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: ${color}"></div>
+                                <span>${d.properties.name}</span>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    document.getElementById('legend-items').innerHTML = legendHTML;
                     
                     // Store projection for village pins
                     window.mapProjection = projection;
@@ -353,9 +371,8 @@
             villages.forEach(v => {
                 if (v.lat && v.lng && v.show_pin !== false) {
                     const [x, y] = projection([v.lng, v.lat]);
-                    const blockColor = getBlockColor(v.block);
                     
-                    // Create pin with neon glow
+                    // Create subtle pins
                     const pin = pinsGroup.append("g")
                         .attr("class", "village-pin")
                         .attr("transform", `translate(${x}, ${y})`)
@@ -370,37 +387,14 @@
                             d3.select("#tooltip").classed("show", false);
                         });
                     
-                    // Pin shape with glow
+                    // Simple circle pin
                     pin.append("circle")
-                        .attr("r", 6)
-                        .attr("fill", blockColor)
+                        .attr("r", 4)
+                        .attr("fill", "#e63946")
                         .attr("stroke", "#ffffff")
-                        .attr("stroke-width", 2)
-                        .attr("filter", `drop-shadow(0 0 6px ${blockColor})`);
-                    
-                    pin.append("circle")
-                        .attr("r", 2.5)
-                        .attr("fill", "#ffffff");
+                        .attr("stroke-width", 1.5);
                 }
             });
-        }
-        
-        function getBlockColor(blockName) {
-            if (!blockName) return '#9ca3af';
-            
-            // Try exact match
-            if (blockColors[blockName]) {
-                return blockColors[blockName].color;
-            }
-            
-            // Try case-insensitive
-            for (let key in blockColors) {
-                if (blockName.toLowerCase() === key.toLowerCase()) {
-                    return blockColors[key].color;
-                }
-            }
-            
-            return '#9ca3af';
         }
         
         function toggleSevaPanel() {
@@ -428,6 +422,9 @@
                     </div>
                 `).join('');
             });
+        
+        // Initialize map
+        loadMap();
         
         // Handle resize
         window.addEventListener('resize', () => {
