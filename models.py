@@ -222,7 +222,7 @@ class MapSettings(SQLModel, table=True):
     village_point_color: str = Field(default="#e63946")  # Red dots
     
     # Pin settings
-    pin_style: str = Field(default="shining")  # shining, pointer, star
+    pin_style: str = Field(default="mappin")  # mappin, diamond, star, triangle, hexagon, pentagon, marker
     pin_color_scheme: str = Field(default="Blues")  # Blues, Oranges, Greens
     pin_color_metric: str = Field(default="field_workers")  # field_workers, uk_centers, population, custom
     show_pins: bool = Field(default=True)

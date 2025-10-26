@@ -462,6 +462,17 @@
         let mapSettings = {};
         let customLabels = {};
         
+        // SVG Pin definitions
+        const pinShapes = {
+            'mappin': '<path d="M0,-8 C-3,-8 -5,-6 -5,-3 C-5,0 0,8 0,8 C0,8 5,0 5,-3 C5,-6 3,-8 0,-8 Z" fill="currentColor"/><circle cx="0" cy="-3" r="2" fill="white"/>',
+            'diamond': '<path d="M0,-6 L4,0 L0,6 L-4,0 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>',
+            'star': '<path d="M0,-6 L1.5,-2 L6,-1.5 L2.5,1.5 L3,6 L0,4 L-3,6 L-2.5,1.5 L-6,-1.5 L-1.5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>',
+            'triangle': '<path d="M0,-6 L5,5 L-5,5 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>',
+            'hexagon': '<path d="M0,-6 L5,-3 L5,3 L0,6 L-5,3 L-5,-3 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>',
+            'pentagon': '<path d="M0,-6 L5,-2 L3,5 L-3,5 L-5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>',
+            'marker': '<circle cx="0" cy="0" r="5" fill="currentColor" stroke="white" stroke-width="1"/><circle cx="0" cy="0" r="2" fill="white"/>'
+        };
+        
         // Color scheme mappings
         const colorSchemes = {
             'Blues': d3.interpolateBlues,
@@ -550,32 +561,39 @@
                     .domain([0, 15])
                     .interpolator(t => d3.interpolateBlues(0.5 + t * 0.4));
                 
-                // Add pins for ALL 1,315 villages
+                // Add SVG pins for ALL 1,315 villages
+                const pinStyle = mapSettings.pin_style || 'mappin';
+                const pinSvg = pinShapes[pinStyle] || pinShapes['mappin'];
+                
                 const pins = g.selectAll(".village-pin")
                     .data(villages.features)
                     .enter()
-                    .append("circle")
+                    .append("g")
                     .attr("class", "village-pin")
                     .attr("transform", d => {
                         const centroid = path.centroid(d);
                         return `translate(${centroid[0]}, ${centroid[1]})`;
                     })
-                    .attr("r", 3.5) // Medium size - not too small, not too big
                     .attr("cursor", "pointer")
                     .attr("opacity", 0) // Hidden by default, shown on zoom
-                    .attr("fill", d => {
-                        // If village has data, color based on field workers, else default blue
-                        if (d.properties.field_worker_count > 0) {
-                            return pinColorScale(d.properties.field_worker_count);
-                        }
-                        return "#3b7bbf"; // Darker blue for visibility
-                    })
-                    .attr("stroke", "#ffffff")
-                    .attr("stroke-width", 1)
-                    .style("filter", "drop-shadow(0px 1px 2px rgba(0,0,0,0.3))")
                     .on("mouseover", showPinTooltip)
                     .on("mouseout", hideTooltip)
                     .on("click", showVillageModal);
+                
+                // Add SVG shape to each pin group
+                pins.each(function(d) {
+                    const pin = d3.select(this);
+                    const color = d.properties.field_worker_count > 0 
+                        ? pinColorScale(d.properties.field_worker_count) 
+                        : "#3b7bbf";
+                    
+                    // Create SVG container with viewBox for the pin shape
+                    pin.append("g")
+                        .attr("class", "pin-shape")
+                        .style("color", color)
+                        .style("filter", "drop-shadow(0px 1px 2px rgba(0,0,0,0.3))")
+                        .html(pinSvg);
+                });
                 
                 console.log(`✅ Added ${pins.size()} pins (zoom to reveal)`);
                 

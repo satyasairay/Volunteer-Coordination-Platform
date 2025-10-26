@@ -41,6 +41,17 @@
             <div id="labels-message" class="mt-4"></div>
         </div>
 
+        <!-- Pin Style Selector -->
+        <div class="bg-white p-6 rounded-lg shadow mb-6">
+            <h2 class="text-xl font-bold mb-4">📍 Choose Pin Style</h2>
+            <p class="text-sm text-gray-600 mb-4">Select the pin marker style to display on the map when zoomed in</p>
+            
+            <div id="pin-style-grid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                <!-- Pin options will be loaded here -->
+            </div>
+            <div id="pin-style-message" class="mt-4"></div>
+        </div>
+
         <div class="grid md:grid-cols-2 gap-6">
             <div class="bg-white p-6 rounded-lg shadow">
                 <h2 class="text-xl font-bold mb-4">Bulk Upload Villages</h2>
@@ -85,6 +96,67 @@
     </div>
 
     <script>
+        // Pin style definitions with SVG paths
+        const pinStyles = [
+            { id: 'mappin', name: 'Map Pin', svg: '<path d="M0,-8 C-3,-8 -5,-6 -5,-3 C-5,0 0,8 0,8 C0,8 5,0 5,-3 C5,-6 3,-8 0,-8 Z" fill="currentColor"/><circle cx="0" cy="-3" r="2" fill="white"/>' },
+            { id: 'diamond', name: 'Diamond', svg: '<path d="M0,-6 L4,0 L0,6 L-4,0 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'star', name: 'Star', svg: '<path d="M0,-6 L1.5,-2 L6,-1.5 L2.5,1.5 L3,6 L0,4 L-3,6 L-2.5,1.5 L-6,-1.5 L-1.5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'triangle', name: 'Triangle', svg: '<path d="M0,-6 L5,5 L-5,5 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'hexagon', name: 'Hexagon', svg: '<path d="M0,-6 L5,-3 L5,3 L0,6 L-5,3 L-5,-3 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'pentagon', name: 'Pentagon', svg: '<path d="M0,-6 L5,-2 L3,5 L-3,5 L-5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
+            { id: 'marker', name: 'Marker', svg: '<circle cx="0" cy="0" r="5" fill="currentColor" stroke="white" stroke-width="1"/><circle cx="0" cy="0" r="2" fill="white"/>' }
+        ];
+
+        // Load map settings and populate pin styles
+        async function loadPinStyles() {
+            try {
+                const res = await fetch('/api/map-settings');
+                const settings = await res.json();
+                const currentStyle = settings.pin_style || 'mappin';
+                
+                const grid = document.getElementById('pin-style-grid');
+                grid.innerHTML = pinStyles.map(style => `
+                    <div 
+                        class="pin-style-option ${currentStyle === style.id ? 'selected' : ''}"
+                        data-style="${style.id}"
+                        onclick="selectPinStyle('${style.id}')"
+                        style="cursor: pointer; border: 3px solid ${currentStyle === style.id ? '#3b82f6' : '#e5e7eb'}; border-radius: 8px; padding: 16px; text-align: center; transition: all 0.2s;"
+                    >
+                        <svg width="40" height="40" viewBox="-10 -10 20 20" style="color: #3b7bbf; margin: 0 auto;">
+                            ${style.svg}
+                        </svg>
+                        <div style="margin-top: 8px; font-size: 12px; font-weight: 500;">${style.name}</div>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error('Error loading pin styles:', err);
+            }
+        }
+        
+        async function selectPinStyle(styleId) {
+            const message = document.getElementById('pin-style-message');
+            try {
+                const res = await fetch('/api/map-settings', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ pin_style: styleId })
+                });
+                
+                if (res.ok) {
+                    message.innerHTML = '<p class="text-green-600">✓ Pin style updated! Refresh the map to see changes.</p>';
+                    setTimeout(() => message.innerHTML = '', 3000);
+                    loadPinStyles(); // Reload to update selection
+                } else {
+                    throw new Error('Failed to update pin style');
+                }
+            } catch (err) {
+                message.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+            }
+        }
+        
+        // Load pin styles on page load
+        loadPinStyles();
+        
         // Load custom labels
         async function loadLabels() {
             try {
