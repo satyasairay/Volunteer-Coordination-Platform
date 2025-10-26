@@ -413,7 +413,44 @@
         </div>
     </nav>
     
-    <div id="map-container">
+    <!-- PHASE 2: Block Selector Sidebar (Desktop) -->
+    <div id="block-sidebar" style="position: fixed; left: 0; top: 60px; width: 280px; height: calc(100vh - 60px); background: white; border-right: 2px solid #e5e7eb; overflow-y: auto; z-index: 100; transition: transform 0.3s ease;">
+        <div style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
+            <h3 style="margin: 0 0 12px 0; font-size: 16px; font-weight: 600; color: #1f2937;">Blocks (7)</h3>
+            <input type="text" id="block-search" placeholder="Search blocks..." style="width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 13px;">
+        </div>
+        
+        <!-- PHASE 3: Heat Map Toggle -->
+        <div style="padding: 12px 16px; border-bottom: 1px solid #e5e7eb; background: #f9fafb;">
+            <div style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 8px;">HEAT MAP OVERLAYS</div>
+            <label style="display: flex; align-items: center; margin-bottom: 8px; cursor: pointer;">
+                <input type="checkbox" id="heatmap-seva" style="margin-right: 8px;">
+                <span style="font-size: 13px;">🔥 Seva Activity</span>
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="heatmap-population" style="margin-right: 8px;">
+                <span style="font-size: 13px;">👥 Population Density</span>
+            </label>
+        </div>
+        
+        <div id="block-list" style="padding: 8px;">
+            <!-- Block items will be populated here -->
+        </div>
+    </div>
+    
+    <!-- PHASE 2: Block Dropdown (Mobile) -->
+    <div id="block-dropdown" style="position: fixed; top: 60px; left: 0; right: 0; background: white; border-bottom: 2px solid #e5e7eb; z-index: 99; display: none; padding: 12px;">
+        <select id="block-select-mobile" style="width: 100%; padding: 10px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px;">
+            <option value="">All Blocks</option>
+        </select>
+    </div>
+    
+    <!-- Toggle Sidebar Button (Mobile) -->
+    <button id="toggle-sidebar" style="position: fixed; top: 70px; left: 10px; z-index: 101; background: white; border: 1px solid #d1d5db; border-radius: 6px; padding: 8px 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-size: 14px; cursor: pointer; display: none;">
+        ☰ Blocks
+    </button>
+    
+    <div id="map-container" style="margin-left: 280px; transition: margin-left 0.3s ease;">
         <div class="loading" id="loading">
             Loading Bhadrak map...
             <div class="loading-progress" id="loading-progress"></div>
@@ -660,13 +697,217 @@
                 
                 console.log(`✅ Added ${pins.size()} pins (zoom to reveal)`);
                 
+                // ============================================================
+                // PHASE 2: Load and Render Block Boundaries
+                // ============================================================
+                updateProgress('Loading block boundaries...');
+                const blocksRes = await fetch('/api/blocks');
+                const blocksData = await blocksRes.json();
+                
+                const blockPaths = g.selectAll(".block-boundary")
+                    .data(blocksData.features)
+                    .enter()
+                    .append("path")
+                    .attr("class", "block-boundary")
+                    .attr("d", path)
+                    .attr("fill", "none")
+                    .attr("stroke", d => d.properties.color || "#f97316")
+                    .attr("stroke-width", 2)
+                    .attr("stroke-opacity", 0.6)
+                    .attr("cursor", "pointer")
+                    .on("mouseover", function(event, d) {
+                        d3.select(this)
+                            .attr("stroke-width", 3)
+                            .attr("stroke-opacity", 1);
+                        showBlockTooltip(event, d);
+                    })
+                    .on("mouseout", function(event, d) {
+                        d3.select(this)
+                            .attr("stroke-width", 2)
+                            .attr("stroke-opacity", 0.6);
+                        hideTooltip();
+                    })
+                    .on("click", (event, d) => {
+                        zoomToBlock(d);
+                    });
+                
+                console.log(`✅ Rendered ${blockPaths.size()} block boundaries`);
+                
+                // ============================================================
+                // PHASE 2: Load Block Statistics and Populate Sidebar
+                // ============================================================
+                const statsRes = await fetch('/api/blocks/statistics');
+                const blockStats = await statsRes.json();
+                
+                populateBlockSidebar(blockStats);
+                populateMobileDropdown(blockStats);
+                
+                // ============================================================
+                // PHASE 3: Heat Map Layer Setup
+                // ============================================================
+                setupHeatMapLayers(blockStats);
+                
                 // Hide loading
                 document.getElementById('loading').style.display = 'none';
-                console.log('✅ Map with pins complete!');
+                console.log('✅ Map with blocks, pins & heat maps complete!');
                 
             } catch (error) {
                 console.error('Error loading map:', error);
                 document.getElementById('loading').innerHTML = `Error loading map<br><small>${error.message}</small>`;
+            }
+        }
+        
+        // ============================================================
+        // PHASE 2: Block Sidebar & Statistics Functions
+        // ============================================================
+        
+        function populateBlockSidebar(blockStats) {
+            const blockList = document.getElementById('block-list');
+            blockList.innerHTML = '';
+            
+            blockStats.forEach(block => {
+                const activityColor = block.activity_color || '#9ca3af';
+                const activityEmoji = block.activity_level === 'high' ? '🟢' : 
+                                     block.activity_level === 'medium' ? '🟡' : 
+                                     block.activity_level === 'low' ? '🟠' : '⚪';
+                
+                const blockItem = document.createElement('div');
+                blockItem.style.cssText = 'padding: 12px; margin-bottom: 8px; background: #f9fafb; border-radius: 8px; cursor: pointer; border-left: 4px solid ' + activityColor + '; transition: all 0.2s;';
+                blockItem.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <div style="font-weight: 600; font-size: 14px; color: #1f2937;">${activityEmoji} ${block.block_name}</div>
+                        <div style="font-size: 11px; color: #6b7280; font-weight: 500;">${block.total_villages} villages</div>
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">
+                        👥 ${block.population.toLocaleString()} people
+                    </div>
+                    <div style="font-size: 12px; color: #6b7280;">
+                        📊 Active: ${block.active_seva_requests} | Total: ${block.total_seva_requests}
+                    </div>
+                `;
+                
+                blockItem.onmouseover = () => {
+                    blockItem.style.background = '#f3f4f6';
+                    blockItem.style.transform = 'translateX(4px)';
+                };
+                blockItem.onmouseout = () => {
+                    blockItem.style.background = '#f9fafb';
+                    blockItem.style.transform = 'translateX(0)';
+                };
+                blockItem.onclick = () => {
+                    // Find and zoom to this block
+                    const blockFeature = g.selectAll(".block-boundary")
+                        .data().find(d => d.properties.name === block.block_name);
+                    if (blockFeature) {
+                        zoomToBlock(blockFeature);
+                    }
+                };
+                
+                blockList.appendChild(blockItem);
+            });
+        }
+        
+        function populateMobileDropdown(blockStats) {
+            const select = document.getElementById('block-select-mobile');
+            blockStats.forEach(block => {
+                const option = document.createElement('option');
+                option.value = block.block_name;
+                option.textContent = `${block.block_name} (${block.total_villages} villages)`;
+                select.appendChild(option);
+            });
+            
+            select.onchange = (e) => {
+                if (e.target.value) {
+                    const blockFeature = g.selectAll(".block-boundary")
+                        .data().find(d => d.properties.name === e.target.value);
+                    if (blockFeature) {
+                        zoomToBlock(blockFeature);
+                    }
+                } else {
+                    resetZoom();
+                }
+            };
+        }
+        
+        function zoomToBlock(blockFeature) {
+            const bounds = path.bounds(blockFeature);
+            const dx = bounds[1][0] - bounds[0][0];
+            const dy = bounds[1][1] - bounds[0][1];
+            const x = (bounds[0][0] + bounds[1][0]) / 2;
+            const y = (bounds[0][1] + bounds[1][1]) / 2;
+            const scale = Math.min(8, 0.9 / Math.max(dx / width, dy / height));
+            const translate = [width / 2 - scale * x, height / 2 - scale * y];
+            
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity.translate(translate[0], translate[1]).scale(scale));
+        }
+        
+        function showBlockTooltip(event, d) {
+            const tooltip = document.getElementById('tooltip');
+            tooltip.innerHTML = `
+                <strong>${d.properties.name}</strong><br>
+                ${d.properties.villages || 0} villages<br>
+                Pop: ${(d.properties.population || 0).toLocaleString()}
+            `;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+            tooltip.style.opacity = '1';
+        }
+        
+        // ============================================================
+        // PHASE 3: Heat Map Functions
+        // ============================================================
+        
+        let heatMapLayers = {
+            seva: null,
+            population: null
+        };
+        
+        function setupHeatMapLayers(blockStats) {
+            // Create heat map layers (hidden by default)
+            // Seva activity heat map
+            const sevaHeatData = blockStats.map(b => ({
+                name: b.block_name,
+                value: b.seva_density || 0,
+                color: d3.interpolateReds(Math.min(b.seva_density / 10, 1))
+            }));
+            
+            // Population density heat map
+            const popHeatData = blockStats.map(b => ({
+                name: b.block_name,
+                value: b.population_density || 0,
+                color: d3.interpolateBlues(Math.min(b.population_density / 1000, 1))
+            }));
+            
+            // Heat map toggle event listeners
+            document.getElementById('heatmap-seva').onchange = function() {
+                toggleHeatMap('seva', this.checked, sevaHeatData);
+            };
+            
+            document.getElementById('heatmap-population').onchange = function() {
+                toggleHeatMap('population', this.checked, popHeatData);
+            };
+        }
+        
+        function toggleHeatMap(type, show, heatData) {
+            if (show) {
+                // Show heat map overlay
+                g.selectAll(`.heatmap-${type}`)
+                    .data(heatData)
+                    .enter()
+                    .append("rect")
+                    .attr("class", `heatmap-${type}`)
+                    .attr("x", 0)
+                    .attr("y", 0)
+                    .attr("width", width)
+                    .attr("height", height)
+                    .attr("fill", d => d.color)
+                    .attr("opacity", 0.3)
+                    .style("pointer-events", "none");
+            } else {
+                // Hide heat map
+                g.selectAll(`.heatmap-${type}`).remove();
             }
         }
         
@@ -816,6 +1057,62 @@
         function resetZoom() {
             svg.transition().call(zoom.transform, d3.zoomIdentity);
         }
+        
+        // ============================================================
+        // RESPONSIVE LAYOUT (Phase 2 - Mobile Support)
+        // ============================================================
+        
+        function updateLayout() {
+            const isMobile = window.innerWidth < 768;
+            const sidebar = document.getElementById('block-sidebar');
+            const mapContainer = document.getElementById('map-container');
+            const toggleBtn = document.getElementById('toggle-sidebar');
+            const dropdown = document.getElementById('block-dropdown');
+            
+            if (isMobile) {
+                // Mobile: Hide sidebar, show dropdown and toggle button
+                sidebar.style.transform = 'translateX(-100%)';
+                mapContainer.style.marginLeft = '0';
+                toggleBtn.style.display = 'block';
+                dropdown.style.display = 'block';
+            } else {
+                // Desktop: Show sidebar, hide dropdown and toggle
+                sidebar.style.transform = 'translateX(0)';
+                mapContainer.style.marginLeft = '280px';
+                toggleBtn.style.display = 'none';
+                dropdown.style.display = 'none';
+            }
+        }
+        
+        // Toggle sidebar on mobile
+        let sidebarOpen = false;
+        document.getElementById('toggle-sidebar').onclick = function() {
+            const sidebar = document.getElementById('block-sidebar');
+            sidebarOpen = !sidebarOpen;
+            
+            if (sidebarOpen) {
+                sidebar.style.transform = 'translateX(0)';
+                this.textContent = '✕ Close';
+            } else {
+                sidebar.style.transform = 'translateX(-100%)';
+                this.textContent = '☰ Blocks';
+            }
+        };
+        
+        // Block search functionality
+        document.getElementById('block-search').oninput = function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const blockItems = document.getElementById('block-list').children;
+            
+            Array.from(blockItems).forEach(item => {
+                const text = item.textContent.toLowerCase();
+                item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+            });
+        };
+        
+        // Initialize responsive layout
+        updateLayout();
+        window.addEventListener('resize', updateLayout);
     </script>
     
     <div class="footer">
