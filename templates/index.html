@@ -322,23 +322,31 @@
                         // Get block color
                         const blockColor = getBlockColor(v.block);
                         
-                        // Create styled pin marker
+                        // Create vibrant glowing pin marker
                         const icon = L.divIcon({
                             html: `
-                                <div style="position: relative; width: 28px; height: 36px; cursor: pointer;" title="${v.name}">
-                                    <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 3px 6px rgba(0,0,0,0.4));">
+                                <div style="position: relative; width: 32px; height: 40px; cursor: pointer;" title="${v.name}">
+                                    <svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 0 8px ${blockColor}) drop-shadow(0 4px 12px rgba(0,0,0,0.6));">
+                                        <defs>
+                                            <radialGradient id="glow-${v.id}" cx="50%" cy="30%">
+                                                <stop offset="0%" style="stop-color:white;stop-opacity:1" />
+                                                <stop offset="50%" style="stop-color:${blockColor};stop-opacity:1" />
+                                                <stop offset="100%" style="stop-color:${blockColor};stop-opacity:0.9" />
+                                            </radialGradient>
+                                        </defs>
                                         <path d="M12 0C5.373 0 0 5.373 0 12c0 9 12 20 12 20s12-11 12-20c0-6.627-5.373-12-12-12z" 
-                                              fill="${blockColor}" 
-                                              stroke="white" 
-                                              stroke-width="1.5"/>
-                                        <circle cx="12" cy="12" r="4" fill="white" opacity="0.95"/>
+                                              fill="url(#glow-${v.id})" 
+                                              stroke="${blockColor}" 
+                                              stroke-width="2"
+                                              style="paint-order: stroke;"/>
+                                        <circle cx="12" cy="11" r="3.5" fill="white" opacity="1"/>
                                     </svg>
                                 </div>
                             `,
                             className: 'village-pin-marker',
-                            iconSize: [28, 36],
-                            iconAnchor: [14, 36],
-                            popupAnchor: [0, -36]
+                            iconSize: [32, 40],
+                            iconAnchor: [16, 40],
+                            popupAnchor: [0, -40]
                         });
 
                         const marker = L.marker([v.lat, v.lng], { icon });
