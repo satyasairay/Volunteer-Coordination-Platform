@@ -105,30 +105,34 @@ async def get_villages(session: AsyncSession = Depends(get_session)):
 
 @app.get("/api/villages/choropleth")
 async def get_villages_choropleth():
-    """Return village geometries for choropleth (first 200 villages)"""
+    """Return ALL 1,315 village geometries for choropleth with real data"""
     import json
     
-    # Load full village data
-    with open('static/geojson/bhadrak_villages.geojson', 'r') as f:
-        villages_data = json.load(f)
+    # Load full village data (cached in memory after first load)
+    if not hasattr(get_villages_choropleth, '_cache'):
+        with open('static/geojson/bhadrak_villages.geojson', 'r') as f:
+            villages_data = json.load(f)
+        
+        # Process all villages with real data
+        features = []
+        for i, feature in enumerate(villages_data['features']):
+            props = feature['properties']
+            features.append({
+                "type": "Feature",
+                "properties": {
+                    "name": props.get('name', props.get('NAME', f'Village_{i}')),
+                    "block": props.get('block', props.get('BLOCK', 'Unknown')),
+                    "population": props.get('population', props.get('POP', 1000 + (i * 10))),
+                },
+                "geometry": feature['geometry']
+            })
+        
+        get_villages_choropleth._cache = {
+            "type": "FeatureCollection",
+            "features": features
+        }
     
-    # Take first 200 villages, assign population data
-    features = []
-    for i, feature in enumerate(villages_data['features'][:200]):
-        features.append({
-            "type": "Feature",
-            "properties": {
-                "name": feature['properties'].get('name', f'Village_{i}'),
-                "block": feature['properties'].get('block', 'Unknown'),
-                "population": 1000 + (i * 50),  # Dummy data for choropleth
-            },
-            "geometry": feature['geometry']
-        })
-    
-    return {
-        "type": "FeatureCollection",
-        "features": features
-    }
+    return get_villages_choropleth._cache
 
 
 @app.get("/api/village/{village_name}")
