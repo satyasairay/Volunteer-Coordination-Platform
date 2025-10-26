@@ -456,9 +456,12 @@
         function loadSevaFeed() {
             fetch('/api/seva/feed?limit=20')
                 .then(res => res.json())
-                .then(data => {
+                .then(response => {
                     const feed = document.getElementById('seva-feed');
                     const count = document.getElementById('seva-count');
+                    
+                    // Handle both array and object responses
+                    const data = Array.isArray(response) ? response : (response.feed || response.requests || []);
                     
                     if (data.length === 0) {
                         feed.innerHTML = '<p style="color: rgba(255,255,255,0.6);">No active seva requests at the moment.</p>';
