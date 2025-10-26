@@ -13,7 +13,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from db import init_db, get_session
-from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel
+from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics
 from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PASSWORD
 
 
@@ -990,6 +990,165 @@ async def update_map_settings(
     await session.commit()
     
     return {"status": "success", "message": "Settings updated successfully"}
+
+
+# ============================================================
+# PHASE 2 & 3: BLOCK STATISTICS & HEAT MAP APIs
+# ============================================================
+
+@app.get("/api/blocks")
+async def get_blocks():
+    """Get all block boundaries (GeoJSON) for Phase 2"""
+    with open('static/geojson/bhadrak_blocks.geojson', 'r') as f:
+        blocks_data = json.load(f)
+    return blocks_data
+
+
+@app.get("/api/blocks/statistics")
+async def get_block_statistics(session: AsyncSession = Depends(get_session)):
+    """Get real-time statistics for all blocks (Phase 2)"""
+    result = await session.execute(select(BlockStatistics))
+    stats = result.scalars().all()
+    
+    # If no stats exist, create default ones from blocks GeoJSON
+    if not stats:
+        with open('static/geojson/bhadrak_blocks.geojson', 'r') as f:
+            blocks_data = json.load(f)
+        
+        for feature in blocks_data['features']:
+            props = feature['properties']
+            block_stat = BlockStatistics(
+                block_name=props['name'],
+                block_code=props.get('block_code', props['name'][:3].upper()),
+                total_villages=props.get('villages', 0),
+                population=props.get('population', 0),
+                activity_level="medium",
+                activity_color="#f59e0b"
+            )
+            session.add(block_stat)
+        
+        await session.commit()
+        result = await session.execute(select(BlockStatistics))
+        stats = result.scalars().all()
+    
+    return [{
+        "block_name": s.block_name,
+        "block_code": s.block_code,
+        "total_villages": s.total_villages,
+        "population": s.population,
+        "active_seva_requests": s.active_seva_requests,
+        "total_seva_requests": s.total_seva_requests,
+        "fulfilled_seva_count": s.fulfilled_seva_count,
+        "avg_response_time_hours": s.avg_response_time_hours,
+        "testimonial_count": s.testimonial_count,
+        "villages_with_members": s.villages_with_members,
+        "total_volunteers": s.total_volunteers,
+        "coverage_percentage": s.coverage_percentage,
+        "activity_level": s.activity_level,
+        "activity_color": s.activity_color,
+        "seva_density": s.seva_density,
+        "population_density": s.population_density,
+        "last_calculated": s.last_calculated.isoformat() if s.last_calculated else None
+    } for s in stats]
+
+
+@app.post("/admin/api/blocks/statistics/refresh")
+async def refresh_block_statistics(
+    admin=Depends(get_current_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Refresh block statistics by calculating from live data (Phase 2)"""
+    from sqlalchemy import func
+    
+    # Get all blocks
+    with open('static/geojson/bhadrak_blocks.geojson', 'r') as f:
+        blocks_data = json.load(f)
+    
+    for feature in blocks_data['features']:
+        block_name = feature['properties']['name']
+        
+        # Get or create block statistics
+        result = await session.execute(
+            select(BlockStatistics).where(BlockStatistics.block_name == block_name)
+        )
+        block_stat = result.scalar_one_or_none()
+        
+        if not block_stat:
+            block_stat = BlockStatistics(
+                block_name=block_name,
+                block_code=feature['properties'].get('block_code', block_name[:3].upper())
+            )
+            session.add(block_stat)
+        
+        # Calculate statistics
+        # Total villages in this block
+        village_count = await session.execute(
+            select(func.count(Village.id)).where(Village.block == block_name)
+        )
+        block_stat.total_villages = village_count.scalar() or 0
+        
+        # Population
+        pop_sum = await session.execute(
+            select(func.sum(Village.population)).where(Village.block == block_name)
+        )
+        block_stat.population = int(pop_sum.scalar() or 0)
+        
+        # Seva requests (active and total)
+        active_count = await session.execute(
+            select(func.count(SevaRequest.id))
+            .join(Village, SevaRequest.village_id == Village.id)
+            .where(Village.block == block_name)
+            .where(SevaRequest.status.in_(["open", "assigned", "in_progress"]))
+        )
+        block_stat.active_seva_requests = active_count.scalar() or 0
+        
+        total_count = await session.execute(
+            select(func.count(SevaRequest.id))
+            .join(Village, SevaRequest.village_id == Village.id)
+            .where(Village.block == block_name)
+        )
+        block_stat.total_seva_requests = total_count.scalar() or 0
+        
+        fulfilled_count = await session.execute(
+            select(func.count(SevaRequest.id))
+            .join(Village, SevaRequest.village_id == Village.id)
+            .where(Village.block == block_name)
+            .where(SevaRequest.status == "fulfilled")
+        )
+        block_stat.fulfilled_seva_count = fulfilled_count.scalar() or 0
+        
+        # Coverage
+        volunteers_count = await session.execute(
+            select(func.count(Member.id))
+            .join(Village, Member.village_id == Village.id)
+            .where(Village.block == block_name)
+            .where(Member.verified == True)
+        )
+        block_stat.total_volunteers = volunteers_count.scalar() or 0
+        
+        # Calculate activity level
+        active_reqs = block_stat.active_seva_requests
+        if active_reqs >= 10:
+            block_stat.activity_level = "high"
+            block_stat.activity_color = "#10b981"  # Green
+        elif active_reqs >= 5:
+            block_stat.activity_level = "medium"
+            block_stat.activity_color = "#f59e0b"  # Yellow
+        elif active_reqs >= 1:
+            block_stat.activity_level = "low"
+            block_stat.activity_color = "#f97316"  # Orange
+        else:
+            block_stat.activity_level = "none"
+            block_stat.activity_color = "#9ca3af"  # Gray
+        
+        # Heat map metrics (Phase 3)
+        if block_stat.population > 0:
+            block_stat.seva_density = (block_stat.total_seva_requests / block_stat.population) * 1000
+        
+        block_stat.last_calculated = datetime.utcnow()
+    
+    await session.commit()
+    return {"status": "success", "message": "Block statistics refreshed"}
 
 
 @app.post("/admin/settings/map")

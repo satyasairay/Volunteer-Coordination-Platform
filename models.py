@@ -274,3 +274,40 @@ class CustomLabel(SQLModel, table=True):
     
     # Timestamps
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class BlockStatistics(SQLModel, table=True):
+    """Real-time block-level statistics for Phase 2 & 3"""
+    __tablename__ = "block_statistics"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    block_name: str = Field(unique=True, index=True)
+    block_code: str = Field(index=True)
+    
+    # Core metrics
+    total_villages: int = Field(default=0)
+    population: int = Field(default=0)
+    
+    # Seva activity (Phase 2)
+    active_seva_requests: int = Field(default=0)
+    total_seva_requests: int = Field(default=0)
+    fulfilled_seva_count: int = Field(default=0)
+    avg_response_time_hours: Optional[float] = None
+    testimonial_count: int = Field(default=0)
+    
+    # Coverage metrics
+    villages_with_members: int = Field(default=0)
+    total_volunteers: int = Field(default=0)
+    coverage_percentage: float = Field(default=0.0)  # % villages with active members
+    
+    # Activity level (for color coding)
+    activity_level: str = Field(default="none")  # none, low, medium, high
+    activity_color: str = Field(default="#9ca3af")  # gray, orange, yellow, green
+    
+    # Heat map data (Phase 3)
+    seva_density: float = Field(default=0.0)  # Requests per 1000 people
+    population_density: float = Field(default=0.0)  # People per sq km
+    
+    # Timestamps
+    last_calculated: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
