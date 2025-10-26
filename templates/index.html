@@ -546,75 +546,6 @@
         let mapSettings = {};
         let customLabels = {};
         
-        // 3D EMOJI-STYLE PINS - WhatsApp/Modern look with depth and realism
-        const pinShapes = {
-            // 3D Map Pin with realistic depth
-            'mappin': `<defs>
-                <linearGradient id="grad-mappin" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/>
-                    <stop offset="60%" style="stop-color:currentColor;stop-opacity:0.85"/>
-                    <stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/>
-                </linearGradient>
-                <radialGradient id="shine-mappin" cx="35%" cy="25%">
-                    <stop offset="0%" style="stop-color:rgba(255,255,255,0.8)"/>
-                    <stop offset="50%" style="stop-color:rgba(255,255,255,0.3)"/>
-                    <stop offset="100%" style="stop-color:rgba(255,255,255,0)"/>
-                </radialGradient>
-                <filter id="shadow-mappin">
-                    <feGaussianBlur in="SourceAlpha" stdDeviation="1.5"/>
-                    <feOffset dx="0" dy="2" result="offsetblur"/>
-                    <feFlood flood-color="#000000" flood-opacity="0.5"/>
-                    <feComposite in2="offsetblur" operator="in"/>
-                    <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
-                </filter>
-            </defs>
-            <path d="M0,-12 C-5,-12 -9,-8 -9,-3 C-9,2 0,14 0,14 C0,14 9,2 9,-3 C9,-8 5,-12 0,-12 Z" 
-                fill="url(#grad-mappin)" 
-                stroke="rgba(0,0,0,0.2)" 
-                stroke-width="0.5" 
-                filter="url(#shadow-mappin)"/>
-            <ellipse cx="0" cy="-4" rx="6" ry="5" fill="url(#shine-mappin)"/>
-            <circle cx="0" cy="-3" r="3" fill="white" opacity="0.95"/>`,
-            
-            'diamond': '<defs><linearGradient id="grad-diamond" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><path d="M0,-7 L5,0 L0,7 L-5,0 Z" fill="url(#grad-diamond)" stroke="white" stroke-width="0.8" opacity="0.95"/>',
-            
-            'star': '<defs><radialGradient id="grad-star"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></radialGradient></defs><path d="M0,-7 L2,-2 L7,-1.5 L3,2 L4,7 L0,5 L-4,7 L-3,2 L-7,-1.5 L-2,-2 Z" fill="url(#grad-star)" stroke="white" stroke-width="0.6" opacity="0.95"/>',
-            
-            'triangle': '<defs><linearGradient id="grad-tri" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><path d="M0,-7 L6,6 L-6,6 Z" fill="url(#grad-tri)" stroke="white" stroke-width="0.8" opacity="0.95"/>',
-            
-            'hexagon': '<defs><linearGradient id="grad-hex" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></linearGradient></defs><path d="M0,-7 L6,-3.5 L6,3.5 L0,7 L-6,3.5 L-6,-3.5 Z" fill="url(#grad-hex)" stroke="white" stroke-width="0.8" opacity="0.95"/>',
-            
-            'pentagon': '<defs><linearGradient id="grad-pent" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><path d="M0,-7 L6,-2 L4,6 L-4,6 L-6,-2 Z" fill="url(#grad-pent)" stroke="white" stroke-width="0.8" opacity="0.95"/>',
-            
-            // Flag styles
-            'flag': '<defs><linearGradient id="grad-flag" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></linearGradient></defs><rect x="0" y="-7" width="1" height="14" fill="white" opacity="0.8"/><path d="M1,-7 L9,-5 L9,-1 L1,-3 Z" fill="url(#grad-flag)" stroke="white" stroke-width="0.5" opacity="0.95"/>',
-            
-            'wavyflag': '<defs><linearGradient id="grad-wflag" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></linearGradient></defs><rect x="0" y="-7" width="1" height="14" fill="white" opacity="0.8"/><path d="M1,-6 Q5,-7 9,-6 L9,-2 Q5,-3 1,-2 Z" fill="url(#grad-wflag)" stroke="white" stroke-width="0.5" opacity="0.95"/>',
-            
-            'pennant': '<defs><linearGradient id="grad-penn" x1="0%" y1="0%" x2="100%" y2="50%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><rect x="0" y="-7" width="1" height="14" fill="white" opacity="0.8"/><path d="M1,-6 L10,0 L1,6 Z" fill="url(#grad-penn)" stroke="white" stroke-width="0.5" opacity="0.95"/>',
-            
-            // Location markers
-            'pinpoint': '<defs><radialGradient id="grad-pp"><stop offset="0%" style="stop-color:white;stop-opacity:1"/><stop offset="40%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></radialGradient></defs><path d="M0,-9 C-4,-9 -7,-6 -7,-2 C-7,2 0,9 0,9 C0,9 7,2 7,-2 C7,-6 4,-9 0,-9 Z" fill="url(#grad-pp)" stroke="white" stroke-width="1" opacity="0.95"/><path d="M0,-8 L-2,-3 L2,-3 Z" fill="white" opacity="0.8"/>',
-            
-            'droplet': '<defs><linearGradient id="grad-drop" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:0.9"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:1"/></linearGradient></defs><path d="M0,-8 C-4,-4 -5,0 -5,3 C-5,6 -2,8 0,8 C2,8 5,6 5,3 C5,0 4,-4 0,-8 Z" fill="url(#grad-drop)" stroke="white" stroke-width="0.8" opacity="0.95"/>',
-            
-            'beacon': '<defs><radialGradient id="grad-beacon"><stop offset="0%" style="stop-color:white;stop-opacity:1"/><stop offset="50%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.5"/></radialGradient></defs><circle cx="0" cy="0" r="7" fill="url(#grad-beacon)" stroke="white" stroke-width="1" opacity="0.95"/><circle cx="0" cy="0" r="3" fill="white" opacity="0.9"/>',
-            
-            'ring': '<defs><linearGradient id="grad-ring" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><circle cx="0" cy="0" r="6" fill="none" stroke="url(#grad-ring)" stroke-width="2.5" opacity="0.95"/><circle cx="0" cy="0" r="2" fill="white" opacity="0.9"/>',
-            
-            // Directional
-            'arrow': '<defs><linearGradient id="grad-arrow" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></linearGradient></defs><path d="M0,-8 L4,-4 L1,-4 L1,6 L-1,6 L-1,-4 L-4,-4 Z" fill="url(#grad-arrow)" stroke="white" stroke-width="0.6" opacity="0.95"/>',
-            
-            'pointer': '<defs><linearGradient id="grad-ptr" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><path d="M-5,-6 L5,-6 L8,0 L5,6 L-5,6 L-2,0 Z" fill="url(#grad-ptr)" stroke="white" stroke-width="0.7" opacity="0.95"/>',
-            
-            // Special
-            'heart': '<defs><radialGradient id="grad-heart"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></radialGradient></defs><path d="M0,-3 C0,-5 -2,-7 -4,-7 C-6,-7 -7,-5 -7,-3 C-7,0 0,7 0,7 C0,7 7,0 7,-3 C7,-5 6,-7 4,-7 C2,-7 0,-5 0,-3 Z" fill="url(#grad-heart)" stroke="white" stroke-width="0.7" opacity="0.95"/>',
-            
-            'shield': '<defs><linearGradient id="grad-shield" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.6"/></linearGradient></defs><path d="M0,-7 L6,-5 L6,2 C6,5 3,8 0,8 C-3,8 -6,5 -6,2 L-6,-5 Z" fill="url(#grad-shield)" stroke="white" stroke-width="0.8" opacity="0.95"/>',
-            
-            'target': '<defs><radialGradient id="grad-target"><stop offset="0%" style="stop-color:white;stop-opacity:1"/><stop offset="30%" style="stop-color:currentColor;stop-opacity:1"/><stop offset="60%" style="stop-color:white;stop-opacity:0.8"/><stop offset="100%" style="stop-color:currentColor;stop-opacity:0.7"/></radialGradient></defs><circle cx="0" cy="0" r="7" fill="url(#grad-target)" stroke="white" stroke-width="0.8" opacity="0.95"/><circle cx="0" cy="0" r="2" fill="currentColor" opacity="0.9"/>'
-        };
-        
         // Color scheme mappings
         const colorSchemes = {
             'Blues': d3.interpolateBlues,
@@ -704,72 +635,42 @@
                     .domain([0, 15])
                     .interpolator(t => d3.interpolateBlues(0.5 + t * 0.4));
                 
-                // Add SVG pins for ALL 1,315 villages
-                const pinStyle = mapSettings.pin_style || 'mappin';
-                const pinSvg = pinShapes[pinStyle] || pinShapes['mappin'];
-                
-                // SURGICAL PIN PLACEMENT - Like Google Maps
-                // Each pin anchored at its point/tip, not center
-                const pinAnchorOffsets = {
-                    'mappin': { x: 0, y: -12 },      // Point at bottom
-                    'pinpoint': { x: 0, y: -12 },
-                    'droplet': { x: 0, y: -12 },
-                    'flag': { x: 0, y: -10 },
-                    'wavyflag': { x: 0, y: -10 },
-                    'pennant': { x: 0, y: -10 },
-                    'arrow': { x: 0, y: -10 },
-                    'pointer': { x: 0, y: -10 },
-                    'diamond': { x: 0, y: 0 },       // Center-based shapes
-                    'star': { x: 0, y: 0 },
-                    'triangle': { x: 0, y: -8 },
-                    'hexagon': { x: 0, y: 0 },
-                    'pentagon': { x: 0, y: 0 },
-                    'beacon': { x: 0, y: 0 },
-                    'ring': { x: 0, y: 0 },
-                    'heart': { x: 0, y: -10 },
-                    'shield': { x: 0, y: -10 },
-                    'target': { x: 0, y: 0 }
-                };
-                
-                const currentPinStyle = mapSettings.pin_style || 'mappin';
-                const anchorOffset = pinAnchorOffsets[currentPinStyle] || { x: 0, y: -12 };
+                // Add 3D GLOWING DOTS for ALL 1,315 villages (CSS-based, no SVG!)
+                const dotStyle = mapSettings.dot_style || 'neon_glow';
                 
                 const pins = g.selectAll(".village-pin")
                     .data(villages.features)
                     .enter()
-                    .append("g")
+                    .append("foreignObject")
                     .attr("class", "village-pin")
-                    .attr("transform", d => {
-                        const centroid = path.centroid(d);
-                        // PIXEL-PERFECT: Anchor at pin's point/tip like real maps
-                        const x = centroid[0] + anchorOffset.x;
-                        const y = centroid[1] + anchorOffset.y;
-                        return `translate(${x}, ${y})`;
-                    })
+                    .attr("width", 40)
+                    .attr("height", 40)
+                    .attr("x", d => path.centroid(d)[0] - 20)  // Center the 40x40 box
+                    .attr("y", d => path.centroid(d)[1] - 20)
                     .attr("cursor", "pointer")
                     .attr("opacity", 0) // Hidden by default, shown on zoom
                     .on("mouseover", showPinTooltip)
                     .on("mouseout", hideTooltip)
                     .on("click", showVillageModal);
                 
-                // Add SVG shape to each pin group - TINY SURGICAL PINS like Google Maps
+                // Add 3D glowing dots with dynamic styles
                 pins.each(function(d) {
                     const pin = d3.select(this);
                     const color = d.properties.field_worker_count > 0 
                         ? pinColorScale(d.properties.field_worker_count) 
                         : "#3b7bbf";
                     
-                    // Create SVG container with SCALED DOWN size for surgical precision
-                    // WhatsApp emoji-style: small but visible 3D markers
-                    pin.append("g")
-                        .attr("class", "pin-shape")
-                        .attr("transform", "scale(0.8)") // Perfect size: visible but surgical
-                        .style("color", color)
-                        .style("filter", "drop-shadow(0px 2px 4px rgba(0,0,0,0.6))")
-                        .html(pinSvg);
+                    // Generate CSS-based glowing dot HTML
+                    const dotHTML = getDotHTML(dotStyle, color);
+                    
+                    pin.html(`
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none;">
+                            ${dotHTML}
+                        </div>
+                    `);
                 });
                 
-                console.log(`✅ Added ${pins.size()} pins (zoom to reveal)`);
+                console.log(`✅ Added ${pins.size()} 3D glowing dots (zoom to reveal)`);
                 
                 // ============================================================
                 // PHASE 2: Load and Render Block Boundaries
@@ -980,6 +881,23 @@
             if (progress) {
                 progress.textContent = message;
             }
+        }
+        
+        // Generate 3D glowing dot HTML based on style
+        function getDotHTML(styleId, color) {
+            const styles = {
+                'neon_glow': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 8px 3px ${color}, 0 0 12px 6px ${color}66, inset 0 0 4px ${color};"></div>`,
+                'pulse_ring': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 3px ${color}88, 0 0 8px 2px ${color}; animation: pulse 1.5s ease-in-out infinite;"></div>`,
+                'double_halo': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 6px 2px ${color}, 0 0 12px 5px ${color}66, 0 0 20px 8px ${color}33;"></div>`,
+                'soft_blur': `<div style="width: 14px; height: 14px; background: ${color}; border-radius: 50%; filter: blur(3px); opacity: 0.9;"></div>`,
+                'sharp_core': `<div style="width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 0 2px #111, 0 0 12px 4px ${color};"></div>`,
+                'plasma': `<div style="width: 14px; height: 14px; background: radial-gradient(circle, ${color} 0%, ${color}66 50%, transparent 100%); border-radius: 50%; filter: blur(1px);"></div>`,
+                'crystal': `<div style="width: 12px; height: 12px; background: linear-gradient(135deg, white, ${color}); border-radius: 50%; box-shadow: 0 0 8px 2px ${color}88, inset -2px -2px 4px rgba(255,255,255,0.6);"></div>`,
+                'firefly': `<div style="width: 10px; height: 10px; background: radial-gradient(circle, ${color}ff 0%, ${color}88 40%, transparent 70%); border-radius: 50%; box-shadow: 0 0 10px 4px ${color}66;"></div>`,
+                'laser': `<div style="width: 8px; height: 8px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}ff, 0 0 8px 3px ${color}cc, 0 0 1px 1px white; border: 1px solid white;"></div>`,
+                'halo_fade': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 2px ${color}99, 0 0 0 5px ${color}55, 0 0 0 8px ${color}22;"></div>`
+            };
+            return styles[styleId] || styles['neon_glow'];
         }
         
         function showPinTooltip(event, d) {
