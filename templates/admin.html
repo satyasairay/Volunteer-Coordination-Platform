@@ -96,61 +96,62 @@
     </div>
 
     <script>
-        // Pin style definitions with SVG paths - 18 creative styles
-        const pinStyles = [
-            // Classic
-            { id: 'mappin', name: '📍 Map Pin', svg: '<path d="M0,-8 C-3,-8 -5,-6 -5,-3 C-5,0 0,8 0,8 C0,8 5,0 5,-3 C5,-6 3,-8 0,-8 Z" fill="currentColor"/><circle cx="0" cy="-3" r="2" fill="white"/>' },
-            { id: 'diamond', name: '💎 Diamond', svg: '<path d="M0,-6 L4,0 L0,6 L-4,0 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'star', name: '⭐ Star', svg: '<path d="M0,-6 L1.5,-2 L6,-1.5 L2.5,1.5 L3,6 L0,4 L-3,6 L-2.5,1.5 L-6,-1.5 L-1.5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'triangle', name: '🔺 Triangle', svg: '<path d="M0,-6 L5,5 L-5,5 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'hexagon', name: '⬡ Hexagon', svg: '<path d="M0,-6 L5,-3 L5,3 L0,6 L-5,3 L-5,-3 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'pentagon', name: '⬟ Pentagon', svg: '<path d="M0,-6 L5,-2 L3,5 L-3,5 L-5,-2 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            
-            // Flags
-            { id: 'flag', name: '🚩 Flag', svg: '<rect x="0" y="-6" width="1" height="12" fill="white"/><path d="M1,-6 L8,-4 L8,-1 L1,-3 Z" fill="currentColor" stroke="white" stroke-width="0.4"/>' },
-            { id: 'wavyflag', name: '🏴 Wavy Flag', svg: '<rect x="0" y="-6" width="1" height="12" fill="white"/><path d="M1,-5 Q4,-6 7,-5 L7,-2 Q4,-3 1,-2 Z" fill="currentColor" stroke="white" stroke-width="0.4"/>' },
-            { id: 'pennant', name: '⛳ Pennant', svg: '<rect x="0" y="-6" width="1" height="12" fill="white"/><path d="M1,-5 L9,0 L1,5 Z" fill="currentColor" stroke="white" stroke-width="0.4"/>' },
-            
-            // Location
-            { id: 'pinpoint', name: '📌 Pinpoint', svg: '<path d="M0,-8 C-3,-8 -6,-5 -6,-2 C-6,2 0,8 0,8 C0,8 6,2 6,-2 C6,-5 3,-8 0,-8 Z" fill="currentColor" stroke="white" stroke-width="0.7"/><path d="M0,-7 L-2,-3 L2,-3 Z" fill="white"/>' },
-            { id: 'droplet', name: '💧 Droplet', svg: '<path d="M0,-7 C-3,-4 -4,0 -4,2 C-4,5 -2,7 0,7 C2,7 4,5 4,2 C4,0 3,-4 0,-7 Z" fill="currentColor" stroke="white" stroke-width="0.7"/>' },
-            { id: 'beacon', name: '🔵 Beacon', svg: '<circle cx="0" cy="0" r="6" fill="currentColor" stroke="white" stroke-width="1"/><circle cx="0" cy="0" r="2.5" fill="white"/>' },
-            { id: 'ring', name: '⭕ Ring', svg: '<circle cx="0" cy="0" r="5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="0" cy="0" r="1.5" fill="white"/>' },
-            
-            // Directional
-            { id: 'arrow', name: '⬆️ Arrow', svg: '<path d="M0,-7 L3,-4 L1,-4 L1,5 L-1,5 L-1,-4 L-3,-4 Z" fill="currentColor" stroke="white" stroke-width="0.5"/>' },
-            { id: 'pointer', name: '👉 Pointer', svg: '<path d="M-4,-5 L4,-5 L7,0 L4,5 L-4,5 L-1,0 Z" fill="currentColor" stroke="white" stroke-width="0.6"/>' },
-            
-            // Special
-            { id: 'heart', name: '❤️ Heart', svg: '<path d="M0,-3 C0,-4.5 -1.5,-6 -3,-6 C-4.5,-6 -6,-4.5 -6,-3 C-6,0 0,6 0,6 C0,6 6,0 6,-3 C6,-4.5 4.5,-6 3,-6 C1.5,-6 0,-4.5 0,-3 Z" fill="currentColor" stroke="white" stroke-width="0.6"/>' },
-            { id: 'shield', name: '🛡️ Shield', svg: '<path d="M0,-6 L5,-4 L5,2 C5,4.5 2.5,7 0,7 C-2.5,7 -5,4.5 -5,2 L-5,-4 Z" fill="currentColor" stroke="white" stroke-width="0.7"/>' },
-            { id: 'target', name: '🎯 Target', svg: '<circle cx="0" cy="0" r="6" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="0" cy="0" r="3" fill="none" stroke="currentColor" stroke-width="1"/><circle cx="0" cy="0" r="1.5" fill="currentColor"/>' }
+        // 3D GLOWING DOT STYLES - CSS-based, no SVG!
+        const dotStyles = [
+            { id: 'neon_glow', name: '✨ Neon Glow', desc: 'Bright neon with soft outer glow' },
+            { id: 'pulse_ring', name: '💫 Pulse Ring', desc: 'Pulsing ring animation' },
+            { id: 'double_halo', name: '🌟 Double Halo', desc: 'Two-layer glowing rings' },
+            { id: 'soft_blur', name: '☁️ Soft Blur', desc: 'Gentle blurred edges' },
+            { id: 'sharp_core', name: '💎 Sharp Core', desc: 'Crisp center with glow' },
+            { id: 'plasma', name: '🔮 Plasma', desc: 'Energy plasma effect' },
+            { id: 'crystal', name: '💠 Crystal', desc: 'Crystalline shimmer' },
+            { id: 'firefly', name: '🪲 Firefly', desc: 'Bioluminescent glow' },
+            { id: 'laser', name: '🔴 Laser', desc: 'Intense laser dot' },
+            { id: 'halo_fade', name: '⭕ Halo Fade', desc: 'Fading outer halo' }
         ];
 
-        // Load map settings and populate pin styles
+        // Load map settings and populate dot styles
         async function loadPinStyles() {
             try {
                 const res = await fetch('/api/map-settings');
                 const settings = await res.json();
-                const currentStyle = settings.pin_style || 'mappin';
+                const currentStyle = settings.dot_style || 'neon_glow';
                 
                 const grid = document.getElementById('pin-style-grid');
-                grid.innerHTML = pinStyles.map(style => `
+                grid.innerHTML = dotStyles.map(style => `
                     <div 
-                        class="pin-style-option ${currentStyle === style.id ? 'selected' : ''}"
+                        class="dot-style-option ${currentStyle === style.id ? 'selected' : ''}"
                         data-style="${style.id}"
                         onclick="selectPinStyle('${style.id}')"
-                        style="cursor: pointer; border: 3px solid ${currentStyle === style.id ? '#3b82f6' : '#e5e7eb'}; border-radius: 8px; padding: 16px; text-align: center; transition: all 0.2s;"
+                        style="cursor: pointer; border: 3px solid ${currentStyle === style.id ? '#3b82f6' : '#e5e7eb'}; border-radius: 12px; padding: 16px; text-align: center; transition: all 0.2s; background: #1a1a1a;"
                     >
-                        <svg width="40" height="40" viewBox="-10 -10 20 20" style="color: #3b7bbf; margin: 0 auto;">
-                            ${style.svg}
-                        </svg>
-                        <div style="margin-top: 8px; font-size: 12px; font-weight: 500;">${style.name}</div>
+                        <div class="dot-preview" style="width: 50px; height: 50px; margin: 0 auto; position: relative; display: flex; align-items: center; justify-content: center;">
+                            ${getDotPreviewHTML(style.id, '#3b7bbf')}
+                        </div>
+                        <div style="margin-top: 12px; font-size: 13px; font-weight: 600; color: white;">${style.name}</div>
+                        <div style="margin-top: 4px; font-size: 10px; color: #999;">${style.desc}</div>
                     </div>
                 `).join('');
             } catch (err) {
-                console.error('Error loading pin styles:', err);
+                console.error('Error loading dot styles:', err);
             }
+        }
+        
+        // Generate HTML for dot preview based on style
+        function getDotPreviewHTML(styleId, color) {
+            const styles = {
+                'neon_glow': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 8px 3px ${color}, 0 0 12px 6px ${color}66, inset 0 0 4px ${color};"></div>`,
+                'pulse_ring': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 3px ${color}88, 0 0 8px 2px ${color}; animation: pulse 1.5s infinite;"></div>`,
+                'double_halo': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 6px 2px ${color}, 0 0 12px 5px ${color}66, 0 0 20px 8px ${color}33;"></div>`,
+                'soft_blur': `<div style="width: 14px; height: 14px; background: ${color}; border-radius: 50%; filter: blur(3px); opacity: 0.9;"></div>`,
+                'sharp_core': `<div style="width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 0 2px #111, 0 0 12px 4px ${color};"></div>`,
+                'plasma': `<div style="width: 14px; height: 14px; background: radial-gradient(circle, ${color} 0%, ${color}66 50%, transparent 100%); border-radius: 50%; filter: blur(1px);"></div>`,
+                'crystal': `<div style="width: 12px; height: 12px; background: linear-gradient(135deg, white, ${color}); border-radius: 50%; box-shadow: 0 0 8px 2px ${color}88, inset -2px -2px 4px rgba(255,255,255,0.6);"></div>`,
+                'firefly': `<div style="width: 10px; height: 10px; background: radial-gradient(circle, ${color}ff 0%, ${color}88 40%, transparent 70%); border-radius: 50%; box-shadow: 0 0 10px 4px ${color}66;"></div>`,
+                'laser': `<div style="width: 8px; height: 8px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}ff, 0 0 8px 3px ${color}cc, 0 0 1px 1px white; border: 1px solid white;"></div>`,
+                'halo_fade': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 2px ${color}99, 0 0 0 5px ${color}55, 0 0 0 8px ${color}22;"></div>`
+            };
+            return styles[styleId] || styles['neon_glow'];
         }
         
         async function selectPinStyle(styleId) {
@@ -159,22 +160,22 @@
                 const res = await fetch('/api/map-settings', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ pin_style: styleId })
+                    body: JSON.stringify({ dot_style: styleId })
                 });
                 
                 if (res.ok) {
-                    message.innerHTML = '<p class="text-green-600">✓ Pin style updated! Refresh the map to see changes.</p>';
+                    message.innerHTML = '<p class="text-green-600">✓ Dot style updated! Refresh the map to see changes.</p>';
                     setTimeout(() => message.innerHTML = '', 3000);
                     loadPinStyles(); // Reload to update selection
                 } else {
-                    throw new Error('Failed to update pin style');
+                    throw new Error('Failed to update dot style');
                 }
             } catch (err) {
                 message.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
             }
         }
         
-        // Load pin styles on page load
+        // Load dot styles on page load
         loadPinStyles();
         
         // Load custom labels

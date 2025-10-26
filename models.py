@@ -221,11 +221,14 @@ class MapSettings(SQLModel, table=True):
     show_blocks: bool = Field(default=True)
     village_point_color: str = Field(default="#e63946")  # Red dots
     
-    # Pin settings
+    # Pin settings (DEPRECATED - use dot_style instead)
     pin_style: str = Field(default="mappin")  # mappin, diamond, star, triangle, hexagon, pentagon, marker
     pin_color_scheme: str = Field(default="Blues")  # Blues, Oranges, Greens
     pin_color_metric: str = Field(default="field_workers")  # field_workers, uk_centers, population, custom
     show_pins: bool = Field(default=True)
+    
+    # NEW: 3D Glowing Dot settings
+    dot_style: str = Field(default="neon_glow")  # neon_glow, pulse_ring, double_halo, soft_blur, sharp_core, plasma, crystal
     
     # Timestamps
     updated_at: datetime = Field(default_factory=datetime.utcnow)
