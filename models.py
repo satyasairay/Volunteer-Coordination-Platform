@@ -318,18 +318,24 @@ class BlockStatistics(SQLModel, table=True):
 
 
 class User(SQLModel, table=True):
-    """User authentication and role management - Version 2.0.0"""
+    """User authentication and role management - Version 3.0.0"""
     __tablename__ = "users"
     
     id: Optional[int] = Field(default=None, primary_key=True)
     
     # Authentication
     email: str = Field(unique=True, index=True)
-    password_hash: str
+    password_hash: Optional[str] = None  # Nullable for Google OAuth users
+    
+    # Google OAuth (Phase 3)
+    google_id: Optional[str] = Field(default=None, unique=True, index=True)
+    oauth_provider: str = Field(default="email")  # 'email' or 'google'
+    oauth_profile_picture: Optional[str] = None
     
     # Profile
     full_name: str
     phone: str
+    profile_updated_at: Optional[datetime] = None
     
     # Role & Multi-Block Access
     role: str = Field(index=True)  # 'super_admin', 'block_coordinator'
