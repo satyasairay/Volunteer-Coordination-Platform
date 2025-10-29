@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - DP Works Bhadrak</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('/static/stock_images/bright_sunlit_green__fd4a9d7d.jpg') center/cover fixed;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            color: #1e293b;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            color: #475569;
+            font-size: 1rem;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-card h2 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .content-card p {
+            color: #475569;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .content-card {
+                padding: 1.5rem;
+            }
+
+            .btn {
+                display: block;
+                width: 100%;
+                text-align: center;
+                margin-right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <div class="header">
+            <h1>📊 Block Coordinator Dashboard</h1>
+            <p>Welcome! Your account is active and ready to submit Field Worker information.</p>
+        </div>
+
+        <div class="content-card">
+            <h2>🗺️ View Village Map</h2>
+            <p>Explore the interactive map showing all 1,315 villages in Bhadrak district with geographic boundaries, choropleth visualization, and 3D glowing dots.</p>
+            <a href="/" class="btn">Open Village Map</a>
+        </div>
+
+        <div class="content-card">
+            <h2>📝 Submit Field Worker Information</h2>
+            <p>Add new Field Worker contact details for villages in your assigned block(s). All submissions require admin approval before going live.</p>
+            <a href="/field-workers/new" class="btn">Add Field Worker</a>
+        </div>
+
+        <div class="content-card">
+            <h2>📋 My Submissions</h2>
+            <p>View and manage all Field Worker entries you've submitted, including pending approvals and approved entries.</p>
+            <a href="/field-workers/my-submissions" class="btn">View My Submissions</a>
+        </div>
+
+        <div class="content-card">
+            <h2>⚙️ Account Settings</h2>
+            <p>Update your profile information, change password, and manage notification preferences.</p>
+            <a href="/admin/login" class="btn btn-secondary">Logout</a>
+        </div>
+    </div>
+</body>
+</html>
