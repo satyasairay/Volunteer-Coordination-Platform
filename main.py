@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig, AboutPage
-from auth import create_session_token, get_current_admin, get_current_user, get_optional_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context
+from auth import create_session_token, get_current_admin, get_current_user, get_optional_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context, hash_password
 
 
 async def seed_default_labels(session: AsyncSession):
@@ -2076,6 +2076,160 @@ async def reactivate_user(
     await session.commit()
     
     return {"success": True, "message": "User reactivated successfully"}
+
+
+@app.post("/api/admin/users")
+async def create_admin_user(
+    full_name: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+    role: str = Form(...),
+    primary_block: str = Form(""),
+    assigned_blocks: str = Form(""),
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Create new admin user (super admin only)"""
+    # Validate role
+    if role not in ["super_admin", "block_coordinator"]:
+        raise HTTPException(status_code=400, detail="Invalid role. Must be super_admin or block_coordinator")
+    
+    # Validate block for coordinators
+    if role == "block_coordinator" and not primary_block:
+        raise HTTPException(status_code=400, detail="Block coordinators must have a primary block assigned")
+    
+    # Check if email already exists
+    result = await session.execute(select(User).where(User.email == email))
+    existing_user = result.scalar_one_or_none()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already exists")
+    
+    # Validate password strength
+    if len(password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    
+    # Create new admin user
+    new_user = User(
+        email=email,
+        password_hash=hash_password(password),
+        full_name=full_name,
+        phone="",  # Optional, can be updated later
+        role=role,
+        primary_block=primary_block or "",
+        assigned_blocks=assigned_blocks,
+        is_active=True,  # Auto-activate admin-created users
+        approved_by=admin_data.get('email'),
+        approved_at=datetime.utcnow(),
+        oauth_provider="email"
+    )
+    
+    session.add(new_user)
+    await session.commit()
+    await session.refresh(new_user)
+    
+    return {
+        "success": True,
+        "message": "Admin user created successfully",
+        "user": {
+            "id": new_user.id,
+            "email": new_user.email,
+            "full_name": new_user.full_name,
+            "role": new_user.role,
+            "primary_block": new_user.primary_block,
+            "is_active": new_user.is_active
+        }
+    }
+
+
+@app.put("/api/admin/users/{user_id}/role")
+async def change_user_role(
+    user_id: int,
+    new_role: str = Form(...),
+    primary_block: str = Form(""),
+    assigned_blocks: str = Form(""),
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Change user role (super admin only)"""
+    # Validate new role
+    if new_role not in ["super_admin", "block_coordinator"]:
+        raise HTTPException(status_code=400, detail="Invalid role")
+    
+    # Get target user
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Check if this is the last super admin being demoted
+    if user.role == "super_admin" and new_role != "super_admin":
+        # Count active super admins
+        count_result = await session.execute(
+            select(func.count(User.id)).where(
+                User.role == "super_admin",
+                User.is_active == True
+            )
+        )
+        super_admin_count = count_result.scalar()
+        
+        if super_admin_count <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot change role. At least one active super admin must remain."
+            )
+    
+    # Update user role
+    user.role = new_role
+    user.primary_block = primary_block if new_role == "block_coordinator" else ""
+    user.assigned_blocks = assigned_blocks if new_role == "block_coordinator" else ""
+    user.profile_updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {
+        "success": True,
+        "message": f"Role changed to {new_role} successfully",
+        "user": {
+            "id": user.id,
+            "email": user.email,
+            "role": user.role,
+            "primary_block": user.primary_block,
+            "assigned_blocks": user.assigned_blocks
+        }
+    }
+
+
+@app.delete("/api/admin/users/{user_id}")
+async def delete_user(
+    user_id: int,
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Delete user (super admin only) - Use with caution"""
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Prevent deleting last super admin
+    if user.role == "super_admin":
+        count_result = await session.execute(
+            select(func.count(User.id)).where(User.role == "super_admin")
+        )
+        super_admin_count = count_result.scalar()
+        
+        if super_admin_count <= 1:
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot delete last super admin"
+            )
+    
+    await session.delete(user)
+    await session.commit()
+    
+    return {"success": True, "message": "User deleted successfully"}
 
 
 # ============================================================
