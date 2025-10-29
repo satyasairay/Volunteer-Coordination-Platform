@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, Depends, HTTPException, Form, UploadFile, 
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from sqlmodel import select, or_
+from sqlmodel import select, or_, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional, List
 import csv
@@ -15,6 +15,7 @@ from contextlib import asynccontextmanager
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig
 from auth import create_session_token, get_current_admin, get_current_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD
+import bcrypt
 
 
 async def seed_default_labels(session: AsyncSession):
