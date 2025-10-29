@@ -343,21 +343,22 @@
         async function approveUser() {
             const blocks = document.getElementById('assignedBlocks').value.trim();
             try {
-                const response = await fetch(`/api/admin/users/${currentUserId}/approve`, {
+                const response = await fetch(`/api/admin/approve-user/${currentUserId}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `assigned_blocks=${encodeURIComponent(blocks)}`
                 });
 
-                if (response.ok) {
-                    alert('User approved successfully!');
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message || 'User approved successfully!');
                     closeModals();
                     loadUsers();
                 } else {
-                    alert('Failed to approve user');
+                    alert(result.message || 'Failed to approve user');
                 }
             } catch (error) {
-                alert('Network error. Please try again.');
+                alert('Network error: ' + error.message);
             }
         }
 
@@ -369,21 +370,22 @@
             }
 
             try {
-                const response = await fetch(`/api/admin/users/${currentUserId}/reject`, {
+                const response = await fetch(`/api/admin/reject-user/${currentUserId}`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/x-www-form-urlencoded'},
                     body: `rejection_reason=${encodeURIComponent(reason)}`
                 });
 
-                if (response.ok) {
-                    alert('User rejected');
+                const result = await response.json();
+                if (result.success) {
+                    alert(result.message || 'User rejected');
                     closeModals();
                     loadUsers();
                 } else {
-                    alert('Failed to reject user');
+                    alert(result.message || 'Failed to reject user');
                 }
             } catch (error) {
-                alert('Network error. Please try again.');
+                alert('Network error: ' + error.message);
             }
         }
 
