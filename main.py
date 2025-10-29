@@ -213,14 +213,12 @@ async def get_village_details(village_name: str, session: AsyncSession = Depends
 
 @app.get("/api/villages/pins")
 async def get_village_pins(session: AsyncSession = Depends(get_session)):
-    """Get pin data for all villages with field workers and UK centers"""
-    # Load full village data with geometries
-    with open('static/geojson/bhadrak_villages.geojson', 'r') as f:
-        villages_data = json.load(f)
+    """FAST LOAD: Return enriched pin data - frontend loads geojson directly"""
+    # Only return pin data enrichment - frontend loads static geojson file
     
     # Get all village pins from database
-    result = await session.execute(select(VillagePin))
-    pins_dict = {pin.village_id: pin for pin in result.scalars().all()}
+    pins_result = await session.execute(select(VillagePin))
+    pins_list = pins_result.scalars().all()
     
     # Get custom labels for display
     labels_result = await session.execute(
@@ -228,34 +226,19 @@ async def get_village_pins(session: AsyncSession = Depends(get_session)):
     )
     labels = {label.label_key: label for label in labels_result.scalars().all()}
     
-    # Enrich village data with pin information
-    features = []
-    for i, feature in enumerate(villages_data['features']):
-        props = feature['properties']
-        village_name = props.get('NAME', f'Village_{i}')
-        
-        # Get or create default pin data
-        pin_data = pins_dict.get(i + 1, None)  # village_id starts at 1
-        
-        features.append({
-            "type": "Feature",
-            "properties": {
-                "id": i + 1,
-                "name": village_name,
-                "block": props.get('SUB_DIST', 'Unknown'),
-                "population": props.get('population', props.get('POP', 1000 + (i * 10))),
-                "field_worker_count": pin_data.field_worker_count if pin_data else 0,
-                "uk_center_count": pin_data.uk_center_count if pin_data else 0,
-                "custom_data": json.loads(pin_data.custom_data) if pin_data and pin_data.custom_data else {},
-                "pin_color": pin_data.pin_color if pin_data else None,
-                "is_active": pin_data.is_active if pin_data else True,
-            },
-            "geometry": feature['geometry']
-        })
+    # Return pin enrichment data only (frontend merges with static geojson)
+    pin_data = {}
+    for pin in pins_list:
+        pin_data[pin.village_id] = {
+            "field_worker_count": pin.field_worker_count,
+            "uk_center_count": pin.uk_center_count,
+            "custom_data": json.loads(pin.custom_data) if pin.custom_data else {},
+            "pin_color": pin.pin_color,
+            "is_active": pin.is_active,
+        }
     
     return {
-        "type": "FeatureCollection",
-        "features": features,
+        "pin_data": pin_data,
         "labels": {
             key: {
                 "value": label.label_value,
@@ -263,7 +246,8 @@ async def get_village_pins(session: AsyncSession = Depends(get_session)):
                 "icon": label.label_icon
             }
             for key, label in labels.items()
-        }
+        },
+        "geojson_url": "/static/geojson/bhadrak_villages.geojson"  # Tell frontend where to load
     }
 
 

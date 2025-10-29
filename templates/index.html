@@ -740,10 +740,31 @@
                 
                 updateProgress('Boundary loaded');
                 
-                // Step 2: Load ALL villages with pin data
-                const villagesRes = await fetch('/api/villages/pins');
-                const villagesData = await villagesRes.json();
-                const villages = villagesData;
+                // Step 2: Load pin data first (small/fast API)
+                updateProgress('Loading pin data...');
+                const pinsRes = await fetch('/api/villages/pins');
+                const pinsData = await pinsRes.json();
+                customLabels = pinsData.labels || {};
+                
+                // Step 3: Load full geojson directly from static file
+                updateProgress('Loading 1,315 villages...');
+                const villagesRes = await fetch(pinsData.geojson_url);
+                const villages = await villagesRes.json();
+                
+                // Merge pin data into village features
+                villages.features.forEach((feature, i) => {
+                    const villageId = i + 1;  // IDs start at 1
+                    const pinInfo = pinsData.pin_data[villageId] || {};
+                    feature.properties.id = villageId;
+                    feature.properties.name = feature.properties.NAME;
+                    feature.properties.block = feature.properties.SUB_DIST;
+                    feature.properties.population = feature.properties.POP || 1000;
+                    feature.properties.field_worker_count = pinInfo.field_worker_count || 0;
+                    feature.properties.uk_center_count = pinInfo.uk_center_count || 0;
+                    feature.properties.custom_data = pinInfo.custom_data || {};
+                    feature.properties.pin_color = pinInfo.pin_color;
+                    feature.properties.is_active = pinInfo.is_active !== false;
+                });
                 
                 console.log(`✅ Loaded ${villages.features.length} villages with pin data`);
                 
