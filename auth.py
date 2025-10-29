@@ -42,7 +42,7 @@ def get_current_admin(request: Request):
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     data = verify_session_token(token)
-    if not data or data.get("email") != ADMIN_EMAIL:
+    if not data or data.get("role") != "super_admin":
         raise HTTPException(status_code=401, detail="Not authenticated")
     
     return data
