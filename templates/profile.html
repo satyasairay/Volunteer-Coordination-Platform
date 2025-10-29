@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - DP Works</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-green-100 via-blue-50 to-purple-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="flex justify-between items-center">
+                <h1 class="text-4xl font-bold text-gray-800">👤 My Profile</h1>
+                <a href="/dashboard" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">
+                    ← Back to Dashboard
+                </a>
+            </div>
+            <p class="text-gray-600 mt-2">View and update your account information</p>
+        </div>
+
+        <!-- Profile Card -->
+        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+            <!-- Header Section -->
+            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-6">
+                <div class="flex items-center gap-4">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl font-bold text-indigo-600">
+                        {{ user.full_name[0].upper() }}
+                    </div>
+                    <div>
+                        <h2 class="text-2xl font-bold">{{ user.full_name }}</h2>
+                        <p class="text-indigo-100">
+                            {% if user.role == 'super_admin' %}
+                                🔑 Super Admin
+                            {% else %}
+                                📋 Block Coordinator
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Information -->
+            <div class="p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-3">📋 Account Information</h3>
+                
+                <form id="profileForm" class="space-y-6">
+                    <!-- Full Name -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                        <input type="text" id="fullName" name="full_name" value="{{ user.full_name }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                               required>
+                    </div>
+
+                    <!-- Email (Read-Only) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email (Cannot be changed)</label>
+                        <input type="email" value="{{ user.email }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                               disabled>
+                        <p class="text-xs text-gray-500 mt-1">Your login email cannot be modified for security reasons</p>
+                    </div>
+
+                    <!-- Phone -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                        <input type="tel" id="phone" name="phone" value="{{ user.phone }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                               required>
+                    </div>
+
+                    <!-- Role (Read-Only) -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                        <input type="text" value="{% if user.role == 'super_admin' %}Super Admin{% else %}Block Coordinator{% endif %}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                               disabled>
+                    </div>
+
+                    <!-- Primary Block -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Primary Block</label>
+                        <input type="text" value="{{ user.primary_block }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                               disabled>
+                    </div>
+
+                    <!-- Assigned Blocks (if any) -->
+                    {% if user.assigned_blocks %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Assigned Blocks</label>
+                        <div class="flex flex-wrap gap-2">
+                            {% for block in user.assigned_blocks.split(',') %}
+                            {% if block.strip() %}
+                            <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
+                                {{ block.strip() }}
+                            </span>
+                            {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Contact admin to modify your assigned blocks</p>
+                    </div>
+                    {% endif %}
+
+                    <!-- Account Status -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Account Status</label>
+                        <span class="inline-block px-4 py-2 rounded-lg font-semibold
+                                     {% if user.is_active %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
+                            {% if user.is_active %}✅ Active{% else %}⏳ Pending Approval{% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Member Since -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Member Since</label>
+                        <input type="text" value="{{ user.created_at.strftime('%B %d, %Y') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                               disabled>
+                    </div>
+
+                    {% if user.last_login %}
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Login</label>
+                        <input type="text" value="{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                               disabled>
+                    </div>
+                    {% endif %}
+
+                    <!-- Save Button -->
+                    <div class="pt-4 border-t">
+                        <button type="submit" id="saveBtn"
+                                class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold text-lg hover:bg-indigo-700 transition">
+                            💾 Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Password Change Section -->
+            <div class="p-8 bg-gray-50 border-t border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800 mb-6">🔒 Change Password</h3>
+                
+                <form id="passwordForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password *</label>
+                        <input type="password" id="currentPassword" name="current_password"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                               required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">New Password *</label>
+                        <input type="password" id="newPassword" name="new_password"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                               required minlength="8">
+                        <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password *</label>
+                        <input type="password" id="confirmPassword" name="confirm_password"
+                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                               required minlength="8">
+                    </div>
+
+                    <button type="submit" id="passwordBtn"
+                            class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
+                        🔐 Update Password
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Danger Zone -->
+        <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 mt-8">
+            <h3 class="text-xl font-bold text-red-800 mb-3">⚠️ Danger Zone</h3>
+            <p class="text-red-700 mb-4">Need to delete your account or have concerns? Contact the administrator.</p>
+            <p class="text-sm text-gray-600">📧 Admin Contact: <a href="mailto:admin@dpworks.in" class="text-indigo-600 underline">admin@dpworks.in</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Profile Form Submission
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Saving...';
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/profile/update', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    btn.textContent = '✅ Saved!';
+                    btn.classList.add('bg-green-600');
+                    setTimeout(() => {
+                        btn.textContent = '💾 Save Changes';
+                        btn.classList.remove('bg-green-600');
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Failed to update profile');
+                    btn.textContent = '💾 Save Changes';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+                btn.textContent = '💾 Save Changes';
+                btn.disabled = false;
+            }
+        });
+
+        // Password Form Submission
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('passwordBtn');
+            
+            const newPass = document.getElementById('newPassword').value;
+            const confirmPass = document.getElementById('confirmPassword').value;
+
+            if (newPass !== confirmPass) {
+                alert('New passwords do not match!');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Updating...';
+
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+
+            try {
+                const response = await fetch('/api/profile/change-password', {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    btn.textContent = '✅ Password Updated!';
+                    btn.classList.add('bg-green-600');
+                    document.getElementById('passwordForm').reset();
+                    setTimeout(() => {
+                        btn.textContent = '🔐 Update Password';
+                        btn.classList.remove('bg-green-600');
+                        btn.disabled = false;
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Failed to update password');
+                    btn.textContent = '🔐 Update Password';
+                    btn.disabled = false;
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+                btn.textContent = '🔐 Update Password';
+                btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>

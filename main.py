@@ -2478,3 +2478,86 @@ async def get_duplicate_exceptions(
         })
     
     return duplicates
+
+
+# ============================================================
+# PHASE 3: USER PROFILE PAGE
+# ============================================================
+
+@app.get("/profile", response_class=HTMLResponse)
+async def profile_page(
+    request: Request,
+    user_data: dict = Depends(get_current_user)
+):
+    """User profile page"""
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": user_data['user']
+    })
+
+
+@app.put("/api/profile/update")
+async def update_profile(
+    request: Request,
+    user_data: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Update user profile information"""
+    data = await request.json()
+    
+    result = await session.execute(
+        select(User).where(User.id == user_data['user'].id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Update allowed fields
+    if 'full_name' in data:
+        user.full_name = data['full_name']
+    if 'phone' in data:
+        user.phone = data['phone']
+    
+    user.profile_updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "Profile updated successfully"}
+
+
+@app.put("/api/profile/change-password")
+async def change_password(
+    request: Request,
+    user_data: dict = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session)
+):
+    """Change user password"""
+    data = await request.json()
+    
+    current_password = data.get('current_password')
+    new_password = data.get('new_password')
+    
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    result = await session.execute(
+        select(User).where(User.id == user_data['user'].id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify current password
+    if not bcrypt.checkpw(current_password.encode('utf-8'), user.password_hash.encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Current password is incorrect")
+    
+    # Hash new password
+    new_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt(rounds=12))
+    user.password_hash = new_hash.decode('utf-8')
+    user.profile_updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "Password changed successfully"}
