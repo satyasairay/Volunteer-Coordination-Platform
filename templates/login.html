@@ -425,10 +425,24 @@
                 <span class="menu-link-icon">⚕️</span>
                 <span>Doctors</span>
             </a>
-            <a href="/admin/login" class="menu-link">
-                <span class="menu-link-icon">🔐</span>
-                <span>Login</span>
-            </a>
+            {% if user %}
+                {% if user.role == "super_admin" %}
+                    <a href="/admin" class="menu-link">
+                        <span class="menu-link-icon">👑</span>
+                        <span>Admin</span>
+                    </a>
+                {% else %}
+                    <a href="/dashboard" class="menu-link">
+                        <span class="menu-link-icon">📊</span>
+                        <span>Dashboard</span>
+                    </a>
+                {% endif %}
+            {% else %}
+                <a href="/admin/login" class="menu-link">
+                    <span class="menu-link-icon">🔐</span>
+                    <span>Login</span>
+                </a>
+            {% endif %}
             <a href="/about" class="menu-link">
                 <span class="menu-link-icon">ℹ️</span>
                 <span>About</span>

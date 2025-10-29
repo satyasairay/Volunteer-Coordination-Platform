@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig, AboutPage
-from auth import create_session_token, get_current_admin, get_current_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context
+from auth import create_session_token, get_current_admin, get_current_user, get_optional_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context
 
 
 async def seed_default_labels(session: AsyncSession):
@@ -92,9 +92,11 @@ templates = Jinja2Templates(directory="templates")
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     mapbox_token = os.getenv("MAPBOX_ACCESS_TOKEN", "")
+    user = get_optional_user(request)
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "mapbox_token": mapbox_token
+        "mapbox_token": mapbox_token,
+        "user": user
     })
 
 
@@ -614,7 +616,8 @@ async def respond_to_seva(
 
 @app.get("/admin/login", response_class=HTMLResponse)
 async def admin_login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
+    user = get_optional_user(request)
+    return templates.TemplateResponse("login.html", {"request": request, "user": user})
 
 
 @app.post("/admin/login")
@@ -1377,7 +1380,8 @@ if __name__ == "__main__":
 @app.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
     """Block Coordinator registration page"""
-    return templates.TemplateResponse("register.html", {"request": request})
+    user = get_optional_user(request)
+    return templates.TemplateResponse("register.html", {"request": request, "user": user})
 
 
 @app.post("/api/auth/register")
@@ -2726,9 +2730,11 @@ async def about_page(request: Request, session: AsyncSession = Depends(get_sessi
         await session.commit()
         await session.refresh(about)
     
+    user = get_optional_user(request)
     return templates.TemplateResponse("about.html", {
         "request": request,
-        "about": about
+        "about": about,
+        "user": user
     })
 
 

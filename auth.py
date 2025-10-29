@@ -61,6 +61,16 @@ def get_current_user(request: Request) -> dict:
     return data
 
 
+def get_optional_user(request: Request) -> dict | None:
+    """Get current user if logged in, None otherwise (for public pages)"""
+    token = request.cookies.get("session")
+    if not token:
+        return None
+    
+    data = verify_session_token(token)
+    return data if data else None
+
+
 def require_role(allowed_roles: list[str]):
     """Dependency to check if user has required role"""
     def role_checker(request: Request):
