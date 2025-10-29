@@ -1806,3 +1806,121 @@ async def delete_field_worker(
     await session.commit()
     
     return {"success": True, "message": "Submission deleted successfully"}
+
+
+@app.get("/admin/field-workers", response_class=HTMLResponse)
+async def admin_field_workers_page(
+    request: Request,
+    admin_data: dict = Depends(require_super_admin)
+):
+    """Admin Field Worker approval interface"""
+    return templates.TemplateResponse("admin_field_workers.html", {
+        "request": request,
+        "admin": admin_data
+    })
+
+
+@app.get("/api/admin/field-workers")
+async def get_all_field_workers(
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all Field Worker submissions (admin only)"""
+    result = await session.execute(
+        select(
+            FieldWorker,
+            Village.village_name,
+            Village.block_name,
+            User.full_name.label('submitted_by_name')
+        )
+        .join(Village, FieldWorker.village_id == Village.id)
+        .join(User, FieldWorker.submitted_by_user_id == User.id)
+        .order_by(FieldWorker.created_at.desc())
+    )
+    
+    field_workers = []
+    for fw, village_name, block_name, submitted_by_name in result.all():
+        field_workers.append({
+            "id": fw.id,
+            "full_name": fw.full_name,
+            "phone": fw.phone,
+            "alternate_phone": fw.alternate_phone,
+            "email": fw.email,
+            "village_id": fw.village_id,
+            "village_name": village_name,
+            "block_name": block_name,
+            "designation": fw.designation,
+            "department": fw.department,
+            "employee_id": fw.employee_id,
+            "status": fw.status,
+            "submitted_by_name": submitted_by_name,
+            "duplicate_exception_reason": fw.duplicate_exception_reason,
+            "created_at": fw.created_at.isoformat(),
+            "approved_at": fw.approved_at.isoformat() if fw.approved_at else None,
+            "approved_by": fw.approved_by,
+            "rejection_reason": fw.rejection_reason
+        })
+    
+    return field_workers
+
+
+@app.post("/api/admin/field-workers/{field_worker_id}/approve")
+async def approve_field_worker(
+    field_worker_id: int,
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Approve a Field Worker submission (admin only)"""
+    result = await session.execute(
+        select(FieldWorker).where(FieldWorker.id == field_worker_id)
+    )
+    fw = result.scalar_one_or_none()
+    
+    if not fw:
+        raise HTTPException(status_code=404, detail="Field Worker not found")
+    
+    if fw.status != 'pending':
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot approve {fw.status} submission. Only pending submissions can be approved."
+        )
+    
+    fw.status = 'approved'
+    fw.approved_by = admin_data.get('email')
+    fw.approved_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "Field Worker approved successfully"}
+
+
+@app.post("/api/admin/field-workers/{field_worker_id}/reject")
+async def reject_field_worker(
+    field_worker_id: int,
+    rejection_reason: str = Form(...),
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Reject a Field Worker submission (admin only)"""
+    result = await session.execute(
+        select(FieldWorker).where(FieldWorker.id == field_worker_id)
+    )
+    fw = result.scalar_one_or_none()
+    
+    if not fw:
+        raise HTTPException(status_code=404, detail="Field Worker not found")
+    
+    if fw.status != 'pending':
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot reject {fw.status} submission. Only pending submissions can be rejected."
+        )
+    
+    fw.status = 'rejected'
+    fw.rejection_reason = rejection_reason
+    fw.approved_by = admin_data.get('email')
+    fw.approved_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "Field Worker rejected"}
