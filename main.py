@@ -2053,7 +2053,7 @@ async def reactivate_user(
 
 @app.get("/api/export/field-workers")
 async def export_field_workers(
-    user_data: dict = Depends(require_auth),
+    user_data: dict = Depends(require_block_coordinator),
     session: AsyncSession = Depends(get_session)
 ):
     """Export Field Workers to CSV"""
