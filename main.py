@@ -14,8 +14,7 @@ from contextlib import asynccontextmanager
 
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig
-from auth import create_session_token, get_current_admin, get_current_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD
-import bcrypt
+from auth import create_session_token, get_current_admin, get_current_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context
 
 
 async def seed_default_labels(session: AsyncSession):
@@ -2551,12 +2550,11 @@ async def change_password(
         raise HTTPException(status_code=404, detail="User not found")
     
     # Verify current password
-    if not bcrypt.checkpw(current_password.encode('utf-8'), user.password_hash.encode('utf-8')):
+    if not pwd_context.verify(current_password, user.password_hash):
         raise HTTPException(status_code=401, detail="Current password is incorrect")
     
     # Hash new password
-    new_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt(rounds=12))
-    user.password_hash = new_hash.decode('utf-8')
+    user.password_hash = pwd_context.hash(new_password)
     user.profile_updated_at = datetime.utcnow()
     
     await session.commit()
