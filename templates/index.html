@@ -609,6 +609,31 @@
             <div class="loading-progress" id="loading-progress"></div>
         </div>
         
+        <!-- Map Load Error with Reload Button -->
+        <div class="loading" id="map-error" style="display: none; background: rgba(255, 59, 48, 0.95);">
+            <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 8px;">Map Failed to Load</div>
+            <div id="error-message" style="font-size: 14px; margin-bottom: 20px; opacity: 0.9;"></div>
+            <button onclick="reloadMap()" style="
+                background: white;
+                color: #ff3b30;
+                border: none;
+                padding: 12px 32px;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                margin: 0 auto;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                transition: all 0.3s ease;
+            " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <span style="font-size: 20px;">⟳</span> Reload Map
+            </button>
+        </div>
+        
         <!-- Population legend removed as requested -->
         
         <div class="zoom-controls">
@@ -846,7 +871,11 @@
                 
             } catch (error) {
                 console.error('Error loading map:', error);
-                document.getElementById('loading').innerHTML = `Error loading map<br><small>${error.message}</small>`;
+                // Hide loading spinner
+                document.getElementById('loading').style.display = 'none';
+                // Show error UI with reload button
+                document.getElementById('map-error').style.display = 'flex';
+                document.getElementById('error-message').textContent = error.message || 'Network timeout or server error';
             }
         }
         
@@ -1217,6 +1246,17 @@
         
         function resetZoom() {
             svg.transition().call(zoom.transform, d3.zoomIdentity);
+        }
+        
+        function reloadMap() {
+            // Hide error UI
+            document.getElementById('map-error').style.display = 'none';
+            // Show loading spinner
+            document.getElementById('loading').style.display = 'flex';
+            // Clear existing map
+            svg.selectAll('*').remove();
+            // Reload page to reinitialize map
+            location.reload();
         }
         
         // ============================================================
