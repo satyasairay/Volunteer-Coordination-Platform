@@ -1207,29 +1207,34 @@
         };
         
         function setupHeatMapLayers(blockStats) {
+            // Heat maps disabled - function kept for compatibility
             // Create heat map layers (hidden by default)
-            // Seva activity heat map
             const sevaHeatData = blockStats.map(b => ({
                 name: b.block_name,
                 value: b.seva_density || 0,
                 color: d3.interpolateReds(Math.min(b.seva_density / 10, 1))
             }));
             
-            // Population density heat map
             const popHeatData = blockStats.map(b => ({
                 name: b.block_name,
                 value: b.population_density || 0,
                 color: d3.interpolateBlues(Math.min(b.population_density / 1000, 1))
             }));
             
-            // Heat map toggle event listeners
-            document.getElementById('heatmap-seva').onchange = function() {
-                toggleHeatMap('seva', this.checked, sevaHeatData);
-            };
+            // Heat map toggle event listeners (only if elements exist)
+            const sevaToggle = document.getElementById('heatmap-seva');
+            if (sevaToggle) {
+                sevaToggle.onchange = function() {
+                    toggleHeatMap('seva', this.checked, sevaHeatData);
+                };
+            }
             
-            document.getElementById('heatmap-population').onchange = function() {
-                toggleHeatMap('population', this.checked, popHeatData);
-            };
+            const popToggle = document.getElementById('heatmap-population');
+            if (popToggle) {
+                popToggle.onchange = function() {
+                    toggleHeatMap('population', this.checked, popHeatData);
+                };
+            }
         }
         
         function toggleHeatMap(type, show, heatData) {
