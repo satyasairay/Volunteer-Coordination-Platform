@@ -697,7 +697,7 @@
         
         <!-- Blocks Section -->
         <div class="mobile-menu-section">
-            <div class="mobile-menu-section-title">🏞️ BLOCKS (7)</div>
+            <div class="mobile-menu-section-title">Blocks BLOCKS (7)</div>
             <div id="mobile-block-list"></div>
         </div>
         
@@ -746,7 +746,7 @@
             <a href="/" class="nav-tab active">Map</a>
             <a href="/doctors" class="nav-tab">Doctors</a>
             <a href="/login" class="nav-tab" style="background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%); color: white;">
-                🔐 Login
+                Login
             </a>
         </div>
     </nav>
@@ -981,18 +981,14 @@
                 console.log(`✅ Rendered ${blockPaths.size()} block boundaries`);
                 
                 // ============================================================
-                // PHASE 2: Load Block Statistics and Populate Sidebar
+                // PHASE 2 & 3: SIDEBAR & HEAT MAPS REMOVED PER USER REQUEST
                 // ============================================================
-                const statsRes = await fetch('/api/blocks/statistics');
-                const blockStats = await statsRes.json();
-                
-                populateBlockSidebar(blockStats);
-                populateMobileBlockList(blockStats);
-                
-                // ============================================================
-                // PHASE 3: Heat Map Layer Setup
-                // ============================================================
-                setupHeatMapLayers(blockStats);
+                // Sidebar functions disabled - no longer needed without UI
+                // const statsRes = await fetch('/api/blocks/statistics');
+                // const blockStats = await statsRes.json();
+                // populateBlockSidebar(blockStats);
+                // populateMobileBlockList(blockStats);
+                // setupHeatMapLayers(blockStats);
                 
                 // Hide loading
                 document.getElementById('loading').style.display = 'none';
