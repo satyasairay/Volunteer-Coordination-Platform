@@ -291,13 +291,12 @@
                 return;
             }
 
-            const formData = {
-                full_name: document.getElementById('full_name').value,
-                email: document.getElementById('email').value,
-                phone: document.getElementById('phone').value,
-                primary_block: document.getElementById('primary_block').value,
-                password: password
-            };
+            const formData = new FormData();
+            formData.append('full_name', document.getElementById('full_name').value);
+            formData.append('email', document.getElementById('email').value);
+            formData.append('phone', document.getElementById('phone').value);
+            formData.append('primary_block', document.getElementById('primary_block').value);
+            formData.append('password', password);
 
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registering...';
@@ -305,10 +304,7 @@
             try {
                 const response = await fetch('/api/auth/register', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
+                    body: formData
                 });
 
                 const result = await response.json();

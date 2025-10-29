@@ -220,6 +220,14 @@
         const errorAlert = document.getElementById('errorAlert');
         const infoAlert = document.getElementById('infoAlert');
 
+        // Check for logout success message
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('logout') === 'success') {
+            showInfo('✅ You have been logged out successfully.');
+            // Clear the URL parameter
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 

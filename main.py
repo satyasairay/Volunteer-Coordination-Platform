@@ -633,9 +633,14 @@ async def admin_login(
 
 @app.get("/admin/logout")
 async def admin_logout():
-    response = RedirectResponse(url="/", status_code=303)
+    response = RedirectResponse(url="/admin/login?logout=success", status_code=303)
     response.delete_cookie("session")
     return response
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_redirect():
+    """User-friendly login redirect"""
+    return RedirectResponse(url="/admin/login", status_code=303)
 
 
 @app.get("/admin", response_class=HTMLResponse)
