@@ -2561,3 +2561,124 @@ async def change_password(
     await session.commit()
     
     return {"success": True, "message": "Password changed successfully"}
+
+
+# ============================================================
+# PHASE 5: MAP INTEGRATION WITH FIELD WORKERS
+# ============================================================
+
+@app.get("/api/villages/field-worker-counts")
+async def get_village_field_worker_counts(session: AsyncSession = Depends(get_session)):
+    """Get Field Worker counts per village for map display"""
+    result = await session.execute(
+        select(
+            FieldWorker.village_id,
+            func.count(FieldWorker.id).label('fw_count')
+        )
+        .where(FieldWorker.status == 'approved')
+        .group_by(FieldWorker.village_id)
+    )
+    
+    counts = {row.village_id: row.fw_count for row in result.all()}
+    return counts
+
+
+@app.get("/api/villages/{village_id}/field-workers")
+async def get_village_field_workers(
+    village_id: int,
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all Field Workers for a specific village"""
+    # Get village details
+    village_result = await session.execute(
+        select(Village).where(Village.id == village_id)
+    )
+    village = village_result.scalar_one_or_none()
+    
+    if not village:
+        raise HTTPException(status_code=404, detail="Village not found")
+    
+    # Get all approved Field Workers for this village
+    fw_result = await session.execute(
+        select(FieldWorker, User.full_name.label('submitted_by_name'))
+        .join(User, FieldWorker.submitted_by_user_id == User.id)
+        .where(FieldWorker.village_id == village_id)
+        .where(FieldWorker.status == 'approved')
+        .order_by(FieldWorker.full_name)
+    )
+    
+    field_workers = []
+    for fw, submitted_by_name in fw_result.all():
+        field_workers.append({
+            "id": fw.id,
+            "full_name": fw.full_name,
+            "phone": fw.phone,
+            "alternate_phone": fw.alternate_phone,
+            "email": fw.email,
+            "designation": fw.designation,
+            "department": fw.department,
+            "address_line": fw.address_line,
+            "preferred_contact_method": fw.preferred_contact_method,
+            "submitted_by": submitted_by_name,
+            "created_at": fw.created_at.isoformat()
+        })
+    
+    return {
+        "village": {
+            "id": village.id,
+            "village_name": village.village_name,
+            "block_name": village.block_name,
+            "population": village.population
+        },
+        "field_workers": field_workers,
+        "total_count": len(field_workers)
+    }
+
+
+@app.get("/api/field-workers/search")
+async def search_field_workers(
+    q: str = "",
+    session: AsyncSession = Depends(get_session)
+):
+    """Global search for Field Workers across all villages"""
+    if not q or len(q) < 2:
+        return {"results": [], "total": 0}
+    
+    search_term = f"%{q.lower()}%"
+    
+    result = await session.execute(
+        select(FieldWorker, Village, User.full_name.label('submitted_by_name'))
+        .join(Village, FieldWorker.village_id == Village.id)
+        .join(User, FieldWorker.submitted_by_user_id == User.id)
+        .where(FieldWorker.status == 'approved')
+        .where(
+            or_(
+                func.lower(FieldWorker.full_name).like(search_term),
+                func.lower(FieldWorker.phone).like(search_term),
+                func.lower(FieldWorker.email).like(search_term),
+                func.lower(FieldWorker.designation).like(search_term),
+                func.lower(FieldWorker.department).like(search_term),
+                func.lower(Village.village_name).like(search_term),
+                func.lower(Village.block_name).like(search_term)
+            )
+        )
+        .order_by(FieldWorker.full_name)
+        .limit(50)
+    )
+    
+    results = []
+    for fw, village, submitted_by_name in result.all():
+        results.append({
+            "id": fw.id,
+            "full_name": fw.full_name,
+            "phone": fw.phone,
+            "email": fw.email,
+            "designation": fw.designation,
+            "department": fw.department,
+            "village_id": village.id,
+            "village_name": village.village_name,
+            "block_name": village.block_name,
+            "submitted_by": submitted_by_name
+        })
+    
+    return {"results": results, "total": len(results), "query": q}
