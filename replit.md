@@ -4,8 +4,112 @@
 **DP Works - Bhadrak** is a professional village-level interactive map displaying all **1,315 villages** of Bhadrak district, Odisha with actual geographic boundaries. The system features role-based authentication where **Block Coordinators** can register, submit Field Worker contact details, and manage submissions for their assigned blocks. **Super Admins** review and approve all submissions, configure forms, manage users, and analyze data.
 
 **Rebranded from:** Seva Atlas → DP Works - Bhadrak  
-**Current Version:** 5.0.0  
-**Status:** ✅ PHASES 1-5 COMPLETE | Phase 6 Documentation in Progress
+**Current Version:** 5.1.0  
+**Status:** ✅ PHASES 1-5 COMPLETE | Critical Fixes Applied | Comprehensive QA Complete
+
+---
+
+## 📋 Version 5.1.0 - Critical Fixes & QA Assessment (October 29, 2025)
+
+### ✅ CRITICAL FIXES APPLIED
+
+**DEPLOYMENT & UX FIXES:**
+
+1. **🔴 CRITICAL: Database Provisioning** ✅ FIXED
+   - **Issue:** App crashed on deployment with SQLAlchemy connection error
+   - **Root Cause:** PostgreSQL database not provisioned
+   - **Fix:** Created database using `create_postgresql_database_tool`
+   - **Impact:** App now fully functional and deployable
+   - **Status:** Database environment variables configured
+
+2. **🔴 CRITICAL: Visible Login Button** ✅ FIXED
+   - **Issue:** No visible way for users to login from homepage
+   - **Root Cause:** Missing login button in navigation
+   - **Fix:** Added blue 🔐 "Login" button in top-right navigation
+   - **Styling:** Prominent gradient button, clearly visible
+   - **Link:** Directs to `/admin/login`
+   - **Impact:** Users can now easily discover login path
+
+3. **🟡 UI Fix: Hamburger Menu Repositioning** ✅ FIXED
+   - **Issue:** Hamburger button too large (48px) and poorly positioned
+   - **Fix:** Reduced to 36px, repositioned inline with nav brand
+   - **Styling:** Added 12px margin, removed fixed positioning
+   - **Impact:** Cleaner mobile navigation experience
+
+4. **🟢 Feature: Heat Maps Disabled** ✅ FIXED
+   - **User Request:** Hide heat map toggles for now
+   - **Fix:** Added `display: none` to both desktop and mobile heat map sections
+   - **Note:** Feature remains functional in code, can be re-enabled easily
+   - **Impact:** Cleaner UI per user preference
+
+### 📋 COMPREHENSIVE DOCUMENTATION
+
+**NEW FILES CREATED:**
+
+1. **COMPREHENSIVE_QA_ASSESSMENT.md** (400+ lines)
+   - Senior QA-level end-to-end audit
+   - Critical issues identified and fixed
+   - Security audit (Authentication, SQL Injection, XSS, CSRF)
+   - End-to-end testing checklist
+   - Missing features identified
+   - Production readiness assessment (60%)
+   - Recommended actions before launch
+
+2. **EMERGENCY_SERVICES_PLAN.md** (600+ lines)
+   - Complete implementation plan for emergency services inventory
+   - Replaces current "doctors" page with comprehensive directory
+   - 6 service categories (Medical, Police, Fire, Utilities, Govt, Helplines)
+   - Database schema design (2 main tables + indexes)
+   - UI/UX mockups and design specifications
+   - Mobile-first features (click-to-call, geolocation, offline access)
+   - 5-week implementation roadmap
+   - Data collection strategy
+   - Future innovative features (telemedicine, ambulance tracking, blood donor network)
+
+### ⚠️ PENDING ENHANCEMENTS (Per User Request)
+
+1. **Absolute Village Focus/Zoom** - HIGH PRIORITY
+   - Dramatic zoom (scale 15x) when village is selected from search
+   - Pulsing border highlight effect
+   - Smooth animation with 1.5s duration
+   - Status: Documented in QA assessment, ready for implementation
+
+2. **Village Existence Recommendations** - MEDIUM PRIORITY
+   - Real-time dropdown showing whether villages exist in database
+   - "Found X villages" feedback as user types
+   - Click to focus on village
+   - Status: Documented in QA assessment, ready for implementation
+
+3. **Modular Background Theme System** - MEDIUM PRIORITY
+   - Slow rotation of background images (5-minute intervals)
+   - Smooth fade transitions
+   - Admin control over rotation speed
+   - Status: Detailed implementation in QA assessment
+
+4. **Admin Background Upload** - MEDIUM PRIORITY
+   - Super Admin can upload custom background photos
+   - Preview before upload
+   - Image compression (max 2MB)
+   - Database schema designed
+   - Status: Complete plan in QA assessment
+
+### 🔐 SECURITY AUDIT SUMMARY
+
+**PASSED:**
+- ✅ Password hashing (bcrypt via passlib)
+- ✅ Session management (secure httponly cookies)
+- ✅ SQL injection protection (ORM parameterized queries)
+- ✅ XSS protection (Jinja2 auto-escaping)
+- ✅ Environment variable secrets
+
+**NEEDS IMPROVEMENT:**
+- ❌ Login rate limiting (vulnerable to brute force)
+- ❌ CSP headers missing
+- ❌ CSRF tokens not implemented
+- ⚠️ Default admin credentials need changing for production
+
+**Production Readiness:** 60%  
+**See:** COMPREHENSIVE_QA_ASSESSMENT.md for full security details
 
 ---
 
