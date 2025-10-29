@@ -2231,3 +2231,106 @@ async def dashboard_page(
         "request": request,
         "user": user_data
     })
+
+
+# ============================================================
+# PHASE 4: ANALYTICS DASHBOARD
+# ============================================================
+
+@app.get("/admin/analytics", response_class=HTMLResponse)
+async def admin_analytics_page(
+    request: Request,
+    admin_data: dict = Depends(require_super_admin)
+):
+    """Admin analytics dashboard"""
+    return templates.TemplateResponse("admin_analytics.html", {
+        "request": request,
+        "admin": admin_data
+    })
+
+
+@app.get("/api/analytics/overview")
+async def get_analytics_overview(
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get comprehensive analytics data"""
+    from collections import defaultdict
+    
+    # Users statistics
+    users_result = await session.execute(select(User))
+    users = users_result.scalars().all()
+    total_users = len(users)
+    active_users = len([u for u in users if u.is_active])
+    
+    # Field Workers statistics
+    fw_result = await session.execute(select(FieldWorker))
+    field_workers = fw_result.scalars().all()
+    total_field_workers = len(field_workers)
+    approved_field_workers = len([fw for fw in field_workers if fw.status == 'approved'])
+    pending_reviews = len([fw for fw in field_workers if fw.status == 'pending'])
+    
+    # Village coverage
+    villages_result = await session.execute(select(Village))
+    all_villages = villages_result.scalars().all()
+    villages_with_fw = set(fw.village_id for fw in field_workers if fw.status == 'approved')
+    villages_covered = len(villages_with_fw)
+    coverage_percent = round((villages_covered / 1315) * 100, 1) if villages_covered > 0 else 0
+    
+    # By Block
+    by_block = defaultdict(int)
+    for fw in field_workers:
+        for village in all_villages:
+            if village.id == fw.village_id:
+                by_block[village.block_name] += 1
+                break
+    
+    # By Status
+    by_status = {
+        "approved": len([fw for fw in field_workers if fw.status == 'approved']),
+        "pending": len([fw for fw in field_workers if fw.status == 'pending']),
+        "rejected": len([fw for fw in field_workers if fw.status == 'rejected'])
+    }
+    
+    # Timeline (last 30 days)
+    from datetime import timedelta
+    timeline = defaultdict(int)
+    today = datetime.utcnow().date()
+    for i in range(30):
+        date = today - timedelta(days=29-i)
+        timeline[date.strftime('%Y-%m-%d')] = 0
+    
+    for fw in field_workers:
+        date_str = fw.created_at.date().strftime('%Y-%m-%d')
+        if date_str in timeline:
+            timeline[date_str] += 1
+    
+    # Top Contributors
+    contributor_counts = defaultdict(int)
+    contributor_data = {}
+    for fw in field_workers:
+        contributor_counts[fw.submitted_by_user_id] += 1
+    
+    for user in users:
+        if user.id in contributor_counts:
+            contributor_data[user.id] = {
+                "name": user.full_name,
+                "email": user.email,
+                "count": contributor_counts[user.id]
+            }
+    
+    top_contributors = sorted(contributor_data.values(), key=lambda x: x['count'], reverse=True)[:10]
+    
+    return {
+        "total_users": total_users,
+        "active_users": active_users,
+        "total_field_workers": total_field_workers,
+        "approved_field_workers": approved_field_workers,
+        "pending_reviews": pending_reviews,
+        "villages_covered": villages_covered,
+        "coverage_percent": coverage_percent,
+        "by_block": [{"block": k, "count": v} for k, v in sorted(by_block.items())],
+        "by_status": by_status,
+        "timeline": [{"date": k, "count": v} for k, v in sorted(timeline.items())],
+        "top_contributors": top_contributors
+    }

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics Dashboard - Admin</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-purple-700 text-white shadow-lg">
+            <div class="container mx-auto px-4 py-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-3xl font-bold">📊 Analytics Dashboard</h1>
+                        <p class="text-purple-100">System-wide insights and statistics</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <a href="/admin" class="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition">
+                            ← Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="container mx-auto px-4 py-8">
+            <!-- Overview Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-gray-500 text-xs font-semibold uppercase mb-2">Total Users</h3>
+                    <p class="text-4xl font-bold text-gray-800" id="totalUsers">0</p>
+                    <p class="text-xs text-gray-500 mt-2" id="activeUsers">0 active</p>
+                </div>
+                <div class="bg-green-50 rounded-xl shadow-md p-6 border border-green-200">
+                    <h3 class="text-green-700 text-xs font-semibold uppercase mb-2">Field Workers</h3>
+                    <p class="text-4xl font-bold text-green-700" id="totalFieldWorkers">0</p>
+                    <p class="text-xs text-green-600 mt-2" id="approvedFieldWorkers">0 approved</p>
+                </div>
+                <div class="bg-yellow-50 rounded-xl shadow-md p-6 border border-yellow-200">
+                    <h3 class="text-yellow-700 text-xs font-semibold uppercase mb-2">Pending Reviews</h3>
+                    <p class="text-4xl font-bold text-yellow-700" id="pendingReviews">0</p>
+                    <p class="text-xs text-yellow-600 mt-2">Awaiting approval</p>
+                </div>
+                <div class="bg-blue-50 rounded-xl shadow-md p-6 border border-blue-200">
+                    <h3 class="text-blue-700 text-xs font-semibold uppercase mb-2">Coverage</h3>
+                    <p class="text-4xl font-bold text-blue-700" id="coveragePercent">0%</p>
+                    <p class="text-xs text-blue-600 mt-2" id="villagesCovered">0 / 1315 villages</p>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Submissions by Block -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">📍 Submissions by Block</h2>
+                    <canvas id="blockChart"></canvas>
+                </div>
+
+                <!-- Status Breakdown -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">✅ Approval Status</h2>
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Timeline -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📈 Submissions Over Time</h2>
+                <canvas id="timelineChart"></canvas>
+            </div>
+
+            <!-- Top Contributors -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">🏆 Top Contributors</h2>
+                <div id="topContributors" class="space-y-3">
+                    <!-- Loaded via JS -->
+                </div>
+            </div>
+
+            <!-- Export Options -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">📥 Export Data</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="exportUsers()" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition">
+                        Export Users
+                    </button>
+                    <button onclick="exportFieldWorkers()" class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
+                        Export Field Workers
+                    </button>
+                    <button onclick="exportAnalytics()" class="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
+                        Export Analytics Report
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let blockChart, statusChart, timelineChart;
+
+        async function loadAnalytics() {
+            try {
+                const response = await fetch('/api/analytics/overview');
+                const data = await response.json();
+                
+                // Update overview cards
+                document.getElementById('totalUsers').textContent = data.total_users;
+                document.getElementById('activeUsers').textContent = `${data.active_users} active`;
+                document.getElementById('totalFieldWorkers').textContent = data.total_field_workers;
+                document.getElementById('approvedFieldWorkers').textContent = `${data.approved_field_workers} approved`;
+                document.getElementById('pendingReviews').textContent = data.pending_reviews;
+                document.getElementById('coveragePercent').textContent = `${data.coverage_percent}%`;
+                document.getElementById('villagesCovered').textContent = `${data.villages_covered} / 1315 villages`;
+                
+                // Render charts
+                renderBlockChart(data.by_block);
+                renderStatusChart(data.by_status);
+                renderTimelineChart(data.timeline);
+                renderTopContributors(data.top_contributors);
+                
+            } catch (error) {
+                console.error('Failed to load analytics:', error);
+            }
+        }
+
+        function renderBlockChart(data) {
+            const ctx = document.getElementById('blockChart').getContext('2d');
+            if (blockChart) blockChart.destroy();
+            
+            blockChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.map(d => d.block),
+                    datasets: [{
+                        label: 'Field Workers',
+                        data: data.map(d => d.count),
+                        backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderStatusChart(data) {
+            const ctx = document.getElementById('statusChart').getContext('2d');
+            if (statusChart) statusChart.destroy();
+            
+            statusChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Approved', 'Pending', 'Rejected'],
+                    datasets: [{
+                        data: [data.approved, data.pending, data.rejected],
+                        backgroundColor: [
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+        }
+
+        function renderTimelineChart(data) {
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            if (timelineChart) timelineChart.destroy();
+            
+            timelineChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.map(d => d.date),
+                    datasets: [{
+                        label: 'Daily Submissions',
+                        data: data.map(d => d.count),
+                        borderColor: 'rgba(168, 85, 247, 1)',
+                        backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { precision: 0 }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderTopContributors(data) {
+            const container = document.getElementById('topContributors');
+            
+            if (data.length === 0) {
+                container.innerHTML = '<p class="text-gray-500 text-center py-4">No submissions yet</p>';
+                return;
+            }
+            
+            container.innerHTML = data.map((contributor, index) => `
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg">
+                            ${index + 1}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">${contributor.name}</h3>
+                            <p class="text-sm text-gray-600">${contributor.email}</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-purple-600">${contributor.count}</p>
+                        <p class="text-xs text-gray-500">submissions</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function exportUsers() {
+            window.location.href = '/api/export/users';
+        }
+
+        async function exportFieldWorkers() {
+            window.location.href = '/api/export/field-workers';
+        }
+
+        async function exportAnalytics() {
+            alert('Analytics report export coming soon!');
+        }
+
+        // Initialize
+        loadAnalytics();
+    </script>
+</body>
+</html>
