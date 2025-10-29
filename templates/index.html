@@ -751,48 +751,58 @@
         </div>
     </nav>
     
-    <!-- MINIMAL UI - Search Box + Dropdown Button -->
-    <div style="position: fixed; top: 70px; left: 20px; z-index: 100; display: flex; flex-direction: column; gap: 10px; width: 280px;">
-        <!-- Search Box for Villages -->
-        <input type="text" id="village-search" placeholder="🔍 Search villages, blocks..." 
-               style="width: 100%; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.9); border-radius: 12px; font-size: 14px; 
-                      background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-                      transition: all 0.2s;">
+    <!-- PROFESSIONAL LEFT SIDEBAR (Collapsible) -->
+    <button id="toggle-sidebar-btn" 
+            style="position: fixed; top: 80px; left: 20px; z-index: 200; 
+                   width: 48px; height: 48px; border-radius: 12px; border: none;
+                   background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
+                   box-shadow: 0 4px 16px rgba(0,0,0,0.15); cursor: pointer;
+                   display: flex; align-items: center; justify-content: center;
+                   font-size: 20px; transition: all 0.3s; color: #1f2937;">
+        ☰
+    </button>
+    
+    <div id="left-sidebar" 
+         style="position: fixed; top: 60px; left: -320px; width: 320px; height: calc(100vh - 60px); 
+                z-index: 199; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px);
+                box-shadow: 4px 0 24px rgba(0,0,0,0.15); transition: left 0.3s ease;
+                overflow-y: auto; overflow-x: hidden;">
         
-        <!-- Show Blocks Dropdown Button -->
-        <button id="toggle-blocks-panel" 
-                style="width: 100%; padding: 12px 16px; border: 2px solid rgba(249,115,22,0.3); border-radius: 12px; font-size: 14px; font-weight: 600;
-                       background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); box-shadow: 0 4px 16px rgba(0,0,0,0.15);
-                       cursor: pointer; transition: all 0.3s; display: flex; justify-content: space-between; align-items: center;
-                       color: #1f2937;">
-            <span>Show Blocks & Overlays</span>
-            <span id="dropdown-arrow" style="transition: transform 0.3s;">▼</span>
-        </button>
+        <!-- Search Section -->
+        <div style="padding: 20px; border-bottom: 2px solid rgba(0,0,0,0.08);">
+            <div style="font-size: 13px; font-weight: 700; color: #6b7280; margin-bottom: 12px; letter-spacing: 0.5px;">🔍 SEARCH</div>
+            <input type="text" id="village-search" placeholder="Type village or block name..." 
+                   style="width: 100%; padding: 12px 16px; border: 2px solid rgba(0,0,0,0.1); border-radius: 10px; font-size: 14px; 
+                          background: white; transition: all 0.2s; outline: none;">
+            <div id="search-results" style="margin-top: 12px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
         
-        <!-- Collapsible Panel -->
-        <div id="blocks-panel" style="display: none; background: rgba(255,255,255,0.98); backdrop-filter: blur(20px); 
-                                       border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); overflow: hidden;
-                                       max-height: 70vh; overflow-y: auto;">
-            <!-- Heat Map Toggles - HIDDEN FOR NOW -->
-            <div style="display: none; padding: 16px; border-bottom: 2px solid rgba(16,185,129,0.15); background: linear-gradient(135deg, rgba(16,185,129,0.05) 0%, rgba(52,211,153,0.02) 100%);">
-                <div style="font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 10px; letter-spacing: 0.5px;">🌿 HEAT MAP OVERLAYS</div>
-                <label style="display: flex; align-items: center; margin-bottom: 10px; cursor: pointer; padding: 8px; border-radius: 8px;">
-                    <input type="checkbox" id="heatmap-seva" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-size: 14px; font-weight: 500;">🔥 Seva Activity</span>
-                </label>
-                <label style="display: flex; align-items: center; cursor: pointer; padding: 8px; border-radius: 8px;">
-                    <input type="checkbox" id="heatmap-population" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
-                    <span style="font-size: 14px; font-weight: 500;">👥 Population Density</span>
-                </label>
+        <!-- Blocks Section -->
+        <div style="padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; cursor: pointer;"
+                 onclick="toggleBlocksList()">
+                <div style="font-size: 13px; font-weight: 700; color: #6b7280; letter-spacing: 0.5px;">🏞️ BLOCKS (7)</div>
+                <span id="blocks-arrow" style="font-size: 14px; color: #6b7280; transition: transform 0.3s;">▼</span>
             </div>
-            
-            <!-- Block List -->
-            <div style="padding: 16px;">
-                <div style="font-size: 12px; font-weight: 700; color: #6b7280; margin-bottom: 12px; letter-spacing: 0.5px;">🏞️ BLOCKS (7)</div>
-                <div id="block-list"></div>
-            </div>
+            <div id="block-list" style="display: block;"></div>
         </div>
     </div>
+    
+    <!-- Sidebar Overlay (for mobile) -->
+    <div id="sidebar-overlay" 
+         style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+                background: rgba(0,0,0,0.5); z-index: 198; display: none; opacity: 0;
+                transition: opacity 0.3s;" 
+         onclick="toggleSidebar()"></div>
+    
+    <!-- Clean Search Box (Top) -->
+    <input type="text" id="top-village-search" placeholder="🔍 Search villages, blocks..." 
+           onfocus="openSidebarAndFocusSearch()"
+           style="position: fixed; top: 80px; left: 80px; z-index: 100; 
+                  width: 280px; padding: 12px 16px; border: 2px solid rgba(255,255,255,0.9); 
+                  border-radius: 12px; font-size: 14px; 
+                  background: rgba(255,255,255,0.95); backdrop-filter: blur(10px); 
+                  box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: all 0.2s; outline: none;">
     
     <div id="map-container" style="margin-left: 0; transition: margin-left 0.3s ease;">
         <div class="loading" id="loading">
@@ -825,6 +835,63 @@
     </div>
 
     <script>
+        // ========== SIDEBAR TOGGLE FUNCTIONS ==========
+        let sidebarOpen = false;
+        
+        function toggleSidebar() {
+            sidebarOpen = !sidebarOpen;
+            const sidebar = document.getElementById('left-sidebar');
+            const overlay = document.getElementById('sidebar-overlay');
+            const btn = document.getElementById('toggle-sidebar-btn');
+            
+            if (sidebarOpen) {
+                sidebar.style.left = '0px';
+                overlay.style.display = 'block';
+                setTimeout(() => overlay.style.opacity = '1', 10);
+                btn.innerHTML = '✕';
+                btn.style.left = '340px';
+            } else {
+                sidebar.style.left = '-320px';
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 300);
+                btn.innerHTML = '☰';
+                btn.style.left = '20px';
+            }
+        }
+        
+        function toggleBlocksList() {
+            const blockList = document.getElementById('block-list');
+            const arrow = document.getElementById('blocks-arrow');
+            if (blockList.style.display === 'none') {
+                blockList.style.display = 'block';
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                blockList.style.display = 'none';
+                arrow.style.transform = 'rotate(-90deg)';
+            }
+        }
+        
+        function openSidebarAndFocusSearch() {
+            if (!sidebarOpen) {
+                toggleSidebar();
+            }
+            setTimeout(() => {
+                document.getElementById('village-search').focus();
+            }, 100);
+        }
+        
+        // Initialize sidebar toggle button
+        document.getElementById('toggle-sidebar-btn').addEventListener('click', toggleSidebar);
+        
+        // Sync top search with sidebar search
+        document.getElementById('top-village-search').addEventListener('input', (e) => {
+            document.getElementById('village-search').value = e.target.value;
+            // Trigger search in sidebar
+            const event = new Event('input', { bubbles: true });
+            document.getElementById('village-search').dispatchEvent(event);
+        });
+        
+        // ========== MAP INITIALIZATION ==========
         const width = window.innerWidth;
         const height = window.innerHeight - 60 - 40;
         
