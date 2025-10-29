@@ -739,15 +739,8 @@
     </div>
     
     <nav>
-        <div style="display: flex; align-items: center;">
-            <!-- Hamburger Menu Button (Mobile) -->
-            <button id="hamburger-btn" class="hamburger-btn" aria-label="Open menu">
-                <span style="font-size: 24px;">☰</span>
-            </button>
-            
-            <div class="nav-brand">
-                DP Works 📍 Bhadrak
-            </div>
+        <div class="nav-brand">
+            DP Works 📍 Bhadrak
         </div>
         <div class="nav-tabs">
             <a href="/" class="nav-tab active">Map</a>
@@ -1200,19 +1193,19 @@
             }
         }
         
-        // Generate 3D glowing dot HTML based on style
+        // Generate 3D glowing dot HTML based on style (SMALLER DOTS)
         function getDotHTML(styleId, color) {
             const styles = {
-                'neon_glow': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 8px 3px ${color}, 0 0 12px 6px ${color}66, inset 0 0 4px ${color};"></div>`,
-                'pulse_ring': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 3px ${color}88, 0 0 8px 2px ${color}; animation: pulse 1.5s ease-in-out infinite;"></div>`,
-                'double_halo': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 6px 2px ${color}, 0 0 12px 5px ${color}66, 0 0 20px 8px ${color}33;"></div>`,
-                'soft_blur': `<div style="width: 14px; height: 14px; background: ${color}; border-radius: 50%; filter: blur(3px); opacity: 0.9;"></div>`,
-                'sharp_core': `<div style="width: 10px; height: 10px; background: white; border-radius: 50%; box-shadow: 0 0 0 2px #111, 0 0 12px 4px ${color};"></div>`,
-                'plasma': `<div style="width: 14px; height: 14px; background: radial-gradient(circle, ${color} 0%, ${color}66 50%, transparent 100%); border-radius: 50%; filter: blur(1px);"></div>`,
-                'crystal': `<div style="width: 12px; height: 12px; background: linear-gradient(135deg, white, ${color}); border-radius: 50%; box-shadow: 0 0 8px 2px ${color}88, inset -2px -2px 4px rgba(255,255,255,0.6);"></div>`,
-                'firefly': `<div style="width: 10px; height: 10px; background: radial-gradient(circle, ${color}ff 0%, ${color}88 40%, transparent 70%); border-radius: 50%; box-shadow: 0 0 10px 4px ${color}66;"></div>`,
-                'laser': `<div style="width: 8px; height: 8px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}ff, 0 0 8px 3px ${color}cc, 0 0 1px 1px white; border: 1px solid white;"></div>`,
-                'halo_fade': `<div style="width: 12px; height: 12px; background: #111; border-radius: 50%; box-shadow: 0 0 0 2px ${color}99, 0 0 0 5px ${color}55, 0 0 0 8px ${color}22;"></div>`
+                'neon_glow': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}, 0 0 8px 3px ${color}88, inset 0 0 2px ${color};"></div>`,
+                'pulse_ring': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 0 2px ${color}99, 0 0 6px 2px ${color}; animation: pulse 1.5s ease-in-out infinite;"></div>`,
+                'double_halo': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 1px ${color}, 0 0 8px 3px ${color}88, 0 0 12px 5px ${color}55;"></div>`,
+                'soft_blur': `<div style="width: 7px; height: 7px; background: ${color}; border-radius: 50%; filter: blur(2px); opacity: 0.9; box-shadow: 0 0 6px ${color};"></div>`,
+                'sharp_core': `<div style="width: 5px; height: 5px; background: white; border-radius: 50%; box-shadow: 0 0 0 1px ${color}, 0 0 8px 3px ${color};"></div>`,
+                'plasma': `<div style="width: 7px; height: 7px; background: radial-gradient(circle, ${color} 0%, ${color}88 50%, transparent 100%); border-radius: 50%; filter: blur(1px); box-shadow: 0 0 6px ${color};"></div>`,
+                'crystal': `<div style="width: 6px; height: 6px; background: linear-gradient(135deg, white, ${color}); border-radius: 50%; box-shadow: 0 0 6px 2px ${color}99, inset -1px -1px 2px rgba(255,255,255,0.6);"></div>`,
+                'firefly': `<div style="width: 5px; height: 5px; background: radial-gradient(circle, ${color}ff 0%, ${color}99 40%, transparent 70%); border-radius: 50%; box-shadow: 0 0 8px 3px ${color}88;"></div>`,
+                'laser': `<div style="width: 4px; height: 4px; background: ${color}; border-radius: 50%; box-shadow: 0 0 3px 1px ${color}ff, 0 0 6px 2px ${color}dd, 0 0 1px 1px white; border: 1px solid white;"></div>`,
+                'halo_fade': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 0 1px ${color}aa, 0 0 0 3px ${color}66, 0 0 0 5px ${color}33;"></div>`
             };
             return styles[styleId] || styles['neon_glow'];
         }
