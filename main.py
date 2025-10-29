@@ -1924,3 +1924,310 @@ async def reject_field_worker(
     await session.commit()
     
     return {"success": True, "message": "Field Worker rejected"}
+
+
+# ============================================================
+# PHASE 3: ADMIN USER MANAGEMENT
+# ============================================================
+
+@app.get("/admin/users", response_class=HTMLResponse)
+async def admin_users_page(
+    request: Request,
+    admin_data: dict = Depends(require_super_admin)
+):
+    """Admin user management interface"""
+    return templates.TemplateResponse("admin_users.html", {
+        "request": request,
+        "admin": admin_data
+    })
+
+
+@app.get("/api/admin/users")
+async def get_all_users(
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all users with submission counts"""
+    # Get all users
+    users_result = await session.execute(select(User).order_by(User.created_at.desc()))
+    users = users_result.scalars().all()
+    
+    # Get submission counts for each user
+    user_list = []
+    for user in users:
+        # Count submissions
+        count_result = await session.execute(
+            select(FieldWorker).where(FieldWorker.submitted_by_user_id == user.id)
+        )
+        submission_count = len(count_result.scalars().all())
+        
+        user_list.append({
+            "id": user.id,
+            "email": user.email,
+            "full_name": user.full_name,
+            "phone": user.phone,
+            "role": user.role,
+            "primary_block": user.primary_block,
+            "assigned_blocks": user.assigned_blocks,
+            "is_active": user.is_active,
+            "approved_by": user.approved_by,
+            "approved_at": user.approved_at.isoformat() if user.approved_at else None,
+            "rejection_reason": user.rejection_reason,
+            "created_at": user.created_at.isoformat(),
+            "last_login": user.last_login.isoformat() if user.last_login else None,
+            "login_count": user.login_count,
+            "submission_count": submission_count
+        })
+    
+    return user_list
+
+
+@app.put("/api/admin/users/{user_id}/blocks")
+async def update_user_blocks(
+    user_id: int,
+    assigned_blocks: str = Form(...),
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Update user's assigned blocks"""
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.assigned_blocks = assigned_blocks
+    user.profile_updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "Blocks updated successfully"}
+
+
+@app.post("/api/admin/users/{user_id}/deactivate")
+async def deactivate_user(
+    user_id: int,
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Deactivate a user"""
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_active = False
+    user.profile_updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "User deactivated successfully"}
+
+
+@app.post("/api/admin/users/{user_id}/reactivate")
+async def reactivate_user(
+    user_id: int,
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Reactivate a user"""
+    result = await session.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_active = True
+    user.rejection_reason = None
+    user.profile_updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "User reactivated successfully"}
+
+
+# ============================================================
+# PHASE 4: DATA EXPORT SYSTEM
+# ============================================================
+
+@app.get("/api/export/field-workers")
+async def export_field_workers(
+    user_data: dict = Depends(require_auth),
+    session: AsyncSession = Depends(get_session)
+):
+    """Export Field Workers to CSV"""
+    from fastapi.responses import StreamingResponse
+    import csv
+    from io import StringIO
+    
+    # Get user
+    user_result = await session.execute(select(User).where(User.email == user_data.get('email')))
+    user = user_result.scalar_one_or_none()
+    
+    # Query based on role
+    if user.role == 'super_admin':
+        # Admin: All Field Workers
+        result = await session.execute(
+            select(FieldWorker, Village.village_name, Village.block_name, User.full_name.label('submitted_by'))
+            .join(Village, FieldWorker.village_id == Village.id)
+            .join(User, FieldWorker.submitted_by_user_id == User.id)
+            .order_by(FieldWorker.created_at.desc())
+        )
+    else:
+        # Coordinator: Own submissions only
+        result = await session.execute(
+            select(FieldWorker, Village.village_name, Village.block_name)
+            .join(Village, FieldWorker.village_id == Village.id)
+            .where(FieldWorker.submitted_by_user_id == user.id)
+            .order_by(FieldWorker.created_at.desc())
+        )
+    
+    # Create CSV
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    # Header
+    if user.role == 'super_admin':
+        writer.writerow([
+            'ID', 'Full Name', 'Phone', 'Alternate Phone', 'Email',
+            'Village', 'Block', 'Designation', 'Department', 'Employee ID',
+            'Status', 'Submitted By', 'Submitted Date', 'Approved By', 'Approved Date'
+        ])
+        
+        for fw, village_name, block_name, submitted_by in result.all():
+            writer.writerow([
+                fw.id, fw.full_name, fw.phone, fw.alternate_phone or '', fw.email or '',
+                village_name, block_name, fw.designation, fw.department or '', fw.employee_id or '',
+                fw.status, submitted_by, fw.created_at.strftime('%Y-%m-%d'),
+                fw.approved_by or '', fw.approved_at.strftime('%Y-%m-%d') if fw.approved_at else ''
+            ])
+    else:
+        writer.writerow([
+            'ID', 'Full Name', 'Phone', 'Alternate Phone', 'Email',
+            'Village', 'Block', 'Designation', 'Department', 'Employee ID',
+            'Status', 'Submitted Date', 'Approved Date'
+        ])
+        
+        for fw, village_name, block_name in result.all():
+            writer.writerow([
+                fw.id, fw.full_name, fw.phone, fw.alternate_phone or '', fw.email or '',
+                village_name, block_name, fw.designation, fw.department or '', fw.employee_id or '',
+                fw.status, fw.created_at.strftime('%Y-%m-%d'),
+                fw.approved_at.strftime('%Y-%m-%d') if fw.approved_at else ''
+            ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=field_workers_export.csv"}
+    )
+
+
+@app.get("/api/export/users")
+async def export_users(
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Export users to CSV (admin only)"""
+    from fastapi.responses import StreamingResponse
+    import csv
+    from io import StringIO
+    
+    result = await session.execute(select(User).order_by(User.created_at.desc()))
+    users = result.scalars().all()
+    
+    output = StringIO()
+    writer = csv.writer(output)
+    
+    writer.writerow([
+        'ID', 'Full Name', 'Email', 'Phone', 'Role', 'Primary Block',
+        'Assigned Blocks', 'Status', 'Registered Date', 'Last Login', 'Login Count'
+    ])
+    
+    for user in users:
+        status = 'Active' if user.is_active else ('Rejected' if user.rejection_reason else 'Pending')
+        writer.writerow([
+            user.id, user.full_name, user.email, user.phone, user.role,
+            user.primary_block, user.assigned_blocks or '',
+            status, user.created_at.strftime('%Y-%m-%d'),
+            user.last_login.strftime('%Y-%m-%d') if user.last_login else 'Never',
+            user.login_count
+        ])
+    
+    output.seek(0)
+    
+    return StreamingResponse(
+        iter([output.getvalue()]),
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=users_export.csv"}
+    )
+
+
+# ============================================================
+# PHASE 3/4: COORDINATOR DASHBOARD STATISTICS
+# ============================================================
+
+@app.get("/api/dashboard/statistics")
+async def get_dashboard_statistics(
+    user_data: dict = Depends(require_block_coordinator),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get coordinator dashboard statistics"""
+    # Get user
+    user_result = await session.execute(select(User).where(User.email == user_data.get('email')))
+    user = user_result.scalar_one_or_none()
+    
+    # Get all submissions
+    fw_result = await session.execute(
+        select(FieldWorker).where(FieldWorker.submitted_by_user_id == user.id)
+    )
+    field_workers = fw_result.scalars().all()
+    
+    total = len(field_workers)
+    pending = len([fw for fw in field_workers if fw.status == 'pending'])
+    approved = len([fw for fw in field_workers if fw.status == 'approved'])
+    rejected = len([fw for fw in field_workers if fw.status == 'rejected'])
+    
+    # Recent submissions (last 5)
+    recent_result = await session.execute(
+        select(FieldWorker, Village.village_name, Village.block_name)
+        .join(Village, FieldWorker.village_id == Village.id)
+        .where(FieldWorker.submitted_by_user_id == user.id)
+        .order_by(FieldWorker.created_at.desc())
+        .limit(5)
+    )
+    
+    recent_submissions = []
+    for fw, village_name, block_name in recent_result.all():
+        recent_submissions.append({
+            "id": fw.id,
+            "full_name": fw.full_name,
+            "village_name": village_name,
+            "block_name": block_name,
+            "status": fw.status,
+            "created_at": fw.created_at.isoformat()
+        })
+    
+    return {
+        "total_submissions": total,
+        "pending": pending,
+        "approved": approved,
+        "rejected": rejected,
+        "recent_submissions": recent_submissions
+    }
+
+
+# Update dashboard route to use enhanced version
+@app.get("/dashboard", response_class=HTMLResponse)
+async def dashboard_page(
+    request: Request,
+    user_data: dict = Depends(require_block_coordinator)
+):
+    """Enhanced coordinator dashboard with statistics"""
+    return templates.TemplateResponse("dashboard_enhanced.html", {
+        "request": request,
+        "user": user_data
+    })
