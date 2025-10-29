@@ -10,9 +10,31 @@
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #ffffff; }
         
+        /* THEME VARIABLES - Easy switching between color schemes */
+        :root {
+            --theme-primary: #667eea;
+            --theme-secondary: #764ba2;
+            --theme-light: #f3e7ff;
+            --theme-medium: #c084fc;
+            --theme-dark: #6b21a8;
+            --theme-glow: rgba(139, 92, 246, 0.5);
+            --theme-colors: '#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8';
+        }
+        
+        /* Alternative Teal/Ocean Theme */
+        body.theme-ocean {
+            --theme-primary: #0891b2;
+            --theme-secondary: #0e7490;
+            --theme-light: #cffafe;
+            --theme-medium: #22d3ee;
+            --theme-dark: #0e7490;
+            --theme-glow: rgba(6, 182, 212, 0.5);
+            --theme-colors: '#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2';
+        }
+        
         /* Modern 2025 Navigation */
         nav {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
             backdrop-filter: blur(20px);
             padding: 16px 32px;
             display: flex;
@@ -21,6 +43,32 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             position: relative;
             z-index: 100;
+        }
+        
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: absolute;
+            right: 80px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            z-index: 101;
+        }
+        
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
         }
         
         .nav-brand {
@@ -111,7 +159,7 @@
         }
         
         .menu-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
             padding: 24px;
             color: white;
         }
@@ -396,9 +444,9 @@
         /* District boundary - PREMIUM 2025 STYLE */
         .district-boundary {
             fill: none;
-            stroke: #6b21a8;
+            stroke: var(--theme-dark);
             stroke-width: 3.5;
-            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+            filter: drop-shadow(0 0 8px var(--theme-glow)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
             stroke-linejoin: round;
         }
         
@@ -605,6 +653,9 @@
         <div class="nav-brand">
             Joyguru 🙏 Bhadrak
         </div>
+        <button class="theme-toggle" onclick="toggleTheme()" title="Change Theme">
+            🎨
+        </button>
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
             <span></span>
@@ -802,14 +853,23 @@
                 updateProgress(`Rendering ${villages.features.length} villages...`);
                 
                 // Step 3: Draw ALL 1,315 village polygons (PREMIUM 2025 STYLE)
-                // Create PURPLE gradient to match header (#667eea → #764ba2)
-                const purpleScale = d3.scaleSequential()
+                // Create dynamic gradient based on current theme
+                function getThemeColors() {
+                    const style = getComputedStyle(document.documentElement);
+                    const colorsStr = style.getPropertyValue('--theme-colors').trim();
+                    // Parse colors from CSS variable
+                    if (document.body.classList.contains('theme-ocean')) {
+                        return ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2'];
+                    }
+                    return ['#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
+                }
+                
+                const themeScale = d3.scaleSequential()
                     .domain([1000, 20000])
                     .interpolator(t => {
-                        // Beautiful purple-to-blue gradient
-                        const purples = ['#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
-                        const idx = Math.floor(t * (purples.length - 1));
-                        return purples[idx];
+                        const colors = getThemeColors();
+                        const idx = Math.floor(t * (colors.length - 1));
+                        return colors[idx];
                     });
                 
                 const villagePaths = g.selectAll(".village-polygon")
@@ -818,11 +878,11 @@
                     .append("path")
                     .attr("class", "village-polygon")
                     .attr("d", path)
-                    .attr("fill", d => purpleScale(d.properties.population || 5000))
+                    .attr("fill", d => themeScale(d.properties.population || 5000))
                     .attr("stroke", "#ffffff")
                     .attr("stroke-width", 0.4)
                     .attr("stroke-opacity", 0.6)
-                    .style("filter", "drop-shadow(0px 1px 2px rgba(139, 92, 246, 0.15))")  // Subtle purple glow
+                    .style("filter", "drop-shadow(0px 1px 2px var(--theme-glow))")
                     .style("transition", "all 0.3s ease");
                 
                 console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
@@ -1326,6 +1386,31 @@
             overlay.classList.toggle('active');
             btn.classList.toggle('active');
         }
+        
+        // Theme Toggle Function
+        function toggleTheme() {
+            const body = document.body;
+            const isOcean = body.classList.contains('theme-ocean');
+            
+            if (isOcean) {
+                body.classList.remove('theme-ocean');
+                localStorage.setItem('mapTheme', 'purple');
+            } else {
+                body.classList.add('theme-ocean');
+                localStorage.setItem('mapTheme', 'ocean');
+            }
+            
+            // Reload map to apply new colors
+            location.reload();
+        }
+        
+        // Load saved theme on page load
+        (function() {
+            const savedTheme = localStorage.getItem('mapTheme');
+            if (savedTheme === 'ocean') {
+                document.body.classList.add('theme-ocean');
+            }
+        })();
     </script>
     
     <div class="footer">
