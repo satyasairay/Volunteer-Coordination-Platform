@@ -1,0 +1,367 @@
+Based on your specifications, here's the finalized plan:
+
+CONSOLIDATED REQUIREMENTS
+Authentication & Permissions Model
+┌──────────────────────────────────────────────────────────┐
+│              REFINED ROLE SYSTEM                         │
+├──────────────────────────────────────────────────────────┤
+│ SUPER ADMIN                                              │
+│ ✓ Full system control                                    │
+│ ✓ User management (approve/reject/assign roles/blocks)   │
+│ ✓ Configure required fields for FW forms                 │
+│ ✓ Approve duplicate exceptions                           │
+│ ✓ Edit ALL entries (even approved ones)                  │
+├──────────────────────────────────────────────────────────┤
+│ BLOCK COORDINATOR                                        │
+│ ✓ Register → Manual approval by admin                    │
+│ ✓ Default block assigned at registration                 │
+│ ✓ Can be assigned MULTIPLE blocks by admin               │
+│ ✓ Submit FW entries (status: pending_approval)           │
+│ ✓ Edit ONLY their own pending entries                    │
+│ ✓ View ALL blocks/villages (read-only)                   │
+│ ✓ After admin approval → entry becomes locked            │
+│ ✓ Multiple coordinators can work on same block           │
+│ ✓ Duplicate phone → Modal with reason for admin review   │
+└──────────────────────────────────────────────────────────┘
+DATABASE SCHEMA - UPDATED
+1. Users Table
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    email: str = Field(unique=True, index=True)
+    password_hash: str
+    full_name: str
+    phone: str
+    
+    # Role & Multi-Block Access
+    role: str = Field(index=True)  # 'super_admin', 'block_coordinator'
+    primary_block: str = Field(index=True)  # Default from registration
+    assigned_blocks: str = Field(default="")  # Comma-separated: "Bhadrak,Tihidi,Basudevpur"
+    
+    # Approval Status
+    is_active: bool = Field(default=False, index=True)
+    approved_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    
+    # Tracking
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_login: Optional[datetime] = None
+    
+    # Relationships
+    field_worker_entries: List["FieldWorker"] = Relationship(back_populates="submitted_by_user")
+2. Field Workers Table
+class FieldWorker(SQLModel, table=True):
+    __tablename__ = "field_workers"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Core Data
+    full_name: str = Field(index=True)
+    phone: str = Field(index=True)  # For duplicate checking
+    alternate_phone: Optional[str] = None
+    email: Optional[str] = None
+    village_id: int = Field(foreign_key="villages.id", index=True)
+    address_line: Optional[str] = None
+    designation: str
+    department: Optional[str] = None
+    
+    # Approval Workflow
+    status: str = Field(default="pending", index=True)  # 'pending', 'approved', 'rejected'
+    submitted_by_user_id: int = Field(foreign_key="users.id", index=True)
+    approved_by: Optional[str] = None
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    
+    # Duplicate Exception Handling
+    duplicate_exception_reason: Optional[str] = None  # Reason from submitter
+    duplicate_of_phone: Optional[str] = None  # Which phone is duplicate
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    
+    # Relationships
+    village: Optional[Village] = Relationship(back_populates="field_workers")
+    submitted_by_user: Optional[User] = Relationship(back_populates="field_worker_entries")
+3. Form Field Configuration Table (NEW)
+class FormFieldConfig(SQLModel, table=True):
+    """Admin-configurable required/optional fields for FW form"""
+    __tablename__ = "form_field_config"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    field_name: str = Field(unique=True, index=True)  # 'full_name', 'phone', 'email', etc.
+    is_required: bool = Field(default=False)
+    is_visible: bool = Field(default=True)
+    display_order: int = Field(default=0)
+    field_label: str  # Display label
+    field_type: str  # 'text', 'tel', 'email', 'textarea', 'select'
+    placeholder: Optional[str] = None
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+UI RECOMMENDATION (Item #8)
+Recommended Approach: Hybrid Unified Interface
+┌─────────────────────────────────────────────────────────┐
+│  UNIFIED URL STRUCTURE WITH ROLE-BASED VIEWS           │
+├─────────────────────────────────────────────────────────┤
+│ /                    → Public map (read-only)           │
+│ /login               → Universal login page             │
+│ /register            → Block coordinator registration   │
+├─────────────────────────────────────────────────────────┤
+│ /dashboard           → Role-aware dashboard             │
+│   ├─ Super Admin:   See admin dashboard                │
+│   └─ Coordinator:   See coordinator dashboard          │
+├─────────────────────────────────────────────────────────┤
+│ /field-workers       → FW management (role-based)       │
+│   ├─ Admin:         See ALL + approval queue           │
+│   └─ Coordinator:   See ALL (read) + THEIR pending     │
+├─────────────────────────────────────────────────────────┤
+│ /admin/*             → Admin-only features              │
+│   ├─ /admin/users/pending    → User approvals          │
+│   ├─ /admin/form-config      → Configure FW fields     │
+│   ├─ /admin/duplicates       → Duplicate exceptions    │
+│   └─ [existing admin routes...]                        │
+└─────────────────────────────────────────────────────────┘
+Why This Approach:
+✅ Single codebase, easier maintenance
+✅ Shared UI components (DRY principle)
+✅ Clear permission boundaries in code
+✅ Better mobile experience (no context switching)
+✅ Future-proof for additional roles
+
+KEY WORKFLOWS
+Workflow 1: User Registration → Approval
+┌─ User visits /register
+├─ Fills form: name, email, phone, password, select PRIMARY block
+├─ Submits → User created (is_active=False, assigned_blocks="")
+├─ Admin gets notification (dashboard badge)
+├─ Admin reviews at /admin/users/pending
+├─ Admin actions:
+│  ├─ Approve: Sets is_active=True, assigned_blocks="PrimaryBlock,Other,..."
+│  ├─ Reject: Sets rejection_reason, sends email
+│  └─ Edit: Can change primary_block or add multiple blocks
+└─ User gets email notification → Can login
+Workflow 2: Add Field Worker (Standard)
+┌─ Coordinator goes to /field-workers/add
+├─ Selects village (filtered by assigned blocks)
+├─ Fills form (dynamic fields based on FormFieldConfig)
+├─ Enters phone number
+├─ System checks: Phone exists?
+│  ├─ NO → Submit → Status: pending
+│  └─ YES → Show error + "Request Exception" button
+├─ Saves to database (status=pending)
+├─ Admin sees in /admin/field-workers (filter: pending)
+└─ Admin approves → Status: approved (now locked for coordinator)
+Workflow 3: Duplicate Phone Exception
+┌─ User enters phone that exists
+├─ System shows: "Phone XXX already exists for [Name] in [Village]"
+├─ Button: "Request Exception" (orange warning button)
+├─ Clicks → Modal opens
+│  ├─ Show existing entry details
+│  ├─ "Reason for duplicate:" (textarea, required)
+│  └─ [Submit for Admin Review]
+├─ Saves with:
+│  ├─ status=pending
+│  ├─ duplicate_exception_reason="User's reason"
+│  └─ duplicate_of_phone="existing phone"
+├─ Admin review at /admin/duplicates
+│  ├─ See: Both entries side-by-side
+│  ├─ Read reason
+│  └─ Approve or Reject
+└─ If approved → Both entries coexist
+Workflow 4: Admin Form Field Configuration
+┌─ Admin goes to /admin/form-config
+├─ See table: All FW form fields
+│  ├─ Field Name | Label | Type | Required | Visible | Order
+│  ├─ full_name  | Full Name | text | ✓ | ✓ | 1
+│  ├─ phone      | Phone | tel | ✓ | ✓ | 2
+│  ├─ email      | Email | email | ✗ | ✓ | 3
+│  └─ [... all fields ...]
+├─ Toggle switches for Required/Visible
+├─ Drag-and-drop to reorder
+├─ Click Save → Updates FormFieldConfig table
+└─ FW forms instantly reflect changes (no code deploy)
+MOBILE UI IMPLEMENTATION
+Hamburger Menu Structure
+┌────────────────────────────────────────┐
+│  [≡]  DP Works 📍 Bhadrak  [Login]    │  ← Top Nav (sticky)
+└────────────────────────────────────────┘
+           ↓ Tap ≡
+┌────────────────────────────────────────┐
+│  MENU                            [×]   │
+├────────────────────────────────────────┤
+│  🔍 Search Villages                    │
+│  📍 My Location                        │
+│  ──────────────────────────            │
+│  🏞️ BLOCKS (7)                         │
+│    ☐ Bhadrak                           │
+│    ☐ Tihidi                            │
+│    ... (collapsible)                   │
+│  ──────────────────────────            │
+│  🌿 HEAT MAP OVERLAYS                  │
+│    ☐ Seva Activity                     │
+│    ☐ Population Density                │
+│  ──────────────────────────            │
+│  👤 My Dashboard                       │
+│  📊 Field Workers                      │
+│  ⚙️ Settings                           │
+│  🚪 Logout                             │
+└────────────────────────────────────────┘
+Mobile Breakpoints:
+
+/* Phone Portrait (320-480px) */
+- Hamburger menu (slide-in from left)
+- Full-screen modals
+- Larger touch targets (48px)
+- Single column forms
+/* Phone Landscape (481-767px) */
+- Keep hamburger menu
+- Two-column forms
+- Horizontal button groups
+/* Tablet (768-1023px) */
+- Collapsible left panel (can toggle)
+- Three-column forms
+- Inline buttons
+/* Desktop (1024px+) */
+- Fixed left sidebar (always visible)
+- Multi-column layouts
+- Hover tooltips
+IMPLEMENTATION PHASES
+Phase 1: Database & Auth (Days 1-2)
+ Create User, FieldWorker, FormFieldConfig tables
+ Update auth.py with role-based permissions
+ Build registration page (mobile-responsive)
+ Build login page with role detection
+ Seed default FormFieldConfig
+Phase 2: Admin Features (Days 3-4)
+ User approval interface (/admin/users/pending)
+ Form field configuration UI (/admin/form-config)
+ Duplicate exception review (/admin/duplicates)
+ Multi-block assignment for users
+ FW approval queue (/admin/field-workers?status=pending)
+Phase 3: Coordinator Features (Days 5-6)
+ Coordinator dashboard (/dashboard)
+ Add FW form with dynamic fields
+ Duplicate check with exception modal
+ View FWs (all blocks, read-only + own pending editable)
+ Edit own pending FWs
+ Profile page
+Phase 4: Mobile Responsiveness (Days 7-8)
+ Hamburger menu component
+ 4-tier breakpoints implementation
+ Touch gestures (pinch-zoom, double-tap)
+ Full-screen modals on mobile
+ Responsive forms
+ Safe area handling (notches)
+Phase 5: Integration (Days 9-10)
+ Connect FW data to map
+ Show FW count on village dots
+ Village modal shows FWs with contact
+ Search functionality across FWs
+ CSV export for coordinators/admin
+ Notifications system
+Phase 6: Testing & Documentation (Days 11-12)
+ Test all user flows on mobile/tablet/desktop
+ Security audit (SQL injection, XSS, CSRF)
+ Performance testing (1000+ FWs)
+ Update replit.md documentation
+ Create user guides (Coordinator Manual, Admin Guide)
+ Final bug fixes
+UPDATED replit.md STRUCTURE
+# DP Works - Bhadrak District Atlas
+## Overview
+[Existing + new features]
+## User System
+### Roles
+1. **Super Admin** - Full control
+2. **Block Coordinator** - Submit FW data, multi-block access
+### Registration & Approval
+- Coordinators register at /register
+- Admin manually approves with role/block assignment
+- Users can be assigned multiple blocks
+### Field Worker Management
+- Coordinators submit FW entries (pending approval)
+- Admin configurable required fields
+- Duplicate phone protection with exception workflow
+- After approval: entries locked (only admin can edit)
+## Mobile & Tablet Responsiveness
+### Supported Devices
+- Mobile: 320px+ (hamburger menu)
+- Tablet: 768px+ (collapsible panel)
+- Desktop: 1024px+ (fixed sidebar)
+### Touch Gestures
+[Your approved list]
+### Hamburger Menu
+- Tap ≡ to open/close
+- Search, blocks, heat maps, user menu
+- Swipe from left edge to open
+## Database Schema
+### New Tables
+- `users`: Authentication & role management
+- `field_workers`: FW contact data with approval workflow
+- `form_field_config`: Admin-configurable form fields
+### Updated Tables
+- `villages`: Added field_workers relationship
+- [others...]
+## API Endpoints
+### Public
+- GET / - Map
+- POST /register - Sign up
+- POST /login - Authenticate
+### Coordinator
+- GET /dashboard - Personal dashboard
+- POST /field-workers/add - Submit FW (pending)
+- GET /field-workers - View all (read) + own pending
+- PUT /field-workers/{id} - Edit own pending only
+### Admin
+- GET /admin/users/pending - Approve users
+- GET /admin/form-config - Configure FW form
+- GET /admin/duplicates - Review exceptions
+- POST /admin/field-workers/{id}/approve - Approve FW
+- [existing admin routes...]
+## Security
+- Bcrypt passwords (12 rounds)
+- Session cookies (7 days)
+- Rate limiting (5 login attempts per 15 min)
+- Audit trail for all FW changes
+## Field Worker Form
+Admin can configure which fields are required/optional at:
+/admin/form-config
+Default fields:
+- Full Name (required)
+- Phone (required, with duplicate check)
+- Village (required)
+- Designation (required)
+- Email, Address, Department (optional/configurable)
+## Development
+[Setup instructions...]
+## Testing
+[Device matrix, test scenarios...]
+FINAL CONFIRMATION
+Summary of Decisions:
+✅ Manual approval for all users
+✅ Multi-block assignment (admin sets)
+✅ Collaborative editing (no conflicts)
+✅ Entries pending approval (locked after)
+✅ Admin-only email approval workflow
+✅ Read-only access to all blocks for coordinators
+✅ Admin configurable form fields via UI
+✅ Duplicate prevention with exception modal
+✅ Unified interface with role-based views (recommended)
+✅ Everything read-only for coordinators post-approval
+
+Estimated Timeline:
+Total Duration: 12 days (can parallelize to ~8 days)
+Core Features (Auth + FW): 6 days
+Mobile Responsiveness: 2 days
+Testing & Docs: 2 days
+Buffer for refinements: 2 days
+Next Steps:
+Once you approve this final plan, I will:
+
+Start with Phase 1 (Database schema + Auth)
+Implement in order of priority
+Update documentation as I go
+Test on each phase completion
+Provide progress updates
+Does this final plan accurately capture all your requirements? Ready to proceed with implementation?
