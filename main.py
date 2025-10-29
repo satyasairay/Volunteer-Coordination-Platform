@@ -14,7 +14,7 @@ from contextlib import asynccontextmanager
 
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig
-from auth import create_session_token, get_current_admin, ADMIN_EMAIL, ADMIN_PASSWORD
+from auth import create_session_token, get_current_admin, get_current_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD
 
 
 async def seed_default_labels(session: AsyncSession):
@@ -1367,3 +1367,205 @@ async def bulk_upload_members(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=5000)
+
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    """Block Coordinator registration page"""
+    return templates.TemplateResponse("register.html", {"request": request})
+
+
+@app.post("/api/auth/register")
+async def register_user(
+    full_name: str = Form(...),
+    email: str = Form(...),
+    phone: str = Form(...),
+    primary_block: str = Form(...),
+    password: str = Form(...),
+    session: AsyncSession = Depends(get_session)
+):
+    """Register a new Block Coordinator (pending approval)"""
+    from auth import hash_password
+    
+    result = await session.execute(
+        select(User).where(User.email == email)
+    )
+    existing_user = result.scalar_one_or_none()
+    
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    
+    password_hash = hash_password(password)
+    
+    new_user = User(
+        email=email,
+        password_hash=password_hash,
+        full_name=full_name,
+        phone=phone,
+        role="block_coordinator",
+        primary_block=primary_block,
+        is_active=False
+    )
+    
+    session.add(new_user)
+    await session.commit()
+    await session.refresh(new_user)
+    
+    return {
+        "success": True,
+        "message": "Registration successful! Your account is pending admin approval.",
+        "user_id": new_user.id
+    }
+
+
+@app.post("/api/auth/login")
+async def login_user(
+    email: str = Form(...),
+    password: str = Form(...),
+    session: AsyncSession = Depends(get_session)
+):
+    """Login with role detection and redirect"""
+    from auth import verify_password, hash_password
+    
+    if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
+        token = create_session_token(email, "super_admin")
+        response = JSONResponse({
+            "success": True,
+            "role": "super_admin",
+            "redirect": "/admin"
+        })
+        response.set_cookie(
+            "session",
+            token,
+            httponly=True,
+            max_age=86400 * 7,
+            samesite="lax"
+        )
+        return response
+    
+    result = await session.execute(
+        select(User).where(User.email == email)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if not verify_password(password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid email or password")
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is pending admin approval. Please contact the administrator."
+        )
+    
+    user.last_login = datetime.utcnow()
+    user.login_count += 1
+    await session.commit()
+    
+    token = create_session_token(user.email, user.role)
+    
+    redirect_url = "/admin" if user.role == "super_admin" else "/dashboard"
+    
+    response = JSONResponse({
+        "success": True,
+        "role": user.role,
+        "redirect": redirect_url,
+        "blocks": user.assigned_blocks or user.primary_block
+    })
+    response.set_cookie(
+        "session",
+        token,
+        httponly=True,
+        max_age=86400 * 7,
+        samesite="lax"
+    )
+    
+    return response
+
+
+@app.get("/dashboard", response_class=HTMLResponse)
+async def coordinator_dashboard(
+    request: Request,
+    user_data: dict = Depends(get_current_user)
+):
+    """Block Coordinator Dashboard"""
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "user": user_data
+    })
+
+
+@app.get("/api/admin/pending-users")
+async def get_pending_users(
+    user_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all pending user registrations (admin only)"""
+    result = await session.execute(
+        select(User)
+        .where(User.is_active == False)
+        .where(User.role == "block_coordinator")
+        .order_by(User.created_at.desc())
+    )
+    pending_users = result.scalars().all()
+    
+    return [{
+        "id": user.id,
+        "full_name": user.full_name,
+        "email": user.email,
+        "phone": user.phone,
+        "primary_block": user.primary_block,
+        "created_at": user.created_at.isoformat()
+    } for user in pending_users]
+
+
+@app.post("/api/admin/approve-user/{user_id}")
+async def approve_user(
+    user_id: int,
+    assigned_blocks: str = Form(""),
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Approve a pending user registration (admin only)"""
+    result = await session.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.is_active = True
+    user.approved_by = admin_data.get("email")
+    user.approved_at = datetime.utcnow()
+    user.assigned_blocks = assigned_blocks
+    
+    await session.commit()
+    
+    return {"success": True, "message": f"User {user.email} approved successfully"}
+
+
+@app.post("/api/admin/reject-user/{user_id}")
+async def reject_user(
+    user_id: int,
+    rejection_reason: str = Form(...),
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Reject a pending user registration (admin only)"""
+    result = await session.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.rejection_reason = rejection_reason
+    
+    await session.delete(user)
+    await session.commit()
+    
+    return {"success": True, "message": f"User registration rejected"}

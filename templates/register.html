@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - DP Works Bhadrak</title>
+    <title>Register - DP Works Bhadrak</title>
     <style>
         * {
             margin: 0;
@@ -21,9 +21,9 @@
             padding: 1rem;
         }
 
-        .login-container {
+        .register-container {
             width: 100%;
-            max-width: 450px;
+            max-width: 500px;
             background: rgba(255, 255, 255, 0.15);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -67,7 +67,12 @@
             font-size: 0.9rem;
         }
 
-        input {
+        label .required {
+            color: #dc2626;
+            margin-left: 2px;
+        }
+
+        input, select {
             width: 100%;
             padding: 0.75rem 1rem;
             border: 1px solid rgba(30, 41, 59, 0.2);
@@ -78,7 +83,7 @@
             transition: all 0.3s ease;
         }
 
-        input:focus {
+        input:focus, select:focus {
             outline: none;
             border-color: #3b82f6;
             background: rgba(255, 255, 255, 0.95);
@@ -122,16 +127,16 @@
             display: none;
         }
 
+        .alert-success {
+            background: rgba(34, 197, 94, 0.15);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #166534;
+        }
+
         .alert-error {
             background: rgba(239, 68, 68, 0.15);
             border: 1px solid rgba(239, 68, 68, 0.3);
             color: #991b1b;
-        }
-
-        .alert-info {
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #1e40af;
         }
 
         .footer-links {
@@ -146,16 +151,20 @@
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
-            display: block;
-            margin: 0.5rem 0;
         }
 
         .footer-links a:hover {
             color: #2563eb;
         }
 
+        .help-text {
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 0.25rem;
+        }
+
         @media (max-width: 640px) {
-            .login-container {
+            .register-container {
                 padding: 1.5rem;
                 border-radius: 15px;
             }
@@ -168,7 +177,7 @@
                 font-size: 0.875rem;
             }
 
-            input {
+            input, select {
                 padding: 0.625rem 0.875rem;
                 font-size: 0.875rem;
             }
@@ -178,101 +187,158 @@
                 font-size: 0.95rem;
             }
         }
+
+        @media (max-width: 400px) {
+            .register-container {
+                padding: 1.25rem;
+            }
+
+            .header h1 {
+                font-size: 1.375rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
+    <div class="register-container">
         <div class="header">
-            <h1>🔐 Login</h1>
-            <p>Access DP Works - Bhadrak</p>
+            <h1>📋 Block Coordinator Registration</h1>
+            <p>Request access to submit Field Worker information</p>
+        </div>
+
+        <div id="successAlert" class="alert alert-success">
+            ✅ Registration successful! Your request is pending admin approval.
         </div>
 
         <div id="errorAlert" class="alert alert-error"></div>
-        <div id="infoAlert" class="alert alert-info"></div>
 
-        <form id="loginForm">
+        <form id="registerForm">
             <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required 
-                       placeholder="your.email@example.com">
+                <label for="full_name">Full Name <span class="required">*</span></label>
+                <input type="text" id="full_name" name="full_name" required 
+                       placeholder="Enter your full name">
             </div>
 
             <div class="form-group">
-                <label for="password">Password</label>
+                <label for="email">Email Address <span class="required">*</span></label>
+                <input type="email" id="email" name="email" required 
+                       placeholder="your.email@example.com">
+                <div class="help-text">Use your official email address</div>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number <span class="required">*</span></label>
+                <input type="tel" id="phone" name="phone" required 
+                       pattern="[0-9]{10}" 
+                       placeholder="10-digit mobile number">
+                <div class="help-text">10-digit mobile number without spaces</div>
+            </div>
+
+            <div class="form-group">
+                <label for="primary_block">Primary Block <span class="required">*</span></label>
+                <select id="primary_block" name="primary_block" required>
+                    <option value="">-- Select Block --</option>
+                    <option value="Bhadrak">Bhadrak</option>
+                    <option value="Basudevpur">Basudevpur</option>
+                    <option value="Tihidi">Tihidi</option>
+                    <option value="Chandbali">Chandbali</option>
+                    <option value="Dhamnagar">Dhamnagar</option>
+                    <option value="Tihidi">Tihidi</option>
+                    <option value="Bonth">Bonth</option>
+                </select>
+                <div class="help-text">Select your primary working block</div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password <span class="required">*</span></label>
                 <input type="password" id="password" name="password" required 
-                       placeholder="Enter your password">
+                       minlength="6" 
+                       placeholder="Minimum 6 characters">
+                <div class="help-text">Create a secure password (min. 6 characters)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirm_password">Confirm Password <span class="required">*</span></label>
+                <input type="password" id="confirm_password" name="confirm_password" required 
+                       minlength="6" 
+                       placeholder="Re-enter your password">
             </div>
 
             <button type="submit" class="btn-primary" id="submitBtn">
-                Login
+                Register Account
             </button>
         </form>
 
         <div class="footer-links">
-            <a href="/register">New user? Register here</a>
-            <a href="/">← Back to Map</a>
+            Already have an account? <a href="/admin/login">Login here</a>
         </div>
     </div>
 
     <script>
-        const form = document.getElementById('loginForm');
+        const form = document.getElementById('registerForm');
         const submitBtn = document.getElementById('submitBtn');
+        const successAlert = document.getElementById('successAlert');
         const errorAlert = document.getElementById('errorAlert');
-        const infoAlert = document.getElementById('infoAlert');
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const formData = new FormData(form);
-            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+
+            if (password !== confirmPassword) {
+                showError('Passwords do not match!');
+                return;
+            }
+
+            const formData = {
+                full_name: document.getElementById('full_name').value,
+                email: document.getElementById('email').value,
+                phone: document.getElementById('phone').value,
+                primary_block: document.getElementById('primary_block').value,
+                password: password
+            };
+
             submitBtn.disabled = true;
-            submitBtn.textContent = 'Logging in...';
-            hideAlerts();
+            submitBtn.textContent = 'Registering...';
 
             try {
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch('/api/auth/register', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
                 });
 
                 const result = await response.json();
 
                 if (response.ok) {
-                    showInfo('Login successful! Redirecting...');
-                    
+                    showSuccess();
+                    form.reset();
                     setTimeout(() => {
-                        if (result.role === 'super_admin') {
-                            window.location.href = '/admin';
-                        } else if (result.role === 'block_coordinator') {
-                            window.location.href = '/dashboard';
-                        } else {
-                            window.location.href = '/';
-                        }
-                    }, 500);
+                        window.location.href = '/admin/login';
+                    }, 3000);
                 } else {
-                    showError(result.detail || 'Login failed. Please check your credentials.');
+                    showError(result.detail || 'Registration failed. Please try again.');
                 }
             } catch (error) {
                 showError('Network error. Please check your connection and try again.');
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.textContent = 'Login';
+                submitBtn.textContent = 'Register Account';
             }
         });
+
+        function showSuccess() {
+            successAlert.style.display = 'block';
+            errorAlert.style.display = 'none';
+        }
 
         function showError(message) {
             errorAlert.textContent = '❌ ' + message;
             errorAlert.style.display = 'block';
-        }
-
-        function showInfo(message) {
-            infoAlert.textContent = 'ℹ️ ' + message;
-            infoAlert.style.display = 'block';
-        }
-
-        function hideAlerts() {
-            errorAlert.style.display = 'none';
-            infoAlert.style.display = 'none';
+            successAlert.style.display = 'none';
         }
     </script>
 </body>
