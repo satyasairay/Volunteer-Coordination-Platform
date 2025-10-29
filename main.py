@@ -1534,22 +1534,33 @@ async def approve_user(
     session: AsyncSession = Depends(get_session)
 ):
     """Approve a pending user registration (admin only)"""
-    result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
-    user = result.scalar_one_or_none()
+    try:
+        result = await session.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "User not found"}
+            )
+        
+        user.is_active = True
+        user.approved_by = admin_data.get("email")
+        user.approved_at = datetime.utcnow()
+        user.assigned_blocks = assigned_blocks if assigned_blocks else user.primary_block
+        
+        await session.commit()
+        
+        return {"success": True, "message": f"✅ User {user.full_name} ({user.email}) approved successfully!"}
     
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    user.is_active = True
-    user.approved_by = admin_data.get("email")
-    user.approved_at = datetime.utcnow()
-    user.assigned_blocks = assigned_blocks
-    
-    await session.commit()
-    
-    return {"success": True, "message": f"User {user.email} approved successfully"}
+    except Exception as e:
+        await session.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to approve user: {str(e)}"}
+        )
 
 
 @app.post("/api/admin/reject-user/{user_id}")
@@ -1560,20 +1571,31 @@ async def reject_user(
     session: AsyncSession = Depends(get_session)
 ):
     """Reject a pending user registration (admin only)"""
-    result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
-    user = result.scalar_one_or_none()
+    try:
+        result = await session.execute(
+            select(User).where(User.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        
+        if not user:
+            return JSONResponse(
+                status_code=404,
+                content={"success": False, "message": "User not found"}
+            )
+        
+        user.rejection_reason = rejection_reason
+        
+        await session.delete(user)
+        await session.commit()
+        
+        return {"success": True, "message": f"❌ User registration for {user.full_name} rejected"}
     
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    user.rejection_reason = rejection_reason
-    
-    await session.delete(user)
-    await session.commit()
-    
-    return {"success": True, "message": f"User registration rejected"}
+    except Exception as e:
+        await session.rollback()
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to reject user: {str(e)}"}
+        )
 
 
 @app.get("/field-workers/new", response_class=HTMLResponse)
