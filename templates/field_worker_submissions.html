@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Submissions - DP Works Bhadrak</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('/static/stock_images/bright_sunlit_green__fd4a9d7d.jpg') center/cover fixed;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 1.5rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .header-title h1 {
+            color: #1e293b;
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .header-title p {
+            color: #475569;
+            font-size: 0.95rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card h3 {
+            color: #64748b;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+        }
+
+        .stat-value {
+            color: #1e293b;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .filters {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            color: #475569;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 0.625rem 1rem;
+            border: 1px solid rgba(30, 41, 59, 0.2);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            color: #1e293b;
+            font-size: 0.9rem;
+        }
+
+        .submissions-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .submission-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .submission-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .submission-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+        }
+
+        .submission-info h3 {
+            color: #1e293b;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .submission-meta {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending {
+            background: rgba(234, 179, 8, 0.2);
+            color: #854d0e;
+            border: 1px solid rgba(234, 179, 8, 0.3);
+        }
+
+        .status-approved {
+            background: rgba(34, 197, 94, 0.2);
+            color: #166534;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.2);
+            color: #991b1b;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .submission-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .detail-label {
+            color: #64748b;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .detail-value {
+            color: #1e293b;
+            font-size: 0.9375rem;
+        }
+
+        .submission-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(30, 41, 59, 0.1);
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-sm {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .empty-state {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .empty-state h3 {
+            color: #1e293b;
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-state p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .rejection-reason {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.75rem;
+        }
+
+        .rejection-reason strong {
+            color: #991b1b;
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+        }
+
+        .rejection-reason p {
+            color: #7f1d1d;
+            font-size: 0.875rem;
+            margin: 0;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .submission-header {
+                flex-direction: column;
+            }
+
+            .submission-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-title">
+                <h1>📋 My Submissions</h1>
+                <p>Track all your Field Worker submissions</p>
+            </div>
+            <div class="header-actions">
+                <a href="/field-workers/new" class="btn btn-primary btn-sm">+ Add Field Worker</a>
+                <a href="/dashboard" class="btn btn-secondary btn-sm">Dashboard</a>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Submissions</h3>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Pending</h3>
+                <div class="stat-value" id="pendingCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Approved</h3>
+                <div class="stat-value" id="approvedCount">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Rejected</h3>
+                <div class="stat-value" id="rejectedCount">0</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label for="statusFilter">Status</label>
+                <select id="statusFilter">
+                    <option value="">All Statuses</option>
+                    <option value="pending">Pending</option>
+                    <option value="approved">Approved</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="searchFilter">Search</label>
+                <input type="text" id="searchFilter" placeholder="Search by name or phone...">
+            </div>
+        </div>
+
+        <div class="submissions-list" id="submissionsList">
+            <!-- Loaded via JavaScript -->
+        </div>
+
+        <div class="empty-state" id="emptyState" style="display: none;">
+            <h3>📝 No Submissions Yet</h3>
+            <p>You haven't submitted any Field Worker information yet.</p>
+            <a href="/field-workers/new" class="btn btn-primary">Add Your First Field Worker</a>
+        </div>
+    </div>
+
+    <script>
+        let allSubmissions = [];
+
+        async function loadSubmissions() {
+            try {
+                const response = await fetch('/api/field-workers/my-submissions');
+                const data = await response.json();
+                allSubmissions = data;
+                
+                updateStats();
+                renderSubmissions();
+            } catch (error) {
+                console.error('Failed to load submissions:', error);
+            }
+        }
+
+        function updateStats() {
+            const total = allSubmissions.length;
+            const pending = allSubmissions.filter(s => s.status === 'pending').length;
+            const approved = allSubmissions.filter(s => s.status === 'approved').length;
+            const rejected = allSubmissions.filter(s => s.status === 'rejected').length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('pendingCount').textContent = pending;
+            document.getElementById('approvedCount').textContent = approved;
+            document.getElementById('rejectedCount').textContent = rejected;
+        }
+
+        function renderSubmissions() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const searchFilter = document.getElementById('searchFilter').value.toLowerCase();
+
+            let filtered = allSubmissions;
+
+            if (statusFilter) {
+                filtered = filtered.filter(s => s.status === statusFilter);
+            }
+
+            if (searchFilter) {
+                filtered = filtered.filter(s => 
+                    s.full_name.toLowerCase().includes(searchFilter) ||
+                    s.phone.includes(searchFilter)
+                );
+            }
+
+            const list = document.getElementById('submissionsList');
+            const emptyState = document.getElementById('emptyState');
+
+            if (filtered.length === 0) {
+                list.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            list.style.display = 'flex';
+            emptyState.style.display = 'none';
+
+            list.innerHTML = filtered.map(submission => `
+                <div class="submission-card">
+                    <div class="submission-header">
+                        <div class="submission-info">
+                            <h3>${submission.full_name}</h3>
+                            <div class="submission-meta">
+                                Submitted on ${new Date(submission.created_at).toLocaleDateString()} • 
+                                ${submission.village_name}, ${submission.block_name}
+                            </div>
+                        </div>
+                        <span class="status-badge status-${submission.status}">
+                            ${submission.status}
+                        </span>
+                    </div>
+
+                    <div class="submission-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Phone</span>
+                            <span class="detail-value">${submission.phone}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Designation</span>
+                            <span class="detail-value">${submission.designation}</span>
+                        </div>
+                        ${submission.email ? `
+                        <div class="detail-item">
+                            <span class="detail-label">Email</span>
+                            <span class="detail-value">${submission.email}</span>
+                        </div>
+                        ` : ''}
+                        ${submission.department ? `
+                        <div class="detail-item">
+                            <span class="detail-label">Department</span>
+                            <span class="detail-value">${submission.department}</span>
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    ${submission.rejection_reason ? `
+                    <div class="rejection-reason">
+                        <strong>Rejection Reason:</strong>
+                        <p>${submission.rejection_reason}</p>
+                    </div>
+                    ` : ''}
+
+                    <div class="submission-actions">
+                        ${submission.status === 'pending' ? `
+                            <button class="btn btn-secondary btn-sm" onclick="editSubmission(${submission.id})">
+                                Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSubmission(${submission.id})">
+                                Delete
+                            </button>
+                        ` : `
+                            <button class="btn btn-secondary btn-sm" disabled>
+                                ${submission.status === 'approved' ? 'Approved (Locked)' : 'Rejected (Locked)'}
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function editSubmission(id) {
+            // TODO: Implement edit functionality
+            alert('Edit functionality coming soon');
+        }
+
+        async function deleteSubmission(id) {
+            if (!confirm('Are you sure you want to delete this submission?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/field-workers/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Submission deleted successfully');
+                    loadSubmissions();
+                } else {
+                    alert('Failed to delete submission');
+                }
+            } catch (error) {
+                alert('Network error. Please try again.');
+            }
+        }
+
+        // Event listeners
+        document.getElementById('statusFilter').addEventListener('change', renderSubmissions);
+        document.getElementById('searchFilter').addEventListener('input', renderSubmissions);
+
+        // Initialize
+        loadSubmissions();
+    </script>
+</body>
+</html>

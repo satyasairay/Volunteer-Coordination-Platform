@@ -1569,3 +1569,240 @@ async def reject_user(
     await session.commit()
     
     return {"success": True, "message": f"User registration rejected"}
+
+
+@app.get("/field-workers/new", response_class=HTMLResponse)
+async def field_worker_new_page(
+    request: Request,
+    user_data: dict = Depends(require_block_coordinator)
+):
+    """Field Worker submission form"""
+    return templates.TemplateResponse("field_worker_new.html", {
+        "request": request,
+        "user": user_data
+    })
+
+
+@app.get("/api/form-fields")
+async def get_form_fields(
+    user_data: dict = Depends(require_block_coordinator),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get form field configuration for Field Worker form"""
+    result = await session.execute(
+        select(FormFieldConfig)
+        .where(FormFieldConfig.is_visible == True)
+        .order_by(FormFieldConfig.display_order)
+    )
+    fields = result.scalars().all()
+    
+    return [{
+        "field_name": f.field_name,
+        "field_label": f.field_label,
+        "field_type": f.field_type,
+        "is_required": f.is_required,
+        "placeholder": f.placeholder,
+        "help_text": f.help_text,
+        "options": f.options
+    } for f in fields]
+
+
+@app.get("/api/villages")
+async def get_villages_list(
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all villages for autocomplete (lightweight version)"""
+    result = await session.execute(
+        select(Village.id, Village.village_name, Village.block_name, Village.population)
+        .order_by(Village.village_name)
+    )
+    villages = result.all()
+    
+    return {
+        "villages": [{
+            "id": v.id,
+            "village_name": v.village_name,
+            "block_name": v.block_name,
+            "population": v.population
+        } for v in villages]
+    }
+
+
+@app.post("/api/field-workers")
+async def submit_field_worker(
+    request: Request,
+    user_data: dict = Depends(require_block_coordinator),
+    session: AsyncSession = Depends(get_session)
+):
+    """Submit a new Field Worker entry"""
+    from auth import check_block_access
+    
+    data = await request.json()
+    
+    # Get village to check block access
+    village_result = await session.execute(
+        select(Village).where(Village.id == data['village_id'])
+    )
+    village = village_result.scalar_one_or_none()
+    
+    if not village:
+        raise HTTPException(status_code=404, detail="Village not found")
+    
+    # Get user object for block access check
+    user_result = await session.execute(
+        select(User).where(User.email == user_data.get('email'))
+    )
+    user = user_result.scalar_one_or_none()
+    
+    # Check if user has access to this block
+    try:
+        check_block_access(user_data, village.block_name, user)
+    except HTTPException:
+        raise HTTPException(
+            status_code=403,
+            detail=f"You do not have access to submit Field Workers for {village.block_name} block"
+        )
+    
+    # Check for duplicate phone number (unless exception provided)
+    if not data.get('duplicate_exception_reason'):
+        duplicate_check = await session.execute(
+            select(FieldWorker)
+            .where(FieldWorker.phone == data['phone'])
+            .where(FieldWorker.is_active == True)
+        )
+        existing = duplicate_check.scalar_one_or_none()
+        
+        if existing:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Phone number {data['phone']} already exists in the system. If this is a valid duplicate, please provide a reason."
+            )
+    
+    # Create Field Worker entry
+    field_worker = FieldWorker(
+        full_name=data['full_name'],
+        phone=data['phone'],
+        alternate_phone=data.get('alternate_phone'),
+        email=data.get('email'),
+        village_id=data['village_id'],
+        address_line=data.get('address_line'),
+        landmark=data.get('landmark'),
+        designation=data['designation'],
+        department=data.get('department'),
+        employee_id=data.get('employee_id'),
+        preferred_contact_method=data.get('preferred_contact_method', 'phone'),
+        available_days=data.get('available_days'),
+        available_hours=data.get('available_hours'),
+        status='pending',
+        submitted_by_user_id=user.id,
+        duplicate_exception_reason=data.get('duplicate_exception_reason'),
+        duplicate_of_phone=data.get('duplicate_of_phone')
+    )
+    
+    session.add(field_worker)
+    await session.commit()
+    await session.refresh(field_worker)
+    
+    return {
+        "success": True,
+        "message": "Field Worker submitted successfully. Pending admin approval.",
+        "id": field_worker.id
+    }
+
+
+@app.get("/field-workers/my-submissions", response_class=HTMLResponse)
+async def my_submissions_page(
+    request: Request,
+    user_data: dict = Depends(require_block_coordinator)
+):
+    """My submissions page"""
+    return templates.TemplateResponse("field_worker_submissions.html", {
+        "request": request,
+        "user": user_data
+    })
+
+
+@app.get("/api/field-workers/my-submissions")
+async def get_my_submissions(
+    user_data: dict = Depends(require_block_coordinator),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all submissions by current user"""
+    # Get user ID
+    user_result = await session.execute(
+        select(User).where(User.email == user_data.get('email'))
+    )
+    user = user_result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Get submissions with village info
+    result = await session.execute(
+        select(FieldWorker, Village.village_name, Village.block_name)
+        .join(Village, FieldWorker.village_id == Village.id)
+        .where(FieldWorker.submitted_by_user_id == user.id)
+        .order_by(FieldWorker.created_at.desc())
+    )
+    
+    submissions = []
+    for fw, village_name, block_name in result.all():
+        submissions.append({
+            "id": fw.id,
+            "full_name": fw.full_name,
+            "phone": fw.phone,
+            "alternate_phone": fw.alternate_phone,
+            "email": fw.email,
+            "village_id": fw.village_id,
+            "village_name": village_name,
+            "block_name": block_name,
+            "designation": fw.designation,
+            "department": fw.department,
+            "employee_id": fw.employee_id,
+            "status": fw.status,
+            "created_at": fw.created_at.isoformat(),
+            "approved_at": fw.approved_at.isoformat() if fw.approved_at else None,
+            "approved_by": fw.approved_by,
+            "rejection_reason": fw.rejection_reason
+        })
+    
+    return submissions
+
+
+@app.delete("/api/field-workers/{field_worker_id}")
+async def delete_field_worker(
+    field_worker_id: int,
+    user_data: dict = Depends(require_block_coordinator),
+    session: AsyncSession = Depends(get_session)
+):
+    """Delete a pending Field Worker submission"""
+    # Get user
+    user_result = await session.execute(
+        select(User).where(User.email == user_data.get('email'))
+    )
+    user = user_result.scalar_one_or_none()
+    
+    # Get field worker
+    fw_result = await session.execute(
+        select(FieldWorker).where(FieldWorker.id == field_worker_id)
+    )
+    fw = fw_result.scalar_one_or_none()
+    
+    if not fw:
+        raise HTTPException(status_code=404, detail="Field Worker not found")
+    
+    # Check ownership
+    if fw.submitted_by_user_id != user.id and user_data.get('role') != 'super_admin':
+        raise HTTPException(status_code=403, detail="You can only delete your own submissions")
+    
+    # Can only delete pending submissions
+    if fw.status != 'pending':
+        raise HTTPException(
+            status_code=400,
+            detail=f"Cannot delete {fw.status} submissions. Only pending submissions can be deleted."
+        )
+    
+    await session.delete(fw)
+    await session.commit()
+    
+    return {"success": True, "message": "Submission deleted successfully"}
