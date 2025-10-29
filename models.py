@@ -433,3 +433,22 @@ class FormFieldConfig(SQLModel, table=True):
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AboutPage(SQLModel, table=True):
+    """Admin-editable About Page content"""
+    __tablename__ = "about_page"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Content sections
+    title: str = Field(default="About Us")
+    subtitle: Optional[str] = None
+    main_content: str = Field(default="We have not named anything yet, awaiting blessings from Param Pujyapad Sree Sree Acharya Dev")
+    mission_statement: Optional[str] = None
+    vision_statement: Optional[str] = None
+    contact_info: Optional[str] = None
+    
+    # Metadata
+    last_edited_by: Optional[str] = None
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
