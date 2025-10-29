@@ -14,33 +14,33 @@
         :root {
             --theme-primary: #667eea;
             --theme-secondary: #764ba2;
-            --theme-light: #f3e7ff;
-            --theme-medium: #c084fc;
+            --theme-light: #e9d5ff;
+            --theme-medium: #a78bfa;
             --theme-dark: #6b21a8;
-            --theme-glow: rgba(139, 92, 246, 0.5);
-            --theme-colors: '#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8';
+            --theme-glow: rgba(109, 40, 217, 0.4);
+            --theme-colors: '#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8';
         }
         
         /* Alternative Teal/Ocean Theme */
         body.theme-ocean {
             --theme-primary: #0891b2;
             --theme-secondary: #0e7490;
-            --theme-light: #cffafe;
+            --theme-light: #a5f3fc;
             --theme-medium: #22d3ee;
             --theme-dark: #0e7490;
-            --theme-glow: rgba(6, 182, 212, 0.5);
-            --theme-colors: '#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2';
+            --theme-glow: rgba(14, 116, 144, 0.4);
+            --theme-colors: '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490';
         }
         
         /* Fresh Grass Green Theme */
         body.theme-grass {
             --theme-primary: #16a34a;
             --theme-secondary: #15803d;
-            --theme-light: #dcfce7;
+            --theme-light: '#bbf7d0';
             --theme-medium: #4ade80;
             --theme-dark: #166534;
-            --theme-glow: rgba(34, 197, 94, 0.5);
-            --theme-colors: '#f0fdf4', '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a';
+            --theme-glow: rgba(22, 101, 52, 0.4);
+            --theme-colors: '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d';
         }
         
         /* Modern 2025 Navigation */
@@ -867,11 +867,11 @@
                 // Create dynamic gradient based on current theme
                 function getThemeColors() {
                     if (document.body.classList.contains('theme-ocean')) {
-                        return ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2'];
+                        return ['#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490'];
                     } else if (document.body.classList.contains('theme-grass')) {
-                        return ['#f0fdf4', '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a'];
+                        return ['#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d'];
                     }
-                    return ['#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
+                    return ['#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
                 }
                 
                 const themeScale = d3.scaleSequential()

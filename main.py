@@ -1654,14 +1654,30 @@ async def submit_field_worker(
     
     data = await request.json()
     
-    # Get village to check block access
-    village_result = await session.execute(
-        select(Village).where(Village.id == data['village_id'])
-    )
-    village = village_result.scalar_one_or_none()
+    # Handle village_id - check if it's empty or a new village name
+    village_id_raw = data.get('village_id', '').strip()
     
-    if not village:
-        raise HTTPException(status_code=404, detail="Village not found")
+    if not village_id_raw:
+        raise HTTPException(status_code=400, detail="Village selection is required")
+    
+    # Try to convert to integer - if it fails, it's a new village name
+    try:
+        village_id = int(village_id_raw)
+        # Get existing village to check block access
+        village_result = await session.execute(
+            select(Village).where(Village.id == village_id)
+        )
+        village = village_result.scalar_one_or_none()
+        
+        if not village:
+            raise HTTPException(status_code=404, detail="Village not found")
+    except ValueError:
+        # It's a new village name - for now, reject it
+        # TODO: Implement new village creation workflow with admin approval
+        raise HTTPException(
+            status_code=400, 
+            detail="Adding new villages requires admin approval. Please select an existing village or contact your administrator."
+        )
     
     # Get user object for block access check
     user_result = await session.execute(
@@ -1699,7 +1715,7 @@ async def submit_field_worker(
         phone=data['phone'],
         alternate_phone=data.get('alternate_phone'),
         email=data.get('email'),
-        village_id=data['village_id'],
+        village_id=village_id,
         address_line=data.get('address_line'),
         landmark=data.get('landmark'),
         designation=data['designation'],
