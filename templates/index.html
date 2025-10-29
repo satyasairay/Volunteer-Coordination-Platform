@@ -32,6 +32,17 @@
             --theme-colors: '#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2';
         }
         
+        /* Fresh Grass Green Theme */
+        body.theme-grass {
+            --theme-primary: #16a34a;
+            --theme-secondary: #15803d;
+            --theme-light: #dcfce7;
+            --theme-medium: #4ade80;
+            --theme-dark: #166534;
+            --theme-glow: rgba(34, 197, 94, 0.5);
+            --theme-colors: '#f0fdf4', '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a';
+        }
+        
         /* Modern 2025 Navigation */
         nav {
             background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
@@ -855,11 +866,10 @@
                 // Step 3: Draw ALL 1,315 village polygons (PREMIUM 2025 STYLE)
                 // Create dynamic gradient based on current theme
                 function getThemeColors() {
-                    const style = getComputedStyle(document.documentElement);
-                    const colorsStr = style.getPropertyValue('--theme-colors').trim();
-                    // Parse colors from CSS variable
                     if (document.body.classList.contains('theme-ocean')) {
                         return ['#ecfeff', '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2'];
+                    } else if (document.body.classList.contains('theme-grass')) {
+                        return ['#f0fdf4', '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a'];
                     }
                     return ['#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
                 }
@@ -1387,15 +1397,24 @@
             btn.classList.toggle('active');
         }
         
-        // Theme Toggle Function
+        // Theme Toggle Function - Cycles through 3 themes
         function toggleTheme() {
             const body = document.body;
             const isOcean = body.classList.contains('theme-ocean');
+            const isGrass = body.classList.contains('theme-grass');
             
-            if (isOcean) {
-                body.classList.remove('theme-ocean');
+            // Cycle: Purple → Ocean → Grass → Purple
+            if (isGrass) {
+                // Grass → Purple
+                body.classList.remove('theme-grass');
                 localStorage.setItem('mapTheme', 'purple');
+            } else if (isOcean) {
+                // Ocean → Grass
+                body.classList.remove('theme-ocean');
+                body.classList.add('theme-grass');
+                localStorage.setItem('mapTheme', 'grass');
             } else {
+                // Purple → Ocean
                 body.classList.add('theme-ocean');
                 localStorage.setItem('mapTheme', 'ocean');
             }
@@ -1409,6 +1428,8 @@
             const savedTheme = localStorage.getItem('mapTheme');
             if (savedTheme === 'ocean') {
                 document.body.classList.add('theme-ocean');
+            } else if (savedTheme === 'grass') {
+                document.body.classList.add('theme-grass');
             }
         })();
     </script>
