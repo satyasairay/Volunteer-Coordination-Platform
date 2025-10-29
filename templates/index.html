@@ -603,7 +603,6 @@
     <nav>
         <div class="nav-brand">
             Volunteer Management Platform
-            <span class="nav-location">📍 <strong>Bhadrak</strong></span>
         </div>
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
@@ -865,6 +864,30 @@
                     });
                 
                 console.log(`✅ Rendered ${blockPaths.size()} block boundaries`);
+                
+                // ============================================================
+                // Add "Bhadrak" District Label on Map
+                // ============================================================
+                // Position in the northern/upper-middle empty area (hand-drawn circle location)
+                // Using approximate coordinates based on Bhadrak district geography
+                const bhadrakLabelCoords = projection([86.5, 21.12]); // Lat/Lon for upper area
+                
+                g.append("text")
+                    .attr("x", bhadrakLabelCoords[0])
+                    .attr("y", bhadrakLabelCoords[1])
+                    .attr("text-anchor", "middle")
+                    .attr("font-family", "system-ui, -apple-system, sans-serif")
+                    .attr("font-size", "24px")
+                    .attr("font-weight", "800")
+                    .attr("fill", "#667eea")
+                    .attr("stroke", "white")
+                    .attr("stroke-width", "3")
+                    .attr("paint-order", "stroke")
+                    .attr("opacity", 0.9)
+                    .style("pointer-events", "none")
+                    .text("BHADRAK");
+                
+                console.log(`✅ Added "BHADRAK" district label on map`);
                 
                 // ============================================================
                 // PHASE 2 & 3: SIDEBAR & HEAT MAPS REMOVED PER USER REQUEST
@@ -1289,7 +1312,7 @@
     
     <div class="footer">
         <div class="footer-text">
-            © 2025 <span class="footer-brand">@volunteerplatform.org</span> Bhadrak Team. All rights reserved.
+            © 2025 <span class="footer-brand">@Bhadrak DP Team</span>. All rights reserved.
         </div>
         <div class="footer-text">
             Village-Level Atlas • 1,315 Villages
