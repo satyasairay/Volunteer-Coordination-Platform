@@ -31,6 +31,7 @@ class Village(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
     
     members: List["Member"] = Relationship(back_populates="village")
+    field_workers: List["FieldWorker"] = Relationship(back_populates="village")
 
 
 class Member(SQLModel, table=True):
@@ -313,4 +314,116 @@ class BlockStatistics(SQLModel, table=True):
     
     # Timestamps
     last_calculated: datetime = Field(default_factory=datetime.utcnow, index=True)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class User(SQLModel, table=True):
+    """User authentication and role management - Version 2.0.0"""
+    __tablename__ = "users"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Authentication
+    email: str = Field(unique=True, index=True)
+    password_hash: str
+    
+    # Profile
+    full_name: str
+    phone: str
+    
+    # Role & Multi-Block Access
+    role: str = Field(index=True)  # 'super_admin', 'block_coordinator'
+    primary_block: str = Field(index=True)  # Default block from registration
+    assigned_blocks: str = Field(default="")  # Comma-separated: "Bhadrak,Tihidi,Basudevpur"
+    
+    # Approval Status
+    is_active: bool = Field(default=False, index=True)
+    approved_by: Optional[str] = None  # Admin email who approved
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    
+    # Tracking
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    last_login: Optional[datetime] = None
+    login_count: int = Field(default=0)
+    
+    # Relationships
+    field_worker_entries: List["FieldWorker"] = Relationship(back_populates="submitted_by_user")
+
+
+class FieldWorker(SQLModel, table=True):
+    """Field Worker contact information with approval workflow - Version 2.0.0"""
+    __tablename__ = "field_workers"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    
+    # Core Data
+    full_name: str = Field(index=True)
+    phone: str = Field(index=True)  # For duplicate checking
+    alternate_phone: Optional[str] = None
+    email: Optional[str] = None
+    village_id: int = Field(foreign_key="villages.id", index=True)
+    address_line: Optional[str] = None
+    landmark: Optional[str] = None
+    designation: str
+    department: Optional[str] = None
+    employee_id: Optional[str] = None
+    
+    # Contact Preferences
+    preferred_contact_method: str = Field(default="phone")  # phone, email, whatsapp
+    available_days: Optional[str] = None  # "Mon-Fri", "All days", etc.
+    available_hours: Optional[str] = None  # "9AM-5PM", "24/7", etc.
+    
+    # Approval Workflow
+    status: str = Field(default="pending", index=True)  # 'pending', 'approved', 'rejected'
+    submitted_by_user_id: int = Field(foreign_key="users.id", index=True)
+    approved_by: Optional[str] = None  # Admin email
+    approved_at: Optional[datetime] = None
+    rejection_reason: Optional[str] = None
+    
+    # Duplicate Exception Handling
+    duplicate_exception_reason: Optional[str] = None  # Submitter's reason for exception
+    duplicate_of_phone: Optional[str] = None  # Which phone number is duplicate
+    
+    # Status
+    is_active: bool = Field(default=True, index=True)
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    last_verified_at: Optional[datetime] = None
+    
+    # Relationships
+    village: Optional[Village] = Relationship(back_populates="field_workers")
+    submitted_by_user: Optional[User] = Relationship(back_populates="field_worker_entries")
+
+
+class FormFieldConfig(SQLModel, table=True):
+    """Admin-configurable Field Worker form fields - Version 2.0.0"""
+    __tablename__ = "form_field_config"
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    field_name: str = Field(unique=True, index=True)  # 'full_name', 'phone', 'email', etc.
+    
+    # Configuration
+    is_required: bool = Field(default=False)
+    is_visible: bool = Field(default=True)
+    display_order: int = Field(default=0, index=True)
+    
+    # Display Properties
+    field_label: str  # "Full Name", "Phone Number", etc.
+    field_type: str  # 'text', 'tel', 'email', 'textarea', 'select'
+    placeholder: Optional[str] = None
+    help_text: Optional[str] = None  # Helper text shown below field
+    
+    # Validation
+    min_length: Optional[int] = None
+    max_length: Optional[int] = None
+    pattern: Optional[str] = None  # Regex pattern for validation
+    
+    # For select fields
+    options: Optional[str] = None  # JSON array of options
+    
+    # Timestamps
+    created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
