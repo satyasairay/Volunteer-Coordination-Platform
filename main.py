@@ -2334,3 +2334,147 @@ async def get_analytics_overview(
         "timeline": [{"date": k, "count": v} for k, v in sorted(timeline.items())],
         "top_contributors": top_contributors
     }
+
+
+# ============================================================
+# PHASE 2: ADMIN FORM FIELD CONFIGURATION
+# ============================================================
+
+@app.get("/admin/form-config", response_class=HTMLResponse)
+async def admin_form_config_page(
+    request: Request,
+    admin_data: dict = Depends(require_super_admin)
+):
+    """Admin form field configuration interface"""
+    return templates.TemplateResponse("admin_form_config.html", {
+        "request": request,
+        "admin": admin_data
+    })
+
+
+@app.get("/api/admin/form-config")
+async def get_form_config(
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all form field configurations"""
+    result = await session.execute(
+        select(FormFieldConfig).order_by(FormFieldConfig.display_order)
+    )
+    configs = result.scalars().all()
+    
+    return [{
+        "id": c.id,
+        "field_name": c.field_name,
+        "field_label": c.field_label,
+        "field_type": c.field_type,
+        "is_required": c.is_required,
+        "is_visible": c.is_visible,
+        "display_order": c.display_order,
+        "placeholder": c.placeholder
+    } for c in configs]
+
+
+@app.put("/api/admin/form-config")
+async def update_form_config(
+    request: Request,
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Update all form field configurations"""
+    data = await request.json()
+    
+    for field_data in data:
+        result = await session.execute(
+            select(FormFieldConfig).where(FormFieldConfig.id == field_data['id'])
+        )
+        config = result.scalar_one_or_none()
+        
+        if config:
+            config.is_required = field_data['is_required']
+            config.is_visible = field_data['is_visible']
+            config.display_order = field_data['display_order']
+            config.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    
+    return {"success": True, "message": "Form configuration updated successfully"}
+
+
+# ============================================================
+# PHASE 2: DUPLICATE EXCEPTIONS REVIEW
+# ============================================================
+
+@app.get("/admin/duplicates", response_class=HTMLResponse)
+async def admin_duplicates_page(
+    request: Request,
+    admin_data: dict = Depends(require_super_admin)
+):
+    """Admin duplicate exceptions review interface"""
+    return templates.TemplateResponse("admin_duplicates.html", {
+        "request": request,
+        "admin": admin_data
+    })
+
+
+@app.get("/api/admin/duplicates")
+async def get_duplicate_exceptions(
+    admin_data: dict = Depends(require_super_admin),
+    session: AsyncSession = Depends(get_session)
+):
+    """Get all Field Workers with duplicate exception reasons"""
+    # Get all Field Workers with duplicate exceptions
+    result = await session.execute(
+        select(FieldWorker, Village, User.full_name.label('submitted_by_name'))
+        .join(Village, FieldWorker.village_id == Village.id)
+        .join(User, FieldWorker.submitted_by_user_id == User.id)
+        .where(FieldWorker.duplicate_exception_reason.isnot(None))
+        .order_by(FieldWorker.created_at.desc())
+    )
+    
+    duplicates = []
+    for fw, village, submitted_by_name in result.all():
+        # Get the existing entry if duplicate_of_phone is set
+        existing_entry = None
+        if fw.duplicate_of_phone:
+            existing_result = await session.execute(
+                select(FieldWorker, Village)
+                .join(Village, FieldWorker.village_id == Village.id)
+                .where(FieldWorker.phone == fw.duplicate_of_phone)
+                .where(FieldWorker.id != fw.id)
+                .where(FieldWorker.status == 'approved')
+                .limit(1)
+            )
+            existing_row = existing_result.first()
+            if existing_row:
+                existing_fw, existing_village = existing_row
+                existing_entry = {
+                    "id": existing_fw.id,
+                    "full_name": existing_fw.full_name,
+                    "phone": existing_fw.phone,
+                    "village_name": existing_village.village_name,
+                    "block_name": existing_village.block_name,
+                    "designation": existing_fw.designation,
+                    "department": existing_fw.department,
+                    "status": existing_fw.status
+                }
+        
+        duplicates.append({
+            "id": fw.id,
+            "full_name": fw.full_name,
+            "phone": fw.phone,
+            "alternate_phone": fw.alternate_phone,
+            "email": fw.email,
+            "village_name": village.village_name,
+            "block_name": village.block_name,
+            "designation": fw.designation,
+            "department": fw.department,
+            "status": fw.status,
+            "duplicate_exception_reason": fw.duplicate_exception_reason,
+            "duplicate_of_phone": fw.duplicate_of_phone,
+            "existing_entry": existing_entry,
+            "submitted_by_name": submitted_by_name,
+            "created_at": fw.created_at.isoformat()
+        })
+    
+    return duplicates
