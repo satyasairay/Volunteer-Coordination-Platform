@@ -393,11 +393,12 @@
             color: #1a1a1a;
         }
         
-        /* District boundary */
+        /* District boundary - PREMIUM 2025 STYLE */
         .district-boundary {
             fill: none;
-            stroke: #333;
-            stroke-width: 2;
+            stroke: #6b21a8;
+            stroke-width: 3.5;
+            filter: drop-shadow(0 0 8px rgba(139, 92, 246, 0.5)) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
             stroke-linejoin: round;
         }
         
@@ -800,16 +801,29 @@
                 
                 updateProgress(`Rendering ${villages.features.length} villages...`);
                 
-                // Step 3: Draw ALL 1,315 village polygons (choropleth base layer)
+                // Step 3: Draw ALL 1,315 village polygons (PREMIUM 2025 STYLE)
+                // Create PURPLE gradient to match header (#667eea → #764ba2)
+                const purpleScale = d3.scaleSequential()
+                    .domain([1000, 20000])
+                    .interpolator(t => {
+                        // Beautiful purple-to-blue gradient
+                        const purples = ['#f3e7ff', '#e0c3fc', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
+                        const idx = Math.floor(t * (purples.length - 1));
+                        return purples[idx];
+                    });
+                
                 const villagePaths = g.selectAll(".village-polygon")
                     .data(villages.features)
                     .enter()
                     .append("path")
                     .attr("class", "village-polygon")
                     .attr("d", path)
-                    .attr("fill", d => colorScale(d.properties.population || 5000))
-                    .attr("stroke", "#fff")
-                    .attr("stroke-width", 0.3);
+                    .attr("fill", d => purpleScale(d.properties.population || 5000))
+                    .attr("stroke", "#ffffff")
+                    .attr("stroke-width", 0.4)
+                    .attr("stroke-opacity", 0.6)
+                    .style("filter", "drop-shadow(0px 1px 2px rgba(139, 92, 246, 0.15))")  // Subtle purple glow
+                    .style("transition", "all 0.3s ease");
                 
                 console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
                 
