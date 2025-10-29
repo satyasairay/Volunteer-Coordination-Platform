@@ -401,47 +401,344 @@
             font-weight: 600;
         }
         
-        /* Mobile responsive */
-        @media (max-width: 768px) {
+        /* ============================================================
+           PHASE 4: MOBILE RESPONSIVENESS - HAMBURGER MENU
+           ============================================================ */
+        
+        /* Hamburger Menu Button */
+        .hamburger-btn {
+            display: none;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 2000;
+            width: 48px;
+            height: 48px;
+            background: rgba(249, 115, 22, 0.95);
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .hamburger-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+        }
+        
+        .hamburger-icon {
+            position: relative;
+            width: 24px;
+            height: 20px;
+            margin: 0 auto;
+        }
+        
+        .hamburger-icon span {
+            display: block;
+            position: absolute;
+            height: 3px;
+            width: 100%;
+            background: white;
+            border-radius: 2px;
+            opacity: 1;
+            left: 0;
+            transform: rotate(0deg);
+            transition: .25s ease-in-out;
+        }
+        
+        .hamburger-icon span:nth-child(1) { top: 0px; }
+        .hamburger-icon span:nth-child(2) { top: 8px; }
+        .hamburger-icon span:nth-child(3) { top: 16px; }
+        
+        .hamburger-btn.active .hamburger-icon span:nth-child(1) {
+            top: 8px;
+            transform: rotate(135deg);
+        }
+        
+        .hamburger-btn.active .hamburger-icon span:nth-child(2) {
+            opacity: 0;
+            left: -60px;
+        }
+        
+        .hamburger-btn.active .hamburger-icon span:nth-child(3) {
+            top: 8px;
+            transform: rotate(-135deg);
+        }
+        
+        /* Mobile Slide-Out Menu */
+        .mobile-menu {
+            position: fixed;
+            top: 0;
+            left: -100%;
+            width: 85%;
+            max-width: 350px;
+            height: 100vh;
+            background: linear-gradient(180deg, rgba(26, 26, 26, 0.98) 0%, rgba(40, 40, 40, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            z-index: 1999;
+            overflow-y: auto;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 4px 0 24px rgba(0,0,0,0.5);
+        }
+        
+        .mobile-menu.active {
+            left: 0;
+        }
+        
+        .mobile-menu-header {
+            padding: 20px;
+            background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+            color: white;
+        }
+        
+        .mobile-menu-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .mobile-menu-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .mobile-menu-section {
+            padding: 16px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .mobile-menu-section-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        
+        .mobile-menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            color: white;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .mobile-menu-item:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateX(4px);
+        }
+        
+        .mobile-menu-item-icon {
+            font-size: 20px;
+            margin-right: 12px;
+            width: 24px;
+            text-align: center;
+        }
+        
+        /* Mobile Menu Overlay */
+        .mobile-menu-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1998;
+        }
+        
+        .mobile-menu-overlay.active {
+            display: block;
+        }
+        
+        /* 4-Tier Responsive Breakpoints */
+        
+        /* Phone Portrait (320-480px) */
+        @media (max-width: 480px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
             nav {
-                flex-direction: column;
-                gap: 12px;
-                padding: 12px 16px;
+                padding: 10px 60px 10px 15px;
+            }
+            
+            .nav-brand {
+                font-size: 18px;
+            }
+            
+            .nav-location {
+                display: none;
             }
             
             .nav-tabs {
-                width: 100%;
-                justify-content: center;
+                gap: 6px;
             }
             
             .nav-tab {
-                flex: 1;
-                text-align: center;
-                padding: 8px 12px;
-                font-size: 13px;
+                padding: 6px 12px;
+                font-size: 12px;
             }
             
-            .legend {
-                top: 10px;
-                right: 10px;
-                font-size: 11px;
-                padding: 10px;
+            /* Hide desktop controls */
+            #village-search,
+            #toggle-blocks-panel {
+                display: none !important;
             }
             
             .zoom-controls {
-                bottom: 20px;
-                right: 20px;
+                bottom: 15px;
+                right: 15px;
             }
             
             .zoom-btn {
-                width: 36px;
-                height: 36px;
-                font-size: 18px;
+                width: 44px;
+                height: 44px;
+                font-size: 20px;
+            }
+            
+            .footer {
+                padding: 6px 15px;
+            }
+            
+            .footer-text {
+                font-size: 10px;
+            }
+        }
+        
+        /* Phone Landscape (481-767px) */
+        @media (min-width: 481px) and (max-width: 767px) {
+            .hamburger-btn {
+                display: block;
+            }
+            
+            nav {
+                padding: 12px 15px;
+            }
+            
+            .nav-brand {
+                font-size: 20px;
+            }
+            
+            .nav-tabs {
+                gap: 8px;
+            }
+            
+            /* Hide desktop controls */
+            #village-search,
+            #toggle-blocks-panel {
+                display: none !important;
+            }
+        }
+        
+        /* Tablet (768-1023px) */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            nav {
+                padding: 12px 20px;
+            }
+            
+            #village-search,
+            #toggle-blocks-panel {
+                width: 240px;
+            }
+            
+            .zoom-controls {
+                bottom: 25px;
+                right: 25px;
+            }
+        }
+        
+        /* Desktop (1024px+) - Default styles apply */
+        @media (min-width: 1024px) {
+            .hamburger-btn,
+            .mobile-menu,
+            .mobile-menu-overlay {
+                display: none !important;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Hamburger Menu Button (Mobile Only) -->
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMobileMenu()">
+        <div class="hamburger-icon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </button>
+    
+    <!-- Mobile Menu Overlay -->
+    <div class="mobile-menu-overlay" id="mobileMenuOverlay" onclick="toggleMobileMenu()"></div>
+    
+    <!-- Mobile Slide-Out Menu -->
+    <div class="mobile-menu" id="mobileMenu">
+        <div class="mobile-menu-header">
+            <div class="mobile-menu-title">DP Works 📍</div>
+            <div class="mobile-menu-subtitle">Bhadrak District Atlas</div>
+        </div>
+        
+        <!-- Search Section -->
+        <div class="mobile-menu-section">
+            <div class="mobile-menu-section-title">🔍 Navigate</div>
+            <input type="text" id="mobile-village-search" placeholder="Search villages, blocks..." 
+                   style="width: 100%; padding: 12px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; 
+                          background: rgba(255,255,255,0.1); color: white; font-size: 14px;"
+                   oninput="searchVillages(this.value)">
+        </div>
+        
+        <!-- Blocks Section -->
+        <div class="mobile-menu-section">
+            <div class="mobile-menu-section-title">🏞️ BLOCKS (7)</div>
+            <div id="mobile-block-list"></div>
+        </div>
+        
+        <!-- Heat Map Overlays -->
+        <div class="mobile-menu-section">
+            <div class="mobile-menu-section-title">🌿 HEAT MAP OVERLAYS</div>
+            <label style="display: flex; align-items: center; margin-bottom: 12px; cursor: pointer;">
+                <input type="checkbox" id="mobile-heatmap-seva" onchange="toggleMobileHeatmap('seva', this.checked)" 
+                       style="margin-right: 10px; width: 20px; height: 20px; cursor: pointer;">
+                <span style="color: white; font-size: 14px;">🔥 Seva Activity</span>
+            </label>
+            <label style="display: flex; align-items: center; cursor: pointer;">
+                <input type="checkbox" id="mobile-heatmap-population" onchange="toggleMobileHeatmap('population', this.checked)"
+                       style="margin-right: 10px; width: 20px; height: 20px; cursor: pointer;">
+                <span style="color: white; font-size: 14px;">👥 Population Density</span>
+            </label>
+        </div>
+        
+        <!-- User Menu -->
+        <div class="mobile-menu-section">
+            <div class="mobile-menu-section-title">👤 ACCOUNT</div>
+            <a href="/dashboard" class="mobile-menu-item">
+                <span class="mobile-menu-item-icon">📊</span>
+                <span>My Dashboard</span>
+            </a>
+            <a href="/field-workers/new" class="mobile-menu-item">
+                <span class="mobile-menu-item-icon">📋</span>
+                <span>Add Field Worker</span>
+            </a>
+            <a href="/profile" class="mobile-menu-item">
+                <span class="mobile-menu-item-icon">⚙️</span>
+                <span>My Profile</span>
+            </a>
+            <a href="/admin" class="mobile-menu-item" style="background: rgba(249,115,22,0.1);">
+                <span class="mobile-menu-item-icon">🔐</span>
+                <span>Admin Panel</span>
+            </a>
+        </div>
+    </div>
+    
     <nav>
         <div style="display: flex; align-items: center;">
             <div class="nav-brand">
@@ -716,6 +1013,7 @@
                 const blockStats = await statsRes.json();
                 
                 populateBlockSidebar(blockStats);
+                populateMobileBlockList(blockStats);
                 
                 // ============================================================
                 // PHASE 3: Heat Map Layer Setup
@@ -1089,6 +1387,73 @@
                 toggleBtn.style.borderColor = 'rgba(249,115,22,0.6)';
             }
         };
+        
+        // ============================================================
+        // PHASE 4: MOBILE MENU FUNCTIONS
+        // ============================================================
+        
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const overlay = document.getElementById('mobileMenuOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            btn.classList.toggle('active');
+        }
+        
+        function toggleMobileHeatmap(type, enabled) {
+            // Sync with desktop heatmap checkboxes
+            if (type === 'seva') {
+                document.getElementById('heatmap-seva').checked = enabled;
+                document.getElementById('heatmap-seva').dispatchEvent(new Event('change'));
+            } else if (type === 'population') {
+                document.getElementById('heatmap-population').checked = enabled;
+                document.getElementById('heatmap-population').dispatchEvent(new Event('change'));
+            }
+        }
+        
+        function searchVillages(searchTerm) {
+            // Sync with desktop search
+            const desktopSearch = document.getElementById('village-search');
+            if (desktopSearch) {
+                desktopSearch.value = searchTerm;
+                desktopSearch.dispatchEvent(new Event('input'));
+            }
+        }
+        
+        function populateMobileBlockList(blockStats) {
+            const mobileBlockList = document.getElementById('mobile-block-list');
+            if (!mobileBlockList) return;
+            
+            mobileBlockList.innerHTML = '';
+            
+            blockStats.forEach(block => {
+                const activityEmoji = block.activity_level === 'high' ? '🟢' : 
+                                     block.activity_level === 'medium' ? '🟡' : 
+                                     block.activity_level === 'low' ? '🟠' : '⚪';
+                
+                const blockItem = document.createElement('div');
+                blockItem.className = 'mobile-menu-item';
+                blockItem.innerHTML = `
+                    <span class="mobile-menu-item-icon">${activityEmoji}</span>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600;">${block.block_name}</div>
+                        <div style="font-size: 12px; opacity: 0.8;">${block.total_villages} villages • ${block.population.toLocaleString()} people</div>
+                    </div>
+                `;
+                blockItem.onclick = () => {
+                    const blockFeature = g.selectAll(".block-boundary")
+                        .data().find(d => d.properties.name === block.block_name);
+                    if (blockFeature) {
+                        zoomToBlock(blockFeature);
+                        toggleMobileMenu(); // Close menu after selection
+                    }
+                };
+                
+                mobileBlockList.appendChild(blockItem);
+            });
+        }
     </script>
     
     <div class="footer">
