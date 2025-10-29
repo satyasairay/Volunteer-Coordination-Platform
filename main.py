@@ -13,7 +13,7 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 from db import init_db, get_session
-from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig
+from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig, AboutPage
 from auth import create_session_token, get_current_admin, get_current_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context
 
 
@@ -2708,3 +2708,130 @@ async def search_field_workers(
         })
     
     return {"results": results, "total": len(results), "query": q}
+
+
+@app.get("/about", response_class=HTMLResponse)
+async def about_page(request: Request, session: AsyncSession = Depends(get_session)):
+    """Public about page"""
+    result = await session.execute(select(AboutPage))
+    about = result.scalar_one_or_none()
+    
+    if not about:
+        about = AboutPage(
+            title="About Us",
+            subtitle="Serving with Devotion",
+            main_content="We have not named anything yet, awaiting blessings from Param Pujyapad Sree Sree Acharya Dev"
+        )
+        session.add(about)
+        await session.commit()
+        await session.refresh(about)
+    
+    return templates.TemplateResponse("about.html", {
+        "request": request,
+        "about": about
+    })
+
+
+@app.get("/api/about")
+async def get_about_api(session: AsyncSession = Depends(get_session)):
+    """API endpoint to fetch about page content"""
+    result = await session.execute(select(AboutPage))
+    about = result.scalar_one_or_none()
+    
+    if not about:
+        about = AboutPage(
+            title="About Us",
+            subtitle="Serving with Devotion",
+            main_content="We have not named anything yet, awaiting blessings from Param Pujyapad Sree Sree Acharya Dev"
+        )
+        session.add(about)
+        await session.commit()
+        await session.refresh(about)
+    
+    return {
+        "id": about.id,
+        "title": about.title,
+        "subtitle": about.subtitle,
+        "main_content": about.main_content,
+        "mission_statement": about.mission_statement,
+        "vision_statement": about.vision_statement,
+        "contact_info": about.contact_info,
+        "last_edited_by": about.last_edited_by,
+        "updated_at": about.updated_at.isoformat() if about.updated_at else None
+    }
+
+
+@app.put("/api/admin/about")
+async def update_about(
+    request: Request,
+    title: str = Form(...),
+    subtitle: Optional[str] = Form(None),
+    main_content: str = Form(...),
+    mission_statement: Optional[str] = Form(None),
+    vision_statement: Optional[str] = Form(None),
+    contact_info: Optional[str] = Form(None),
+    session: AsyncSession = Depends(get_session),
+    admin: User = Depends(require_super_admin)
+):
+    """Admin endpoint to update about page content (requires super_admin)"""
+    result = await session.execute(select(AboutPage))
+    about = result.scalar_one_or_none()
+    
+    if not about:
+        about = AboutPage()
+        session.add(about)
+    
+    about.title = title
+    about.subtitle = subtitle
+    about.main_content = main_content
+    about.mission_statement = mission_statement
+    about.vision_statement = vision_statement
+    about.contact_info = contact_info
+    about.last_edited_by = admin.email
+    about.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    await session.refresh(about)
+    
+    return {
+        "success": True,
+        "message": "About page updated successfully",
+        "about": {
+            "id": about.id,
+            "title": about.title,
+            "subtitle": about.subtitle,
+            "main_content": about.main_content,
+            "mission_statement": about.mission_statement,
+            "vision_statement": about.vision_statement,
+            "contact_info": about.contact_info,
+            "last_edited_by": about.last_edited_by,
+            "updated_at": about.updated_at.isoformat() if about.updated_at else None
+        }
+    }
+
+
+@app.get("/admin/about", response_class=HTMLResponse)
+async def admin_about_page(
+    request: Request,
+    session: AsyncSession = Depends(get_session),
+    admin: User = Depends(get_current_admin)
+):
+    """Admin page for editing about content"""
+    result = await session.execute(select(AboutPage))
+    about = result.scalar_one_or_none()
+    
+    if not about:
+        about = AboutPage(
+            title="About Us",
+            subtitle="Serving with Devotion",
+            main_content="We have not named anything yet, awaiting blessings from Param Pujyapad Sree Sree Acharya Dev"
+        )
+        session.add(about)
+        await session.commit()
+        await session.refresh(about)
+    
+    return templates.TemplateResponse("admin_about.html", {
+        "request": request,
+        "about": about,
+        "admin": admin
+    })

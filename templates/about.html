@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Volunteer Management Platform Bhadrak</title>
+    <title>{{ about.title }} - Satsangee</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
-
+        
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 0;
         }
         
         /* Modern Navigation */
@@ -27,7 +27,6 @@
             align-items: center;
             justify-content: space-between;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            position: relative;
             z-index: 100;
         }
         
@@ -48,7 +47,6 @@
             font-weight: 500;
         }
         
-        /* Hamburger Button - RIGHT SIDE */
         .hamburger-btn {
             width: 44px;
             height: 44px;
@@ -91,7 +89,6 @@
             transform: rotate(-45deg) translate(7px, -7px);
         }
         
-        /* RIGHT-SIDE SLIDE-IN MENU */
         .slide-menu {
             position: fixed;
             top: 0;
@@ -186,7 +183,6 @@
             text-align: center;
         }
         
-        /* Menu Overlay */
         .menu-overlay {
             position: fixed;
             top: 0;
@@ -205,170 +201,33 @@
             visibility: visible;
         }
         
-        .page-content {
-            min-height: calc(100vh - 68px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem 1rem;
+        .gradient-text {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-
-        .login-container {
-            width: 100%;
-            max-width: 450px;
-            background: rgba(255, 255, 255, 0.15);
+        
+        .content-card {
+            background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-            animation: fadeIn 0.5s ease-out;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
         }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+        
+        .section-divider {
+            background: linear-gradient(90deg, transparent, #667eea, transparent);
+            height: 2px;
+            margin: 2rem 0;
         }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
         }
-
-        .header h1 {
-            color: #1e293b;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .header p {
-            color: #475569;
-            font-size: 0.95rem;
-        }
-
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-
-        label {
-            display: block;
-            color: #1e293b;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        input {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid rgba(30, 41, 59, 0.2);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            color: #1e293b;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-        }
-
-        input:focus {
-            outline: none;
-            border-color: #3b82f6;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .alert {
-            padding: 0.875rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.25rem;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #991b1b;
-        }
-
-        .alert-info {
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(59, 130, 246, 0.3);
-            color: #1e40af;
-        }
-
-        .footer-links {
-            text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(30, 41, 59, 0.1);
-        }
-
-        .footer-links a {
-            color: #3b82f6;
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
-            display: block;
-            margin: 0.5rem 0;
-        }
-
-        .footer-links a:hover {
-            color: #2563eb;
-        }
-
-        @media (max-width: 640px) {
-            .login-container {
-                padding: 1.5rem;
-                border-radius: 15px;
-            }
-
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .header p {
-                font-size: 0.875rem;
-            }
-
-            input {
-                padding: 0.625rem 0.875rem;
-                font-size: 0.875rem;
-            }
-
-            .btn-primary {
-                padding: 0.75rem;
-                font-size: 0.95rem;
-            }
+        
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
         }
         
         @media (max-width: 768px) {
@@ -406,10 +265,8 @@
     </style>
 </head>
 <body>
-    <!-- Menu Overlay -->
     <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
     
-    <!-- RIGHT-SIDE SLIDE-IN MENU -->
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
             <button class="menu-close" onclick="toggleMenu()">×</button>
@@ -436,7 +293,6 @@
         </div>
     </div>
     
-    <!-- Modern Navigation Bar -->
     <nav>
         <div class="nav-brand">
             Volunteer Management Platform
@@ -448,111 +304,99 @@
             <span></span>
         </button>
     </nav>
-    
-    <div class="page-content">
-        <div class="login-container">
-        <div class="header">
-            <h1>Login</h1>
-            <p>Access Volunteer Management Platform</p>
+
+    <div class="max-w-5xl mx-auto px-4 md:px-8 py-12">
+        <div class="content-card rounded-3xl p-8 md:p-12 mb-8">
+            <div class="text-center mb-12">
+                <div class="floating-icon text-6xl mb-6">🕉️</div>
+                <h1 class="text-5xl md:text-6xl font-black gradient-text mb-4">
+                    {{ about.title }}
+                </h1>
+                {% if about.subtitle %}
+                <p class="text-2xl text-gray-600 font-light">{{ about.subtitle }}</p>
+                {% endif %}
+            </div>
+
+            <div class="section-divider"></div>
+
+            <div class="prose prose-lg max-w-none mb-10">
+                <div class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
+                    {{ about.main_content }}
+                </div>
+            </div>
+
+            {% if about.mission_statement %}
+            <div class="section-divider"></div>
+            
+            <div class="mb-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="text-3xl">🎯</div>
+                    <h2 class="text-3xl font-bold gradient-text">Our Mission</h2>
+                </div>
+                <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-6 border-l-4 border-blue-500">
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
+                        {{ about.mission_statement }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if about.vision_statement %}
+            <div class="section-divider"></div>
+            
+            <div class="mb-10">
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="text-3xl">👁️</div>
+                    <h2 class="text-3xl font-bold gradient-text">Our Vision</h2>
+                </div>
+                <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-2xl p-6 border-l-4 border-purple-500">
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
+                        {{ about.vision_statement }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if about.contact_info %}
+            <div class="section-divider"></div>
+            
+            <div>
+                <div class="flex items-center gap-3 mb-4">
+                    <div class="text-3xl">📞</div>
+                    <h2 class="text-3xl font-bold gradient-text">Contact Us</h2>
+                </div>
+                <div class="bg-gradient-to-r from-green-50 to-teal-50 rounded-2xl p-6 border-l-4 border-green-500">
+                    <p class="text-gray-700 leading-relaxed whitespace-pre-wrap text-lg">
+                        {{ about.contact_info }}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if about.last_edited_by %}
+            <div class="mt-10 pt-6 border-t border-gray-200 text-center">
+                <p class="text-sm text-gray-500">
+                    Last updated by {{ about.last_edited_by }}
+                    {% if about.updated_at %}
+                    on {{ about.updated_at.strftime('%B %d, %Y at %I:%M %p') }}
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
         </div>
 
-        <div id="errorAlert" class="alert alert-error"></div>
-        <div id="infoAlert" class="alert alert-info"></div>
-
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="email">Email Address</label>
-                <input type="email" id="email" name="email" required 
-                       placeholder="your.email@example.com">
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <input type="password" id="password" name="password" required 
-                       placeholder="Enter your password">
-            </div>
-
-            <button type="submit" class="btn-primary" id="submitBtn">
-                Login
-            </button>
-        </form>
-
-        <div class="footer-links">
-            <a href="/register">New user? Register here</a>
-            <a href="/">Back to Map</a>
+        <div class="text-center">
+            <a href="/" class="inline-block bg-white text-purple-600 px-8 py-4 rounded-full font-bold text-lg shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
+                ← Back to Map
+            </a>
         </div>
     </div>
 
+    <footer class="text-center py-8 text-white">
+        <p class="text-sm opacity-80">Made with devotion 🙏</p>
+    </footer>
+    
     <script>
-        const form = document.getElementById('loginForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const errorAlert = document.getElementById('errorAlert');
-        const infoAlert = document.getElementById('infoAlert');
-
-        // Check for logout success message
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('logout') === 'success') {
-            showInfo('✅ You have been logged out successfully.');
-            // Clear the URL parameter
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Logging in...';
-            hideAlerts();
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showInfo('Login successful! Redirecting...');
-                    
-                    setTimeout(() => {
-                        if (result.role === 'super_admin') {
-                            window.location.href = '/admin';
-                        } else if (result.role === 'block_coordinator') {
-                            window.location.href = '/dashboard';
-                        } else {
-                            window.location.href = '/';
-                        }
-                    }, 500);
-                } else {
-                    showError(result.detail || 'Login failed. Please check your credentials.');
-                }
-            } catch (error) {
-                showError('Network error. Please check your connection and try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Login';
-            }
-        });
-
-        function showError(message) {
-            errorAlert.textContent = '❌ ' + message;
-            errorAlert.style.display = 'block';
-        }
-
-        function showInfo(message) {
-            infoAlert.textContent = 'ℹ️ ' + message;
-            infoAlert.style.display = 'block';
-        }
-
-        function hideAlerts() {
-            errorAlert.style.display = 'none';
-            infoAlert.style.display = 'none';
-        }
-        
-        // Modern Menu Toggle Function
         function toggleMenu() {
             const menu = document.getElementById('slideMenu');
             const overlay = document.getElementById('menuOverlay');
@@ -563,6 +407,5 @@
             btn.classList.toggle('active');
         }
     </script>
-    </div>
 </body>
 </html>

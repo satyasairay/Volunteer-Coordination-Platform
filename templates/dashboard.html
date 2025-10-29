@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - DP Works Bhadrak</title>
+    <title>Dashboard - Volunteer Management Platform Bhadrak</title>
     <style>
         * {
             margin: 0;
@@ -13,9 +13,14 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: url('/static/stock_images/bright_sunlit_green__fd4a9d7d.jpg') center/cover fixed;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
-            padding: 1rem;
+            padding: 0;
+        }
+        
+        .page-content {
+            min-height: calc(100vh - 68px);
+            padding: 2rem 1rem;
         }
 
         .dashboard-container {
@@ -91,8 +96,207 @@
         .btn-secondary {
             background: linear-gradient(135deg, #64748b 0%, #475569 100%);
         }
+        
+        /* Modern Navigation */
+        nav {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            backdrop-filter: blur(20px);
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            z-index: 100;
+        }
+        
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 22px;
+            font-weight: 800;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+        
+        .nav-location {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-left: 16px;
+            font-weight: 500;
+        }
+        
+        .hamburger-btn {
+            width: 44px;
+            height: 44px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            transition: all 0.3s ease;
+            z-index: 101;
+        }
+        
+        .hamburger-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .hamburger-btn span {
+            width: 24px;
+            height: 3px;
+            background: white;
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+        
+        .hamburger-btn.active span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+        
+        .hamburger-btn.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .hamburger-btn.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        .slide-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.2);
+            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slide-menu.active {
+            right: 0;
+        }
+        
+        .menu-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 24px;
+            color: white;
+        }
+        
+        .menu-header h2 {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+        
+        .menu-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .menu-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .menu-links {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            text-decoration: none;
+            color: #1a1a1a;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .menu-link:hover {
+            transform: translateX(-4px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+        }
+        
+        .menu-link-icon {
+            font-size: 24px;
+            margin-right: 16px;
+            width: 32px;
+            text-align: center;
+        }
+        
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 199;
+        }
+        
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
 
         @media (max-width: 768px) {
+            nav {
+                padding: 12px 20px;
+            }
+            
+            .nav-brand {
+                font-size: 18px;
+            }
+            
+            .nav-location {
+                display: none;
+            }
+            
+            .slide-menu {
+                width: 280px;
+            }
+            
             .header h1 {
                 font-size: 1.5rem;
             }
@@ -108,9 +312,65 @@
                 margin-right: 0;
             }
         }
+        
+        @media (max-width: 480px) {
+            nav {
+                padding: 10px 16px;
+            }
+            
+            .nav-brand {
+                font-size: 16px;
+            }
+            
+            .slide-menu {
+                width: 100%;
+                max-width: 320px;
+            }
+        }
     </style>
 </head>
 <body>
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    
+    <div class="slide-menu" id="slideMenu">
+        <div class="menu-header">
+            <button class="menu-close" onclick="toggleMenu()">×</button>
+            <h2>Menu</h2>
+            <p>Volunteer Management Platform</p>
+        </div>
+        <div class="menu-links">
+            <a href="/" class="menu-link">
+                <span class="menu-link-icon">🗺️</span>
+                <span>Map</span>
+            </a>
+            <a href="/doctors" class="menu-link">
+                <span class="menu-link-icon">⚕️</span>
+                <span>Doctors</span>
+            </a>
+            <a href="/admin/login" class="menu-link">
+                <span class="menu-link-icon">🔐</span>
+                <span>Login</span>
+            </a>
+            <a href="/about" class="menu-link">
+                <span class="menu-link-icon">ℹ️</span>
+                <span>About</span>
+            </a>
+        </div>
+    </div>
+    
+    <nav>
+        <div class="nav-brand">
+            Volunteer Management Platform
+            <span class="nav-location">📍 Bhadrak</span>
+        </div>
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+    </nav>
+    
+    <div class="page-content">
     <div class="dashboard-container">
         <div class="header">
             <h1>📊 Block Coordinator Dashboard</h1>
@@ -141,5 +401,18 @@
             <a href="/admin/login" class="btn btn-secondary">Logout</a>
         </div>
     </div>
+    </div>
+    
+    <script>
+        function toggleMenu() {
+            const menu = document.getElementById('slideMenu');
+            const overlay = document.getElementById('menuOverlay');
+            const btn = document.getElementById('hamburgerBtn');
+            
+            menu.classList.toggle('active');
+            overlay.classList.toggle('active');
+            btn.classList.toggle('active');
+        }
+    </script>
 </body>
 </html>
