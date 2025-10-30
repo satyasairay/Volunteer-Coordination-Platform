@@ -763,6 +763,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="village_block">Block <span class="required">*</span></label>
+                        <select id="village_block" name="village_block" required>
+                            <option value="">Select block...</option>
+                        </select>
+                        <span class="help-text">Choose the block this village belongs to.</span>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
                         <label for="landmark">Landmark</label>
                         <input type="text" id="landmark" name="landmark" 
                                placeholder="e.g., Near Temple, Behind School">
@@ -850,18 +860,73 @@
         }
 
         // Village Data & Autocomplete
+        const coordinatorBlocks = {{ user_blocks|default([], true)|tojson }};
+        const defaultBlock = {{ default_block|default('', true)|tojson }};
         let villagesData = [];
+        const blockSelect = document.getElementById('village_block');
 
         async function loadVillages() {
             try {
-                const response = await fetch('/api/villages/pins');
-                const data = await response.json();
-                villagesData = data.map(v => ({
-                    id: v.id,
-                    name: v.name,
-                    block: v.block
-                }));
-                console.log(`✅ Loaded ${villagesData.length} villages for autocomplete`);
+                const response = await fetch('/api/villages');
+                const payload = await response.json();
+                const source = Array.isArray(payload) ? payload : (payload.villages || []);
+
+                villagesData = source
+                    .map(v => ({
+                        id: v.id,
+                        name: v.name,
+                        block: v.block
+                    }))
+                    .filter(v => v.name);
+
+                if (!villagesData.length) {
+                    try {
+                        const fallbackResponse = await fetch('/static/geojson/bhadrak_villages.geojson');
+                        if (fallbackResponse.ok) {
+                            const fallbackGeo = await fallbackResponse.json();
+                            villagesData = fallbackGeo.features.map((feature, index) => ({
+                                id: index + 1,
+                                name: feature.properties?.NAME || feature.properties?.name || `Village ${index + 1}` ,
+                                block: feature.properties?.SUB_DIST || feature.properties?.block || ''
+                            }));
+                        }
+                    } catch (fallbackError) {
+                        console.error('Fallback village load failed:', fallbackError);
+                    }
+                }
+
+                villagesData.sort((a, b) => a.name.localeCompare(b.name));
+
+                const blockSet = new Set();
+                coordinatorBlocks.forEach(block => {
+                    if (block) {
+                        blockSet.add(block);
+                    }
+                });
+                villagesData.forEach(v => {
+                    if (v.block) {
+                        blockSet.add(v.block);
+                    }
+                });
+
+                const sortedBlocks = Array.from(blockSet).sort((a, b) => a.localeCompare(b));
+                let optionsHtml = '<option value="">Select block...</option>';
+                sortedBlocks.forEach(block => {
+                    optionsHtml += `<option value="${block}">${block}</option>`;
+                });
+                blockSelect.innerHTML = optionsHtml;
+
+                if (defaultBlock) {
+                    if (!sortedBlocks.includes(defaultBlock)) {
+                        const opt = document.createElement('option');
+                        opt.value = defaultBlock;
+                        opt.textContent = defaultBlock;
+                        blockSelect.appendChild(opt);
+                    }
+                    blockSelect.value = defaultBlock;
+                }
+
+                console.log(`Loaded ${villagesData.length} villages for autocomplete`);
             } catch (error) {
                 console.error('Failed to load villages:', error);
             }
@@ -884,10 +949,11 @@
                 return;
             }
 
-            const matches = villagesData.filter(v => 
-                v.name.toLowerCase().includes(query) ||
-                v.block.toLowerCase().includes(query)
-            ).slice(0, 10);
+            const matches = villagesData.filter(v => {
+                const nameMatch = v.name.toLowerCase().includes(query);
+                const blockMatch = v.block ? v.block.toLowerCase().includes(query) : false;
+                return nameMatch || blockMatch;
+            }).slice(0, 10);
 
             if (matches.length === 0) {
                 villageResults.innerHTML = `
@@ -900,7 +966,7 @@
                 villageResults.innerHTML = matches.map(v => `
                     <div class="autocomplete-item" onclick='selectVillage(${JSON.stringify(v)})'>
                         <strong>${v.name}</strong>
-                        <small>📍 ${v.block} Block</small>
+                        <small>${v.block ? `${v.block} Block` : 'Block pending'}</small>
                     </div>
                 `).join('');
             }
@@ -909,9 +975,19 @@
         });
 
         function selectVillage(village) {
-            villageSearch.value = village.name;
-            villageIdInput.value = village.id;
+            villageSearch.value = `${village.name}${village.block ? ' - ' + village.block : ''}`;
+            villageIdInput.value = village.id || '';
             villageNameInput.value = village.name;
+            if (village.block) {
+                const existingOption = Array.from(blockSelect.options).some(option => option.value === village.block);
+                if (!existingOption) {
+                    const opt = document.createElement('option');
+                    opt.value = village.block;
+                    opt.textContent = village.block;
+                    blockSelect.appendChild(opt);
+                }
+                blockSelect.value = village.block;
+            }
             villageResults.classList.remove('show');
         }
 
@@ -919,6 +995,9 @@
             villageSearch.value = name;
             villageIdInput.value = '';  // Empty means new village
             villageNameInput.value = name;
+            if (!blockSelect.value && defaultBlock) {
+                blockSelect.value = defaultBlock;
+            }
             villageResults.classList.remove('show');
         }
 
@@ -985,12 +1064,20 @@
             const data = Object.fromEntries(formData.entries());
 
             // Validate village is selected
-            const villageName = document.getElementById('village_name').value;
+            const villageName = document.getElementById('village_name').value.trim();
             if (!villageName) {
                 showError('Please select a village from the list or enter a new one');
                 return;
             }
             data.village_name = villageName;
+
+            const blockValue = blockSelect.value.trim();
+            if (!blockValue) {
+                showError('Please select the block for this village');
+                return;
+            }
+            data.village_block = blockValue;
+            data.village_id = (data.village_id || '').trim();
 
             // Validate phone is 10 digits
             if (!/^[0-9]{10}$/.test(data.phone)) {
@@ -1039,3 +1126,4 @@
     </script>
 </body>
 </html>
+

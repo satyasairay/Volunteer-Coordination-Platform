@@ -12,6 +12,95 @@ import os
 from datetime import datetime
 from contextlib import asynccontextmanager
 
+STATIC_VILLAGE_FEATURES: list[dict] | None = None
+STATIC_BLOCK_FEATURE_MAP: dict[str, list[dict]] = {}
+STATIC_BLOCK_CACHE: dict[str, dict | None] = {}
+
+
+def _normalize_block(name: str) -> str:
+    return ''.join(ch for ch in name.lower() if ch.isalnum())
+
+
+async def ensure_static_village_features() -> list[dict]:
+    global STATIC_VILLAGE_FEATURES, STATIC_BLOCK_FEATURE_MAP
+    if STATIC_VILLAGE_FEATURES is None:
+        with open('static/geojson/bhadrak_villages.geojson', 'r', encoding='utf-8') as f:
+            data = json.load(f)
+            STATIC_VILLAGE_FEATURES = data.get('features', [])
+
+        block_map: dict[str, list[dict]] = {}
+        for feature in STATIC_VILLAGE_FEATURES:
+            props = feature.get('properties', {})
+            block = (props.get('SUB_DIST') or props.get('block') or '').strip()
+            if not block:
+                continue
+            normalized = _normalize_block(block)
+            block_map.setdefault(normalized, []).append(feature)
+        STATIC_BLOCK_FEATURE_MAP = block_map
+    return STATIC_VILLAGE_FEATURES
+
+
+async def get_block_bounds_from_static(block_name: str) -> dict | None:
+    if not block_name:
+        return None
+
+    await ensure_static_village_features()
+    normalized = _normalize_block(block_name)
+
+    if normalized in STATIC_BLOCK_CACHE:
+        return STATIC_BLOCK_CACHE[normalized]
+
+    block_features = STATIC_BLOCK_FEATURE_MAP.get(normalized)
+    if not block_features:
+        from difflib import get_close_matches
+        matches = get_close_matches(normalized, list(STATIC_BLOCK_FEATURE_MAP.keys()), n=1, cutoff=0.72)
+        if matches:
+            normalized = matches[0]
+            block_features = STATIC_BLOCK_FEATURE_MAP.get(normalized)
+        else:
+            STATIC_BLOCK_CACHE[normalized] = None
+            return None
+
+    lats: list[float] = []
+    lngs: list[float] = []
+    south = north = west = east = None
+
+    for feature in block_features:
+        geometry = feature.get('geometry', {})
+        coords = geometry.get('coordinates', [])
+        if geometry.get('type') == 'Polygon':
+            polygons = [coords]
+        elif geometry.get('type') == 'MultiPolygon':
+            polygons = coords
+        else:
+            polygons = []
+
+        for polygon in polygons:
+            for ring in polygon:
+                for lng, lat in ring:
+                    lats.append(lat)
+                    lngs.append(lng)
+                    south = lat if south is None else min(south, lat)
+                    north = lat if north is None else max(north, lat)
+                    west = lng if west is None else min(west, lng)
+                    east = lng if east is None else max(east, lng)
+
+    if not lats or not lngs:
+        STATIC_BLOCK_CACHE[normalized] = None
+        return None
+
+    stats = {
+        'lat': sum(lats) / len(lats),
+        'lng': sum(lngs) / len(lngs),
+        'south': south,
+        'west': west,
+        'north': north,
+        'east': east
+    }
+    STATIC_BLOCK_CACHE[normalized] = stats
+    return stats
+
+
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig, AboutPage
 from auth import create_session_token, get_current_admin, get_current_user, get_optional_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context, hash_password
@@ -1589,12 +1678,43 @@ async def reject_user(
 @app.get("/field-workers/new", response_class=HTMLResponse)
 async def field_worker_new_page(
     request: Request,
-    user_data: dict = Depends(require_block_coordinator)
+    user_data: dict = Depends(require_block_coordinator),
+    session: AsyncSession = Depends(get_session)
 ):
     """Field Worker submission form"""
+    user_profile = None
+    coordinator_blocks: list[str] = []
+
+    if user_data:
+        result = await session.execute(
+            select(User).where(User.email == user_data.get("email"))
+        )
+        user_profile = result.scalar_one_or_none()
+
+        if user_profile:
+            if getattr(user_profile, "primary_block", None):
+                coordinator_blocks.append(user_profile.primary_block.strip())
+            if getattr(user_profile, "assigned_blocks", None):
+                coordinator_blocks.extend([
+                    blk.strip()
+                    for blk in user_profile.assigned_blocks.split(",")
+                    if blk.strip()
+                ])
+
+    unique_blocks = sorted({blk for blk in coordinator_blocks if blk})
+    default_block = ""
+
+    if unique_blocks:
+        default_block = unique_blocks[0]
+    elif user_profile and getattr(user_profile, "primary_block", None):
+        default_block = user_profile.primary_block.strip()
+
     return templates.TemplateResponse("field_worker_new.html", {
         "request": request,
-        "user": user_data
+        "user": user_data,
+        "user_profile": user_profile,
+        "user_blocks": unique_blocks,
+        "default_block": default_block
     })
 
 
@@ -1653,45 +1773,145 @@ async def submit_field_worker(
     from auth import check_block_access
     
     data = await request.json()
-    
-    # Handle village_id - check if it's empty or a new village name
-    village_id_raw = data.get('village_id', '').strip()
-    
-    if not village_id_raw:
-        raise HTTPException(status_code=400, detail="Village selection is required")
-    
-    # Try to convert to integer - if it fails, it's a new village name
-    try:
-        village_id = int(village_id_raw)
-        # Get existing village to check block access
-        village_result = await session.execute(
-            select(Village).where(Village.id == village_id)
-        )
-        village = village_result.scalar_one_or_none()
-        
-        if not village:
-            raise HTTPException(status_code=404, detail="Village not found")
-    except ValueError:
-        # It's a new village name - for now, reject it
-        # TODO: Implement new village creation workflow with admin approval
-        raise HTTPException(
-            status_code=400, 
-            detail="Adding new villages requires admin approval. Please select an existing village or contact your administrator."
-        )
-    
-    # Get user object for block access check
+
+    village_name = (data.get('village_name') or "").strip()
+    if not village_name:
+        raise HTTPException(status_code=400, detail="Village name is required")
+
+    village_id_raw = (data.get('village_id') or "").strip()
+    incoming_block = (data.get('village_block') or "").strip()
+
     user_result = await session.execute(
         select(User).where(User.email == user_data.get('email'))
     )
     user = user_result.scalar_one_or_none()
-    
-    # Check if user has access to this block
+
+    def resolve_user_block(user_obj: User | None, payload: dict) -> str:
+        if user_obj:
+            block_hints: list[str] = []
+            if getattr(user_obj, "primary_block", None):
+                block_hints.append(user_obj.primary_block.strip())
+            if getattr(user_obj, "assigned_blocks", None):
+                block_hints.extend([
+                    blk.strip()
+                    for blk in user_obj.assigned_blocks.split(",")
+                    if blk.strip()
+                ])
+            for hint in block_hints:
+                if hint:
+                    return hint
+        session_blocks = (payload.get("blocks") or "").split(",")
+        for blk in session_blocks:
+            blk = blk.strip()
+            if blk:
+                return blk
+        return ""
+
+    block_name = incoming_block or resolve_user_block(user, user_data)
+
+    village: Village | None = None
+    if village_id_raw:
+        try:
+            village_id = int(village_id_raw)
+        except ValueError:
+            village_id = None
+
+        if village_id is not None:
+            village_result = await session.execute(
+                select(Village).where(Village.id == village_id)
+            )
+            village = village_result.scalar_one_or_none()
+            if village:
+                block_name = village.block
+
+    if not village:
+        if not block_name:
+            raise HTTPException(
+                status_code=400,
+                detail="Block selection is required for village submissions"
+            )
+
+        existing_village = await session.execute(
+            select(Village)
+            .where(func.lower(Village.name) == village_name.lower())
+            .where(func.lower(Village.block) == block_name.lower())
+        )
+        village = existing_village.scalar_one_or_none()
+
+        if not village:
+            block_lookup = await session.execute(
+                select(Village).where(func.lower(Village.block) == block_name.lower())
+            )
+            block_villages = block_lookup.scalars().all()
+
+            if block_villages:
+                lat = sum(v.lat for v in block_villages) / len(block_villages)
+                lng = sum(v.lng for v in block_villages) / len(block_villages)
+                south = min(v.south for v in block_villages)
+                west = min(v.west for v in block_villages)
+                north = max(v.north for v in block_villages)
+                east = max(v.east for v in block_villages)
+            else:
+                static_bounds = await get_block_bounds_from_static(block_name)
+                if static_bounds:
+                    lat = static_bounds['lat']
+                    lng = static_bounds['lng']
+                    south = static_bounds['south']
+                    west = static_bounds['west']
+                    north = static_bounds['north']
+                    east = static_bounds['east']
+                else:
+                    # Fallback to Bhadrak centroid if no data at all
+                    lat = 21.054
+                    lng = 86.52
+                    south = lat - 0.02
+                    west = lng - 0.02
+                    north = lat + 0.02
+                    east = lng + 0.02
+
+            village = Village(
+                name=village_name,
+                block=block_name,
+                lat=lat,
+                lng=lng,
+                south=south,
+                west=west,
+                north=north,
+                east=east,
+                population=0,
+                show_pin=False,
+                pin_description="Pending geo-verification",
+                pin_notes="Auto-created from Field Worker submission"
+            )
+            session.add(village)
+            await session.flush()
+
+            session.add(VillagePin(
+                village_id=village.id,
+                field_worker_count=0,
+                uk_center_count=0,
+                is_active=False
+            ))
+
+
+    static_bounds = await get_block_bounds_from_static(block_name)
+    if static_bounds and abs(village.lat - 21.054) < 0.0005 and abs(village.lng - 86.52) < 0.0005:
+        village.lat = static_bounds['lat']
+        village.lng = static_bounds['lng']
+        village.south = static_bounds['south']
+        village.west = static_bounds['west']
+        village.north = static_bounds['north']
+        village.east = static_bounds['east']
+        session.add(village)
+
+    village_id = village.id
+
     try:
-        check_block_access(user_data, village.block_name, user)
+        check_block_access(user_data, village.block, user)
     except HTTPException:
         raise HTTPException(
             status_code=403,
-            detail=f"You do not have access to submit Field Workers for {village.block_name} block"
+            detail=f"You do not have access to submit Field Workers for {village.block} block"
         )
     
     # Check for duplicate phone number (unless exception provided)

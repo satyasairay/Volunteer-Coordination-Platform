@@ -12,37 +12,63 @@
         
         /* THEME VARIABLES - Easy switching between color schemes */
         :root {
-            --theme-primary: #667eea;
-            --theme-secondary: #764ba2;
-            --theme-light: #e9d5ff;
-            --theme-medium: #a78bfa;
-            --theme-dark: #6b21a8;
-            --theme-glow: rgba(109, 40, 217, 0.4);
-            --theme-colors: '#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8';
+            --theme-primary: #4338ca;
+            --theme-secondary: #312e81;
+            --theme-light: #d9d6fe;
+            --theme-medium: #a5b4fc;
+            --theme-dark: #1e1b4b;
+            --theme-glow: rgba(49, 46, 129, 0.35);
+            --theme-colors: '#d9d6fe', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca';
         }
         
         /* Alternative Teal/Ocean Theme */
         body.theme-ocean {
-            --theme-primary: #0891b2;
-            --theme-secondary: #0e7490;
-            --theme-light: #a5f3fc;
-            --theme-medium: #22d3ee;
-            --theme-dark: #0e7490;
-            --theme-glow: rgba(14, 116, 144, 0.4);
-            --theme-colors: '#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490';
+            --theme-primary: #0f4c75;
+            --theme-secondary: #073b4c;
+            --theme-light: #cadff2;
+            --theme-medium: #5aa5c8;
+            --theme-dark: #032b44;
+            --theme-glow: rgba(7, 59, 76, 0.35);
+            --theme-colors: '#dcecf6', '#b4d4ea', '#7fb7d6', '#4d99be', '#2f7ea5', '#17617f', '#0f4c75';
         }
         
         /* Fresh Grass Green Theme */
         body.theme-grass {
-            --theme-primary: #16a34a;
-            --theme-secondary: #15803d;
-            --theme-light: '#bbf7d0';
-            --theme-medium: #4ade80;
-            --theme-dark: #166534;
-            --theme-glow: rgba(22, 101, 52, 0.4);
-            --theme-colors: '#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d';
+            --theme-primary: #14532d;
+            --theme-secondary: #0f2f21;
+            --theme-light: #d9f4e0;
+            --theme-medium: #4f9d69;
+            --theme-dark: #052e16;
+            --theme-glow: rgba(5, 46, 22, 0.4);
+            --theme-colors: '#e3f4e8', '#c5e7d3', '#9cd5b4', '#6bb98d', '#3f8f63', '#22613f', '#14532d';
         }
         
+        .village-label-layer {
+            pointer-events: none;
+        }
+
+        .village-label text {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 600;
+            font-size: 10px;
+            letter-spacing: 0.4px;
+            text-transform: uppercase;
+        }
+
+        .village-label text.label-outline {
+            fill: none;
+            stroke: rgba(15, 23, 42, 0.65);
+            stroke-width: 4;
+            stroke-linejoin: round;
+            vector-effect: non-scaling-stroke;
+        }
+
+        .village-label text.label-fill {
+            fill: rgba(248, 250, 252, 0.95);
+            vector-effect: non-scaling-stroke;
+            filter: drop-shadow(0 0 6px rgba(15, 23, 42, 0.35));
+        }
+
         /* Modern 2025 Navigation */
         nav {
             background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
@@ -750,6 +776,8 @@
         let g = svg.append("g");
         let projection, path;
         let colorScale, pinColorScale;
+        let villageLabelLayer;
+        let villageLabels;
         let mapSettings = {};
         let customLabels = {};
         
@@ -854,6 +882,10 @@
                 projection = d3.geoMercator()
                     .fitExtent([[50, 50], [width - 50, height - 50]], villages);
                 path = d3.geoPath().projection(projection);
+
+                villages.features.forEach(feature => {
+                    feature.properties._centroid = path.centroid(feature);
+                });
                 
                 // Now draw boundary with the villages-fitted projection
                 g.append("path")
@@ -867,13 +899,13 @@
                 // Create dynamic gradient based on current theme
                 function getThemeColors() {
                     if (document.body.classList.contains('theme-ocean')) {
-                        return ['#cffafe', '#a5f3fc', '#67e8f9', '#22d3ee', '#06b6d4', '#0891b2', '#0e7490'];
+                        return ['#dcecf6', '#b4d4ea', '#7fb7d6', '#4d99be', '#2f7ea5', '#17617f', '#0f4c75'];
                     } else if (document.body.classList.contains('theme-grass')) {
-                        return ['#dcfce7', '#bbf7d0', '#86efac', '#4ade80', '#22c55e', '#16a34a', '#15803d'];
+                        return ['#e3f4e8', '#c5e7d3', '#9cd5b4', '#6bb98d', '#3f8f63', '#22613f', '#14532d'];
                     }
-                    return ['#e9d5ff', '#d8b4fe', '#c084fc', '#a855f7', '#9333ea', '#7e22ce', '#6b21a8'];
+                    return ['#d9d6fe', '#c7d2fe', '#a5b4fc', '#818cf8', '#6366f1', '#4f46e5', '#4338ca'];
                 }
-                
+
                 const themeScale = d3.scaleSequential()
                     .domain([1000, 20000])
                     .interpolator(t => {
@@ -895,8 +927,34 @@
                     .style("filter", "drop-shadow(0px 1px 2px var(--theme-glow))")
                     .style("transition", "all 0.3s ease");
                 
-                console.log(`✅ Rendered ${villagePaths.size()} village polygons`);
-                
+                console.log(` Rendered ${villagePaths.size()} village polygons`);
+
+                villageLabelLayer = g.append("g")
+                    .attr("class", "village-label-layer");
+
+                villageLabels = villageLabelLayer.selectAll(".village-label")
+                    .data(villages.features)
+                    .enter()
+                    .append("g")
+                    .attr("class", "village-label")
+                    .attr("transform", d => {
+                        const [x, y] = d.properties._centroid || path.centroid(d);
+                        return `translate(${x}, ${y})`;
+                    })
+                    .style("opacity", 0);
+
+                villageLabels.append("text")
+                    .attr("class", "label-outline")
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "0.35em")
+                    .text(d => d.properties.name);
+
+                villageLabels.append("text")
+                    .attr("class", "label-fill")
+                    .attr("text-anchor", "middle")
+                    .attr("dy", "0.35em")
+                    .text(d => d.properties.name);
+
                 // Step 4: Add pin markers for ALL villages (visible only when zoomed)
                 // Create color scale for pins based on field worker count
                 pinColorScale = d3.scaleSequential()
@@ -939,6 +997,10 @@
                 });
                 
                 console.log(`✅ Added ${pins.size()} 3D glowing dots (zoom to reveal)`);
+
+                if (villageLabelLayer) {
+                    villageLabelLayer.raise();
+                }
                 
                 // ============================================================
                 // PHASE 2: Load and Render Block Boundaries
@@ -1345,16 +1407,27 @@
         function zoomed(event) {
             g.attr("transform", event.transform);
             
-            // Show pins only when zoomed in (Google Maps style)
             const zoomLevel = event.transform.k;
             const pins = g.selectAll(".village-pin");
             
-            if (zoomLevel > 2) {
-                // Zoomed in enough - show pins
-                pins.transition().duration(200).attr("opacity", 0.85);
+            if (zoomLevel > 5) {
+                pins.transition().duration(200).attr("opacity", 0.45);
+            } else if (zoomLevel > 2) {
+                pins.transition().duration(200).attr("opacity", 0.7);
             } else {
-                // Zoomed out - hide pins
                 pins.transition().duration(200).attr("opacity", 0);
+            }
+
+            if (villageLabelLayer && typeof path === 'function') {
+                const targetOpacity = zoomLevel <= 3 ? 0 : Math.min(1, (zoomLevel - 3) / 2.5);
+                villageLabelLayer.style("opacity", targetOpacity);
+
+                villageLabelLayer.selectAll(".village-label")
+                    .attr("transform", d => {
+                        const [x, y] = d.properties._centroid || path.centroid(d);
+                        const scaleFactor = 1 / Math.max(zoomLevel, 1);
+                        return `translate(${x}, ${y}) scale(${scaleFactor})`;
+                    });
             }
         }
         
