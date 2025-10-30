@@ -1,4 +1,4 @@
-# Field Worker Village & Map Enhancements (Oct 30, 2025)
+ï»¿# Field Worker Village & Map Enhancements (Oct 30, 2025)
 
 ## Overview
 - Enabled block coordinators to submit field workers for villages that are not yet stored in the database.
@@ -14,8 +14,8 @@
 - Coordinator dashboard view injects the user profile and block assignments into the field worker form template so the new selector defaults correctly.
 
 ## Frontend Updates (Field Worker Form)
-- Added a required “Block” dropdown in `templates/field_worker_new.html` populated from `/api/villages`; falls back to the static GeoJSON when the API has no rows yet.
-- Autocomplete suggestions now display `Village – Block`, store both fields, and ensure the block list always contains the selected value.
+- Added a required "Block" dropdown in `templates/field_worker_new.html` populated from `/api/villages`; falls back to the static GeoJSON when the API has no rows yet.
+- Autocomplete suggestions now display `Village - Block`, store both fields, and ensure the block list always contains the selected value.
 - Submit handler trims/validates `village_name`, `village_block`, and `village_id` before POSTing JSON.
 
 ## Map Presentation
@@ -30,7 +30,17 @@
 4. Manually inspected the map to ensure village labels appear crisp at high zoom and themes reflect the scaled palette.
 
 All changes committed in `7351290`.
-\n## Follow-up Fix (Oct 30, 2025 PM)\n- Resolved a regression in the field-worker submission pipeline where queries referenced non-existent \Village.village_name\/\Village.block_name\ attributes; the selects now alias \Village.name\/\Village.block\ so admin dashboards render submissions without Pydantic errors.\n- Reconfirmed coordinator submission flow end-to-end (auto-created village + admin approvals).\n\nLatest code in commit \38b25b2\.
-- Adjusted admin approval queries and new-village pipeline to reference SQLModel \Village.name\/\Village.block\ consistently, preventing pydantic attribute errors during approvals.
-- On startup, the app now indexes \\static/geojson/bhadrak_villages.geojson\\ into the \\Village\\ table and maps geo features to database IDs so pins/labels stay in sync, with fallback markers for DB-only villages.
-- Stabilized map bootstrap by defining fallback arrays upfront (e.g., \\unmatchedVillages\\) so the error banner no longer flashes when the map loads successfully.
+
+## Follow-up Fixes (Oct 30, 2025 PM)
+- Resolved a regression in the field-worker submission pipeline where queries referenced non-existent `Village.village_name`/`Village.block_name` attributes; the selects now alias `Village.name`/`Village.block` so admin dashboards render submissions without Pydantic errors.
+- Reconfirmed coordinator submission flow end-to-end (auto-created village + admin approvals).
+- Adjusted admin approval queries and new-village pipeline to reference SQLModel `Village.name`/`Village.block` consistently, preventing pydantic attribute errors during approvals.
+- On startup, the app now indexes `static/geojson/bhadrak_villages.geojson` into the `Village` table and maps geo features to database IDs so pins/labels stay in sync, with fallback markers for DB-only villages.
+- Stabilized map bootstrap by defining fallback arrays upfront (e.g., `unmatchedVillages`) so the error banner no longer flashes when the map loads successfully.
+
+## Planned Visual Polish (Draft)
+- Rebalance the zoomed-in choropleth so village polygons retain subtle tone shifts without overpowering the pins; consider a faint inner shadow to separate adjacent villages.
+- Replace the generic circular pins with etched badges that display village initials at max zoom while preserving the glow for quick scanning.
+- When zoom level exceeds ~6, render crisp village name lettering anchored to polygon centroids, wrapped in a contrast-aware halo for readability.
+- Add a hover outline plus micro-tooltip that previews `Village Â· Block` before opening the modal, reusing the new professional typography.
+- Run a final audit so legend, footer, and zoom controls echo the sharpened aesthetic prior to hand-off.
