@@ -71,16 +71,16 @@ async def lifespan(app: FastAPI):
     async with async_session_maker() as session:
         await seed_default_labels(session)
     
-    print("\n" + "="*60)
-    print("🕉️  SATSANGEE SEVA ATLAS - Ready to Serve")
-    print("="*60)
-    print("📍 Public URLs:")
+    print("\n" + "=" * 60)
+    print("SATSANGEE SEVA ATLAS - Ready to Serve")
+    print("=" * 60)
+    print("Public URLs:")
     print("   Seva Map:    http://0.0.0.0:5000/")
     print("   Doctors:     http://0.0.0.0:5000/doctors")
-    print("\n🔐 Admin URLs:")
+    print("\nAdmin URLs:")
     print("   Login:       http://0.0.0.0:5000/admin/login")
     print("   Dashboard:   http://0.0.0.0:5000/admin")
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
     yield
 
 
