@@ -101,6 +101,121 @@ async def get_block_bounds_from_static(block_name: str) -> dict | None:
     return stats
 
 
+
+def _normalize_village_key(name: str, block: str) -> str:
+    combined = f"{name or ''}::{block or ''}".lower()
+    return ''.join(ch for ch in combined if ch.isalnum())
+
+
+def _iterate_feature_coords(feature: dict) -> list[tuple[float, float]]:
+    geometry = feature.get("geometry", {})
+    coords = geometry.get("coordinates", [])
+    if geometry.get("type") == "Polygon":
+        polygons = [coords]
+    elif geometry.get("type") == "MultiPolygon":
+        polygons = coords
+    else:
+        return []
+    collected: list[tuple[float, float]] = []
+    for polygon in polygons:
+        for ring in polygon:
+            for lng, lat in ring:
+                collected.append((lat, lng))
+    return collected
+
+
+def _compute_feature_stats(feature: dict) -> dict | None:
+    coords = _iterate_feature_coords(feature)
+    if not coords:
+        return None
+    lats = [lat for lat, _ in coords]
+    lngs = [lng for _, lng in coords]
+    lat = sum(lats) / len(lats)
+    lng = sum(lngs) / len(lngs)
+    south = min(lats)
+    north = max(lats)
+    west = min(lngs)
+    east = max(lngs)
+    return {
+        "lat": lat,
+        "lng": lng,
+        "south": south,
+        "north": north,
+        "west": west,
+        "east": east,
+    }
+
+
+async def sync_static_villages(session: AsyncSession):
+    """Ensure the Village table contains entries for all static GeoJSON features."""
+    features = await ensure_static_village_features()
+    existing_result = await session.execute(select(Village.id, Village.name, Village.block))
+    existing_map = {
+        _normalize_village_key(name, block): village_id
+        for village_id, name, block in existing_result.all()
+    }
+
+    new_villages: list[Village] = []
+    for feature in features:
+        props = feature.get('properties', {})
+        name = (props.get('NAME') or props.get('name') or '').strip()
+        block = (props.get('SUB_DIST') or props.get('block') or '').strip()
+        if not name or not block:
+            continue
+        key = _normalize_village_key(name, block)
+        if key in existing_map:
+            continue
+
+        stats = _compute_feature_stats(feature)
+        if not stats:
+            continue
+
+        population = props.get('population') or props.get('POP') or 0
+        code_2011 = props.get('CENSUSCODE') or props.get('code_2011') or props.get('code')
+
+        new_villages.append(Village(
+            name=name,
+            block=block,
+            lat=stats['lat'],
+            lng=stats['lng'],
+            south=stats['south'],
+            west=stats['west'],
+            north=stats['north'],
+            east=stats['east'],
+            population=population,
+            code_2011=str(code_2011) if code_2011 else None,
+            show_pin=True
+        ))
+
+    if not new_villages:
+        return
+
+    session.add_all(new_villages)
+    await session.flush()
+
+    for village in new_villages:
+        key = _normalize_village_key(village.name, village.block)
+        existing_map[key] = village.id
+
+    # Ensure each newly inserted village has a pin entry
+    pin_result = await session.execute(select(VillagePin.village_id))
+    existing_pins = {row[0] for row in pin_result.all()}
+    new_pins = [
+        VillagePin(
+            village_id=village.id,
+            field_worker_count=0,
+            uk_center_count=0,
+            is_active=True
+        )
+        for village in new_villages
+        if village.id not in existing_pins
+    ]
+    if new_pins:
+        session.add_all(new_pins)
+
+    await session.commit()
+
+
 from db import init_db, get_session
 from models import Village, Member, Doctor, Audit, Report, SevaRequest, SevaResponse, Testimonial, BlockSettings, MapSettings, VillagePin, CustomLabel, BlockStatistics, User, FieldWorker, FormFieldConfig, AboutPage
 from auth import create_session_token, get_current_admin, get_current_user, get_optional_user, require_super_admin, require_block_coordinator, ADMIN_EMAIL, ADMIN_PASSWORD, pwd_context, hash_password
@@ -159,6 +274,7 @@ async def lifespan(app: FastAPI):
     from db import async_session_maker
     async with async_session_maker() as session:
         await seed_default_labels(session)
+        await sync_static_villages(session)
     
     print("\n" + "=" * 60)
     print("SATSANGEE SEVA ATLAS - Ready to Serve")
