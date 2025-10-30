@@ -2691,7 +2691,7 @@ async def get_analytics_overview(
     for fw in field_workers:
         for village in all_villages:
             if village.id == fw.village_id:
-                by_block[village.block_name] += 1
+                by_block[village.block] += 1
                 break
     
     # By Status
@@ -2861,8 +2861,8 @@ async def get_duplicate_exceptions(
                     "id": existing_fw.id,
                     "full_name": existing_fw.full_name,
                     "phone": existing_fw.phone,
-                    "village_name": existing_village.village_name,
-                    "block_name": existing_village.block_name,
+                    "village_name": existing_village.name,
+                    "block_name": existing_village.block,
                     "designation": existing_fw.designation,
                     "department": existing_fw.department,
                     "status": existing_fw.status
@@ -2874,8 +2874,8 @@ async def get_duplicate_exceptions(
             "phone": fw.phone,
             "alternate_phone": fw.alternate_phone,
             "email": fw.email,
-            "village_name": village.village_name,
-            "block_name": village.block_name,
+            "village_name": village.name,
+            "block_name": village.block,
             "designation": fw.designation,
             "department": fw.department,
             "status": fw.status,
@@ -3034,8 +3034,8 @@ async def get_village_field_workers(
     return {
         "village": {
             "id": village.id,
-            "village_name": village.village_name,
-            "block_name": village.block_name,
+            "village_name": village.name,
+            "block_name": village.block,
             "population": village.population
         },
         "field_workers": field_workers,
@@ -3084,8 +3084,8 @@ async def search_field_workers(
             "designation": fw.designation,
             "department": fw.department,
             "village_id": village.id,
-            "village_name": village.village_name,
-            "block_name": village.block_name,
+            "village_name": village.name,
+            "block_name": village.block,
             "submitted_by": submitted_by_name
         })
     

@@ -31,3 +31,4 @@
 
 All changes committed in `7351290`.
 \n## Follow-up Fix (Oct 30, 2025 PM)\n- Resolved a regression in the field-worker submission pipeline where queries referenced non-existent \Village.village_name\/\Village.block_name\ attributes; the selects now alias \Village.name\/\Village.block\ so admin dashboards render submissions without Pydantic errors.\n- Reconfirmed coordinator submission flow end-to-end (auto-created village + admin approvals).\n\nLatest code in commit \38b25b2\.
+- Adjusted admin approval queries and new-village pipeline to reference SQLModel \Village.name\/\Village.block\ consistently, preventing pydantic attribute errors during approvals.
