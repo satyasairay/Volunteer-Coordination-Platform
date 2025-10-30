@@ -1748,8 +1748,12 @@ async def get_villages_list(
 ):
     """Get all villages for autocomplete (lightweight version)"""
     result = await session.execute(
-        select(Village.id, Village.village_name, Village.block_name, Village.population)
-        .order_by(Village.village_name)
+        select(
+            Village.id,
+            Village.name.label("village_name"),
+            Village.block.label("block_name"),
+            Village.population
+        ).order_by(Village.name)
     )
     villages = result.all()
     
@@ -1990,7 +1994,7 @@ async def get_my_submissions(
     
     # Get submissions with village info
     result = await session.execute(
-        select(FieldWorker, Village.village_name, Village.block_name)
+        select(FieldWorker, Village.name.label('village_name'), Village.block.label('block_name'))
         .join(Village, FieldWorker.village_id == Village.id)
         .where(FieldWorker.submitted_by_user_id == user.id)
         .order_by(FieldWorker.created_at.desc())
@@ -2080,8 +2084,8 @@ async def get_all_field_workers(
     result = await session.execute(
         select(
             FieldWorker,
-            Village.village_name,
-            Village.block_name,
+            Village.name.label('village_name'),
+            Village.block.label('block_name'),
             User.full_name.label('submitted_by_name')
         )
         .join(Village, FieldWorker.village_id == Village.id)
@@ -2474,7 +2478,7 @@ async def export_field_workers(
     if user.role == 'super_admin':
         # Admin: All Field Workers
         result = await session.execute(
-            select(FieldWorker, Village.village_name, Village.block_name, User.full_name.label('submitted_by'))
+            select(FieldWorker, Village.name.label('village_name'), Village.block.label('block_name'), User.full_name.label('submitted_by'))
             .join(Village, FieldWorker.village_id == Village.id)
             .join(User, FieldWorker.submitted_by_user_id == User.id)
             .order_by(FieldWorker.created_at.desc())
@@ -2482,7 +2486,7 @@ async def export_field_workers(
     else:
         # Coordinator: Own submissions only
         result = await session.execute(
-            select(FieldWorker, Village.village_name, Village.block_name)
+            select(FieldWorker, Village.name.label('village_name'), Village.block.label('block_name'))
             .join(Village, FieldWorker.village_id == Village.id)
             .where(FieldWorker.submitted_by_user_id == user.id)
             .order_by(FieldWorker.created_at.desc())
@@ -2598,7 +2602,7 @@ async def get_dashboard_statistics(
     
     # Recent submissions (last 5)
     recent_result = await session.execute(
-        select(FieldWorker, Village.village_name, Village.block_name)
+        select(FieldWorker, Village.name.label('village_name'), Village.block.label('block_name'))
         .join(Village, FieldWorker.village_id == Village.id)
         .where(FieldWorker.submitted_by_user_id == user.id)
         .order_by(FieldWorker.created_at.desc())
@@ -3062,8 +3066,8 @@ async def search_field_workers(
                 func.lower(FieldWorker.email).like(search_term),
                 func.lower(FieldWorker.designation).like(search_term),
                 func.lower(FieldWorker.department).like(search_term),
-                func.lower(Village.village_name).like(search_term),
-                func.lower(Village.block_name).like(search_term)
+                func.lower(Village.name).like(search_term),
+                func.lower(Village.block).like(search_term)
             )
         )
         .order_by(FieldWorker.full_name)
