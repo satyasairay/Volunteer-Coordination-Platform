@@ -191,3 +191,22 @@ Validation
 
 Notes
 - Next step remains etched labels at k≥6 with a contrast-aware halo.
+
+## Oct 31, 2025 — Retry Adjustments (Start as before; prune end)
+
+Summary
+- Reverted start to default k=1 (no first-zoom pruning). Set max zoom to 10 only.
+- Pins hidden on start; appear when zoom > `PIN_VISIBILITY_MIN_ZOOM` (config line in template).
+- Unified pin color to deep neutral `#0b1220` and ensured both main and extra pins use the same renderer.
+- Pins shrink slightly toward k=10 via CSS variable `--pin-scale` for a tidy high-zoom view.
+
+Changes
+- templates/index.html
+  - `d3.zoom().scaleExtent([1, 10])` and removed post-load `scale(2)`.
+  - Added `const PIN_VISIBILITY_MIN_ZOOM = 2;` (tweakable).
+  - Dot wrapper now uses `transform: scale(var(--pin-scale, 1))`; `zoomed()` sets `--pin-scale` from 1 → ~0.6 across k=2..10.
+  - `mercury_deep` base size set to 6px; highlight kept subtle; color forced to `#0b1220` for all pins.
+
+Validation
+- FastAPI TestClient smoke: OK.
+- Manual sanity: pins are hidden at start, appear after zooming beyond threshold, no white/black discrepancy, and shrink at max zoom.
