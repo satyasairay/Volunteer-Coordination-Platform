@@ -1,12 +1,40 @@
 from fastapi import Request, HTTPException, Depends
 from fastapi.responses import RedirectResponse
-from itsdangerous import URLSafeTimedSerializer
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired, BadData
 from passlib.context import CryptContext
 import os
+import logging
+import warnings
 
-SESSION_SECRET = os.getenv("SESSION_SECRET", "dev-secret-change-in-production")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "admin@example.com")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Environment variable validation - require credentials in production
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").lower()
+
+SESSION_SECRET = os.getenv("SESSION_SECRET")
+if not SESSION_SECRET:
+    if ENVIRONMENT == "production":
+        raise ValueError("SESSION_SECRET must be set in production environment")
+    SESSION_SECRET = "dev-secret-change-in-production"
+    warnings.warn("Using default SESSION_SECRET - DO NOT USE IN PRODUCTION", UserWarning)
+    logger.warning("Using default SESSION_SECRET - DO NOT USE IN PRODUCTION")
+
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+if not ADMIN_EMAIL:
+    if ENVIRONMENT == "production":
+        raise ValueError("ADMIN_EMAIL must be set in production environment")
+    ADMIN_EMAIL = "admin@example.com"
+    warnings.warn("Using default ADMIN_EMAIL - DO NOT USE IN PRODUCTION", UserWarning)
+    logger.warning("Using default ADMIN_EMAIL - DO NOT USE IN PRODUCTION")
+
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_PASSWORD:
+    if ENVIRONMENT == "production":
+        raise ValueError("ADMIN_PASSWORD must be set in production environment")
+    ADMIN_PASSWORD = "admin123"
+    warnings.warn("Using default ADMIN_PASSWORD - DO NOT USE IN PRODUCTION", UserWarning)
+    logger.warning("Using default ADMIN_PASSWORD - DO NOT USE IN PRODUCTION")
 
 serializer = URLSafeTimedSerializer(SESSION_SECRET)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -31,7 +59,13 @@ def verify_session_token(token: str) -> dict | None:
     """Verify and decode session token (7-day expiry)"""
     try:
         return serializer.loads(token, max_age=86400 * 7)
-    except:
+    except (BadSignature, SignatureExpired, BadData) as e:
+        # Expected errors for invalid/expired tokens
+        logger.debug(f"Session token verification failed: {type(e).__name__}")
+        return None
+    except Exception as e:
+        # Log unexpected errors for debugging
+        logger.error(f"Unexpected error in verify_session_token: {e}", exc_info=True)
         return None
 
 
@@ -124,7 +158,9 @@ def check_block_access(user_data: dict, block_name: str, user_obj = None) -> boo
     if role == "block_coordinator":
         if user_obj:
             # Check assigned_blocks from database
-            assigned = user_obj.assigned_blocks.split(",") if user_obj.assigned_blocks else []
+            assigned = []
+            if user_obj.assigned_blocks:
+                assigned = [b.strip() for b in user_obj.assigned_blocks.split(",") if b.strip()]
             if user_obj.primary_block:
                 assigned.append(user_obj.primary_block)
             
@@ -132,7 +168,8 @@ def check_block_access(user_data: dict, block_name: str, user_obj = None) -> boo
                 return True
         
         # Fallback to session data
-        user_blocks = user_data.get("blocks", "").split(",")
+        user_blocks_str = user_data.get("blocks") or ""
+        user_blocks = [b.strip() for b in user_blocks_str.split(",") if b.strip()] if user_blocks_str else []
         if block_name in user_blocks:
             return True
     

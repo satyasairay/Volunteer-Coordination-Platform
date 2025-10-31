@@ -9,8 +9,11 @@ import csv
 import io
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 STATIC_VILLAGE_FEATURES: list[dict] | None = None
 STATIC_BLOCK_FEATURE_MAP: dict[str, list[dict]] = {}
@@ -24,9 +27,25 @@ def _normalize_block(name: str) -> str:
 async def ensure_static_village_features() -> list[dict]:
     global STATIC_VILLAGE_FEATURES, STATIC_BLOCK_FEATURE_MAP
     if STATIC_VILLAGE_FEATURES is None:
-        with open('static/geojson/bhadrak_villages.geojson', 'r', encoding='utf-8') as f:
-            data = json.load(f)
-            STATIC_VILLAGE_FEATURES = data.get('features', [])
+        try:
+            with open('static/geojson/bhadrak_villages.geojson', 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                STATIC_VILLAGE_FEATURES = data.get('features', [])
+        except FileNotFoundError:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning("GeoJSON file not found: static/geojson/bhadrak_villages.geojson - villages features will be empty")
+            STATIC_VILLAGE_FEATURES = []
+        except json.JSONDecodeError as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Invalid JSON in GeoJSON file: {e}")
+            STATIC_VILLAGE_FEATURES = []
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error loading GeoJSON file: {e}", exc_info=True)
+            STATIC_VILLAGE_FEATURES = []
 
         block_map: dict[str, list[dict]] = {}
         for feature in STATIC_VILLAGE_FEATURES:
@@ -268,6 +287,14 @@ async def seed_default_labels(session: AsyncSession):
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # Initialize structured logging
+    from logging_config import setup_logging
+    log_file = os.getenv("LOG_FILE")
+    setup_logging(log_level=os.getenv("LOG_LEVEL"), log_file=log_file)
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info("Starting application initialization...")
     await init_db()
     
     # Seed default labels
@@ -276,6 +303,7 @@ async def lifespan(app: FastAPI):
         await seed_default_labels(session)
         await sync_static_villages(session)
     
+    logger.info("Application initialization complete")
     print("\n" + "=" * 60)
     print("SATSANGEE SEVA ATLAS - Ready to Serve")
     print("=" * 60)
@@ -290,8 +318,98 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+
+# Rate limiting configuration
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# CSRF protection
+from csrf import create_csrf_middleware
+create_csrf_middleware(app)
+
+# Standardized error handlers
+from sqlalchemy.exc import SQLAlchemyError
+
+@app.exception_handler(SQLAlchemyError)
+async def db_error_handler(request: Request, exc: SQLAlchemyError):
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.error(f"Database error: {exc}", exc_info=True)
+    # Try to rollback if we have a session
+    try:
+        session = request.state.get("session")
+        if session:
+            await session.rollback()
+    except:
+        pass
+    return JSONResponse(
+        status_code=500,
+        content={"success": False, "message": "Database error occurred"}
+    )
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"success": False, "message": exc.detail}
+    )
+
+# CSP (Content Security Policy) headers
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    """Add security headers including CSP"""
+    response = await call_next(request)
+    # Content Security Policy - adjust based on your needs
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdn.jsdelivr.net d3js.org unpkg.com; "
+        "style-src 'self' 'unsafe-inline' cdn.tailwindcss.com cdn.jsdelivr.net; "
+        "img-src 'self' data: https: blob:; "
+        "font-src 'self' data:; "
+        "connect-src 'self'; "
+        "frame-ancestors 'none';"
+    )
+    response.headers["Content-Security-Policy"] = csp
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+
+@app.get("/health")
+async def health_check(session: AsyncSession = Depends(get_session)):
+    """
+    Health check endpoint for monitoring application status.
+    Returns database connectivity status and application health.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        # Check database connectivity
+        await session.execute(select(1))
+        db_status = "connected"
+    except Exception as e:
+        logger.error(f"Database health check failed: {e}", exc_info=True)
+        db_status = "disconnected"
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "database": db_status,
+                "error": str(e)
+            }
+        )
+    
+    return {
+        "status": "healthy",
+        "database": db_status,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -793,7 +911,7 @@ async def respond_to_seva(
     if seva_request:
         seva_request.status = "assigned"
         seva_request.assigned_to_id = volunteer_id
-        seva_request.updated_at = datetime.utcnow()
+        seva_request.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -810,15 +928,29 @@ async def admin_login_page(request: Request):
 
 
 @app.post("/admin/login")
+@limiter.limit("5/minute")
 async def admin_login(
+    request: Request,
     email: str = Form(...),
     password: str = Form(...),
+    session: AsyncSession = Depends(get_session)
 ):
-    if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
-        token = create_session_token(email)
-        response = RedirectResponse(url="/admin", status_code=303)
-        response.set_cookie(key="session", value=token, httponly=True, max_age=86400*7)
-        return response
+    """Admin login - uses password hash verification for all users including admin"""
+    from auth import verify_password
+    
+    # Check if admin user exists in database
+    result = await session.execute(
+        select(User).where(User.email == ADMIN_EMAIL)
+    )
+    admin_user = result.scalar_one_or_none()
+    
+    # If admin user exists, verify password hash
+    if admin_user and email == ADMIN_EMAIL:
+        if verify_password(password, admin_user.password_hash):
+            token = create_session_token(email, "super_admin")
+            response = RedirectResponse(url="/admin", status_code=303)
+            response.set_cookie(key="session", value=token, httponly=True, max_age=86400*7, samesite="lax")
+            return response
     
     raise HTTPException(status_code=401, detail="Invalid credentials")
 
@@ -938,7 +1070,7 @@ async def verify_member(
         raise HTTPException(status_code=404, detail="Member not found")
     
     member.verified = True
-    member.updated_at = datetime.utcnow()
+    member.updated_at = datetime.now(timezone.utc)
     await session.commit()
     
     audit = Audit(
@@ -1020,7 +1152,7 @@ async def update_village_coords(
     village.show_pin = show_pin
     if population:
         village.population = int(population)
-    village.updated_at = datetime.utcnow()
+    village.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -1085,7 +1217,7 @@ async def update_block_settings(
     if 'show_boundary' in data:
         block.show_boundary = bool(data['show_boundary'])
     
-    block.updated_at = datetime.utcnow()
+    block.updated_at = datetime.now(timezone.utc)
     await session.commit()
     
     # Audit log
@@ -1186,7 +1318,7 @@ async def update_map_settings(
     if "dot_style" in data:
         settings.dot_style = data["dot_style"]
     
-    settings.updated_at = datetime.utcnow()
+    settings.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -1200,9 +1332,21 @@ async def update_map_settings(
 @app.get("/api/blocks")
 async def get_blocks():
     """Get all block boundaries (GeoJSON) for Phase 2"""
-    with open('static/geojson/bhadrak_blocks.geojson', 'r') as f:
-        blocks_data = json.load(f)
-    return blocks_data
+    import logging
+    logger = logging.getLogger(__name__)
+    try:
+        with open('static/geojson/bhadrak_blocks.geojson', 'r', encoding='utf-8') as f:
+            blocks_data = json.load(f)
+        return blocks_data
+    except FileNotFoundError:
+        logger.error("GeoJSON file not found: static/geojson/bhadrak_blocks.geojson")
+        raise HTTPException(status_code=500, detail="Block boundaries file not found")
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in blocks GeoJSON file: {e}")
+        raise HTTPException(status_code=500, detail="Invalid block boundaries data")
+    except Exception as e:
+        logger.error(f"Error loading blocks GeoJSON: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error loading block boundaries")
 
 
 @app.get("/api/blocks/statistics")
@@ -1213,8 +1357,20 @@ async def get_block_statistics(session: AsyncSession = Depends(get_session)):
     
     # If no stats exist, create default ones from blocks GeoJSON
     if not stats:
-        with open('static/geojson/bhadrak_blocks.geojson', 'r') as f:
-            blocks_data = json.load(f)
+        import logging
+        logger = logging.getLogger(__name__)
+        try:
+            with open('static/geojson/bhadrak_blocks.geojson', 'r', encoding='utf-8') as f:
+                blocks_data = json.load(f)
+        except FileNotFoundError:
+            logger.error("GeoJSON file not found: static/geojson/bhadrak_blocks.geojson")
+            return []
+        except json.JSONDecodeError as e:
+            logger.error(f"Invalid JSON in blocks GeoJSON file: {e}")
+            return []
+        except Exception as e:
+            logger.error(f"Error loading blocks GeoJSON: {e}", exc_info=True)
+            return []
         
         for feature in blocks_data['features']:
             props = feature['properties']
@@ -1260,10 +1416,22 @@ async def refresh_block_statistics(
 ):
     """Refresh block statistics by calculating from live data (Phase 2)"""
     from sqlalchemy import func
+    import logging
+    logger = logging.getLogger(__name__)
     
     # Get all blocks
-    with open('static/geojson/bhadrak_blocks.geojson', 'r') as f:
-        blocks_data = json.load(f)
+    try:
+        with open('static/geojson/bhadrak_blocks.geojson', 'r', encoding='utf-8') as f:
+            blocks_data = json.load(f)
+    except FileNotFoundError:
+        logger.error("GeoJSON file not found: static/geojson/bhadrak_blocks.geojson")
+        raise HTTPException(status_code=500, detail="Block boundaries file not found")
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in blocks GeoJSON file: {e}")
+        raise HTTPException(status_code=500, detail="Invalid block boundaries data")
+    except Exception as e:
+        logger.error(f"Error loading blocks GeoJSON: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Error loading block boundaries")
     
     for feature in blocks_data['features']:
         block_name = feature['properties']['name']
@@ -1346,7 +1514,7 @@ async def refresh_block_statistics(
         if block_stat.population > 0:
             block_stat.seva_density = (block_stat.total_seva_requests / block_stat.population) * 1000
         
-        block_stat.last_calculated = datetime.utcnow()
+        block_stat.last_calculated = datetime.now(timezone.utc)
     
     await session.commit()
     return {"status": "success", "message": "Block statistics refreshed"}
@@ -1380,7 +1548,7 @@ async def save_map_settings(
         settings.show_villages = data.get("show_villages", settings.show_villages)
         settings.show_blocks = data.get("show_blocks", settings.show_blocks)
         settings.village_point_color = data.get("village_point_color", settings.village_point_color)
-        settings.updated_at = datetime.utcnow()
+        settings.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -1574,7 +1742,9 @@ async def register_page(request: Request):
 
 
 @app.post("/api/auth/register")
+@limiter.limit("3/hour")
 async def register_user(
+    request: Request,
     full_name: str = Form(...),
     email: str = Form(...),
     phone: str = Form(...),
@@ -1617,29 +1787,39 @@ async def register_user(
 
 
 @app.post("/api/auth/login")
+@limiter.limit("5/minute")
 async def login_user(
+    request: Request,
     email: str = Form(...),
     password: str = Form(...),
     session: AsyncSession = Depends(get_session)
 ):
-    """Login with role detection and redirect"""
+    """Login with role detection and redirect - uses password hash verification for all users including admin"""
     from auth import verify_password, hash_password
     
-    if email == ADMIN_EMAIL and password == ADMIN_PASSWORD:
-        token = create_session_token(email, "super_admin")
-        response = JSONResponse({
-            "success": True,
-            "role": "super_admin",
-            "redirect": "/admin"
-        })
-        response.set_cookie(
-            "session",
-            token,
-            httponly=True,
-            max_age=86400 * 7,
-            samesite="lax"
+    # Check if admin user exists in database
+    if email == ADMIN_EMAIL:
+        result = await session.execute(
+            select(User).where(User.email == ADMIN_EMAIL)
         )
-        return response
+        admin_user = result.scalar_one_or_none()
+        
+        # If admin user exists, verify password hash
+        if admin_user and verify_password(password, admin_user.password_hash):
+            token = create_session_token(email, "super_admin")
+            response = JSONResponse({
+                "success": True,
+                "role": "super_admin",
+                "redirect": "/admin"
+            })
+            response.set_cookie(
+                "session",
+                token,
+                httponly=True,
+                max_age=86400 * 7,
+                samesite="lax"
+            )
+            return response
     
     result = await session.execute(
         select(User).where(User.email == email)
@@ -1658,7 +1838,7 @@ async def login_user(
             detail="Your account is pending admin approval. Please contact the administrator."
         )
     
-    user.last_login = datetime.utcnow()
+    user.last_login = datetime.now(timezone.utc)
     user.login_count += 1
     await session.commit()
     
@@ -1741,7 +1921,7 @@ async def approve_user(
         
         user.is_active = True
         user.approved_by = admin_data.get("email")
-        user.approved_at = datetime.utcnow()
+        user.approved_at = datetime.now(timezone.utc)
         user.assigned_blocks = assigned_blocks if assigned_blocks else user.primary_block
         
         await session.commit()
@@ -2258,7 +2438,7 @@ async def approve_field_worker(
     
     fw.status = 'approved'
     fw.approved_by = admin_data.get('email')
-    fw.approved_at = datetime.utcnow()
+    fw.approved_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -2290,7 +2470,7 @@ async def reject_field_worker(
     fw.status = 'rejected'
     fw.rejection_reason = rejection_reason
     fw.approved_by = admin_data.get('email')
-    fw.approved_at = datetime.utcnow()
+    fw.approved_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -2368,7 +2548,7 @@ async def update_user_blocks(
         raise HTTPException(status_code=404, detail="User not found")
     
     user.assigned_blocks = assigned_blocks
-    user.profile_updated_at = datetime.utcnow()
+    user.profile_updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -2389,7 +2569,7 @@ async def deactivate_user(
         raise HTTPException(status_code=404, detail="User not found")
     
     user.is_active = False
-    user.profile_updated_at = datetime.utcnow()
+    user.profile_updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -2411,7 +2591,7 @@ async def reactivate_user(
     
     user.is_active = True
     user.rejection_reason = None
-    user.profile_updated_at = datetime.utcnow()
+    user.profile_updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -2459,7 +2639,7 @@ async def create_admin_user(
         assigned_blocks=assigned_blocks,
         is_active=True,  # Auto-activate admin-created users
         approved_by=admin_data.get('email'),
-        approved_at=datetime.utcnow(),
+        approved_at=datetime.now(timezone.utc),
         oauth_provider="email"
     )
     
@@ -2523,7 +2703,7 @@ async def change_user_role(
     user.role = new_role
     user.primary_block = primary_block if new_role == "block_coordinator" else ""
     user.assigned_blocks = assigned_blocks if new_role == "block_coordinator" else ""
-    user.profile_updated_at = datetime.utcnow()
+    user.profile_updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -2820,7 +3000,7 @@ async def get_analytics_overview(
     # Timeline (last 30 days)
     from datetime import timedelta
     timeline = defaultdict(int)
-    today = datetime.utcnow().date()
+    today = datetime.now(timezone.utc).date()
     for i in range(30):
         date = today - timedelta(days=29-i)
         timeline[date.strftime('%Y-%m-%d')] = 0
@@ -2919,7 +3099,7 @@ async def update_form_config(
             config.is_required = field_data['is_required']
             config.is_visible = field_data['is_visible']
             config.display_order = field_data['display_order']
-            config.updated_at = datetime.utcnow()
+            config.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -3044,7 +3224,7 @@ async def update_profile(
     if 'phone' in data:
         user.phone = data['phone']
     
-    user.profile_updated_at = datetime.utcnow()
+    user.profile_updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -3080,7 +3260,7 @@ async def change_password(
     
     # Hash new password
     user.password_hash = pwd_context.hash(new_password)
-    user.profile_updated_at = datetime.utcnow()
+    user.profile_updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     
@@ -3274,6 +3454,43 @@ async def update_about(
     admin: User = Depends(require_super_admin)
 ):
     """Admin endpoint to update about page content (requires super_admin)"""
+    import bleach
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # Allowed HTML tags and attributes for Quill editor content
+    allowed_tags = [
+        'p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+        'ul', 'ol', 'li', 'a', 'blockquote', 'pre', 'code', 'span', 'div'
+    ]
+    allowed_attributes = {
+        'a': ['href', 'title', 'target'],
+        'span': ['style'],
+        'div': ['style'],
+        'p': ['style'],
+        'h1': ['style'], 'h2': ['style'], 'h3': ['style'],
+        'h4': ['style'], 'h5': ['style'], 'h6': ['style']
+    }
+    allowed_styles = ['color', 'background-color', 'text-align']
+    
+    # Sanitize HTML content from Quill editor
+    def sanitize_html(html_content: str) -> str:
+        if not html_content:
+            return ""
+        return bleach.clean(
+            html_content,
+            tags=allowed_tags,
+            attributes=allowed_attributes,
+            styles=allowed_styles,
+            strip=True
+        )
+    
+    # Sanitize all HTML content fields
+    main_content = sanitize_html(main_content)
+    mission_statement = sanitize_html(mission_statement) if mission_statement else None
+    vision_statement = sanitize_html(vision_statement) if vision_statement else None
+    contact_info = sanitize_html(contact_info) if contact_info else None
+    
     result = await session.execute(select(AboutPage))
     about = result.scalar_one_or_none()
     
@@ -3288,7 +3505,7 @@ async def update_about(
     about.vision_statement = vision_statement
     about.contact_info = contact_info
     about.last_edited_by = admin.email
-    about.updated_at = datetime.utcnow()
+    about.updated_at = datetime.now(timezone.utc)
     
     await session.commit()
     await session.refresh(about)

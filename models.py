@@ -1,6 +1,6 @@
 from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class Village(SQLModel, table=True):
@@ -27,8 +27,8 @@ class Village(SQLModel, table=True):
     pin_notes: Optional[str] = None
     show_pin: bool = Field(default=True)
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     members: List["Member"] = Relationship(back_populates="village")
     field_workers: List["FieldWorker"] = Relationship(back_populates="village")
@@ -52,8 +52,8 @@ class Member(SQLModel, table=True):
     total_seva_count: int = Field(default=0)
     last_seva_date: Optional[datetime] = None
     
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     
     village: Optional[Village] = Relationship(back_populates="members")
     seva_responses: List["SevaResponse"] = Relationship(back_populates="volunteer")
@@ -73,8 +73,8 @@ class Doctor(SQLModel, table=True):
     referred_by: Optional[str] = None
     rank: int = Field(default=0)
     verified: bool = Field(default=False, index=True)
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class Audit(SQLModel, table=True):
@@ -85,7 +85,7 @@ class Audit(SQLModel, table=True):
     row_id: int
     action: str
     changed_by: str
-    changed_at: datetime = Field(default_factory=datetime.utcnow)
+    changed_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     diff: Optional[str] = None
 
 
@@ -96,7 +96,7 @@ class Report(SQLModel, table=True):
     table_name: str
     row_id: int
     reason: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     created_by_ip: str
 
 
@@ -125,8 +125,8 @@ class SevaRequest(SQLModel, table=True):
     assigned_to_id: Optional[int] = Field(default=None, foreign_key="members.id")
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     fulfilled_at: Optional[datetime] = None
     
     # Relationships
@@ -152,7 +152,7 @@ class SevaResponse(SQLModel, table=True):
     estimated_time: Optional[str] = None  # "30 minutes", "1 hour", etc.
     
     # Timestamps
-    responded_at: datetime = Field(default_factory=datetime.utcnow)
+    responded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     completed_at: Optional[datetime] = None
     
     # Relationships
@@ -182,7 +182,7 @@ class Testimonial(SQLModel, table=True):
     featured: bool = Field(default=False)  # Highlight special stories
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow, index=True)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
     
     # Relationships
     village: Optional[Village] = Relationship()
@@ -204,7 +204,7 @@ class BlockSettings(SQLModel, table=True):
     show_boundary: bool = Field(default=True)
     
     # Timestamps
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class MapSettings(SQLModel, table=True):
@@ -232,7 +232,7 @@ class MapSettings(SQLModel, table=True):
     dot_style: str = Field(default="neon_glow")  # neon_glow, pulse_ring, double_halo, soft_blur, sharp_core, plasma, crystal
     
     # Timestamps
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class VillagePin(SQLModel, table=True):
@@ -257,8 +257,8 @@ class VillagePin(SQLModel, table=True):
     quick_links: Optional[str] = Field(default="[]")
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class CustomLabel(SQLModel, table=True):
@@ -277,7 +277,7 @@ class CustomLabel(SQLModel, table=True):
     display_order: int = Field(default=0)
     
     # Timestamps
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class BlockStatistics(SQLModel, table=True):
@@ -313,8 +313,8 @@ class BlockStatistics(SQLModel, table=True):
     population_density: float = Field(default=0.0)  # People per sq km
     
     # Timestamps
-    last_calculated: datetime = Field(default_factory=datetime.utcnow, index=True)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    last_calculated: datetime = Field(default_factory=lambda: datetime.now(timezone.utc), index=True)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class User(SQLModel, table=True):
@@ -349,7 +349,7 @@ class User(SQLModel, table=True):
     rejection_reason: Optional[str] = None
     
     # Tracking
-    created_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_login: Optional[datetime] = None
     login_count: int = Field(default=0)
     
@@ -395,8 +395,8 @@ class FieldWorker(SQLModel, table=True):
     is_active: bool = Field(default=True, index=True)
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_verified_at: Optional[datetime] = None
     
     # Relationships
@@ -431,8 +431,8 @@ class FormFieldConfig(SQLModel, table=True):
     options: Optional[str] = None  # JSON array of options
     
     # Timestamps
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
 class AboutPage(SQLModel, table=True):
@@ -451,4 +451,4 @@ class AboutPage(SQLModel, table=True):
     
     # Metadata
     last_edited_by: Optional[str] = None
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
+    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
