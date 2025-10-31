@@ -412,43 +412,43 @@
     <!-- RIGHT-SIDE SLIDE-IN MENU -->
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
-            <button class="menu-close" onclick="toggleMenu()">Ã—</button>
+            <button class="menu-close" onclick="toggleMenu()">├ù</button>
             <h2>Menu</h2>
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
             <a href="/" class="menu-link">
-                <span class="menu-link-icon">ðŸ—ºï¸</span>
+                <span class="menu-link-icon">≡ƒù║∩╕Å</span>
                 <span>Map</span>
             </a>
             <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon">âš•ï¸</span>
+                <span class="menu-link-icon">ΓÜò∩╕Å</span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
                     <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon">ðŸ‘‘</span>
+                        <span class="menu-link-icon">≡ƒææ</span>
                         <span>Admin</span>
                     </a>
                 {% else %}
                     <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon">ðŸ“Š</span>
+                        <span class="menu-link-icon">≡ƒôè</span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon">ðŸšª</span>
+                    <span class="menu-link-icon">≡ƒÜ¬</span>
                     <span>Logout</span>
                 </a>
             {% else %}
                 <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon">ðŸ”</span>
+                    <span class="menu-link-icon">≡ƒöÉ</span>
                     <span>Login</span>
                 </a>
             {% endif %}
             <a href="/about" class="menu-link">
-                <span class="menu-link-icon">â„¹ï¸</span>
+                <span class="menu-link-icon">Γä╣∩╕Å</span>
                 <span>About</span>
             </a>
         </div>
@@ -458,7 +458,7 @@
     <nav>
         <div class="nav-brand">
             Volunteer Management Platform
-            <span class="nav-location">ðŸ“ Bhadrak</span>
+            <span class="nav-location">≡ƒôì Bhadrak</span>
         </div>
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
@@ -510,7 +510,7 @@
         // Check for logout success message
         const urlParams = new URLSearchParams(window.location.search);
         if (urlParams.get('logout') === 'success') {
-            showInfo('âœ… You have been logged out successfully.');
+            showInfo('Γ£à You have been logged out successfully.');
             // Clear the URL parameter
             window.history.replaceState({}, document.title, window.location.pathname);
         }
@@ -556,12 +556,12 @@
         });
 
         function showError(message) {
-            errorAlert.textContent = 'âŒ ' + message;
+            errorAlert.textContent = 'Γ¥î ' + message;
             errorAlert.style.display = 'block';
         }
 
         function showInfo(message) {
-            infoAlert.textContent = 'â„¹ï¸ ' + message;
+            infoAlert.textContent = 'Γä╣∩╕Å ' + message;
             infoAlert.style.display = 'block';
         }
 
@@ -584,4 +584,3 @@
     </div>
 </body>
 </html>
-

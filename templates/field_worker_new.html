@@ -598,43 +598,43 @@
     <!-- RIGHT-SIDE SLIDE-IN MENU -->
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
-            <button class="menu-close" onclick="toggleMenu()">Ã—</button>
+            <button class="menu-close" onclick="toggleMenu()">├ù</button>
             <h2>Menu</h2>
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
             <a href="/" class="menu-link">
-                <span class="menu-link-icon">ðŸ—ºï¸</span>
+                <span class="menu-link-icon">≡ƒù║∩╕Å</span>
                 <span>Map</span>
             </a>
             <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon">âš•ï¸</span>
+                <span class="menu-link-icon">ΓÜò∩╕Å</span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
                     <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon">ðŸ‘‘</span>
+                        <span class="menu-link-icon">≡ƒææ</span>
                         <span>Admin</span>
                     </a>
                 {% else %}
                     <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon">ðŸ“Š</span>
+                        <span class="menu-link-icon">≡ƒôè</span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon">ðŸšª</span>
+                    <span class="menu-link-icon">≡ƒÜ¬</span>
                     <span>Logout</span>
                 </a>
             {% else %}
                 <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon">ðŸ”</span>
+                    <span class="menu-link-icon">≡ƒöÉ</span>
                     <span>Login</span>
                 </a>
             {% endif %}
             <a href="/about" class="menu-link">
-                <span class="menu-link-icon">â„¹ï¸</span>
+                <span class="menu-link-icon">Γä╣∩╕Å</span>
                 <span>About</span>
             </a>
         </div>
@@ -644,7 +644,7 @@
     <nav>
         <div class="nav-brand">
             Volunteer Management Platform
-            <span class="nav-location">ðŸ“ <strong>Bhadrak</strong></span>
+            <span class="nav-location">≡ƒôì <strong>Bhadrak</strong></span>
         </div>
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
@@ -655,12 +655,12 @@
 
     <div class="page-content">
         <div class="header">
-            <h1>ðŸ“ Add Field Worker</h1>
+            <h1>≡ƒô¥ Add Field Worker</h1>
             <p>Submit new Field Worker information for admin approval</p>
         </div>
 
         <div class="alert alert-success" id="successAlert">
-            âœ… Field Worker submitted successfully! Pending admin approval.
+            Γ£à Field Worker submitted successfully! Pending admin approval.
         </div>
 
         <div class="alert alert-error" id="errorAlert"></div>
@@ -668,7 +668,7 @@
         <form id="fieldWorkerForm" class="form-card">
             <!-- Section 1: Basic Information -->
             <div class="form-section">
-                <h2>ðŸ‘¤ Basic Information</h2>
+                <h2>≡ƒæñ Basic Information</h2>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="full_name">Full Name <span class="required">*</span></label>
@@ -707,7 +707,7 @@
 
             <!-- Section 2: Contact Information -->
             <div class="form-section">
-                <h2>ðŸ“ž Contact Information</h2>
+                <h2>≡ƒô₧ Contact Information</h2>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="phone">Phone Number <span class="required">*</span></label>
@@ -747,7 +747,7 @@
 
             <!-- Section 3: Location Information -->
             <div class="form-section">
-                <h2>ðŸ“ Location Information</h2>
+                <h2>≡ƒôì Location Information</h2>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="village_search">Village <span class="required">*</span></label>
@@ -790,7 +790,7 @@
 
             <!-- Section 4: Availability Information -->
             <div class="form-section">
-                <h2>ðŸ•’ Availability Information</h2>
+                <h2>≡ƒòÆ Availability Information</h2>
                 <div class="form-row">
                     <div class="form-group">
                         <label for="available_days">Available Days</label>
@@ -809,7 +809,7 @@
 
             <!-- Section 5: Skills & Expertise (NEW as per P2d) -->
             <div class="form-section">
-                <h2>ðŸ’¡ Skills & Expertise</h2>
+                <h2>≡ƒÆí Skills & Expertise</h2>
                 <div class="form-row">
                     <div class="form-group form-group-full">
                         <label for="skills">Your Skills/Capabilities</label>
@@ -828,10 +828,10 @@
             <!-- Submit Buttons -->
             <div class="button-group">
                 <button type="submit" class="btn btn-primary">
-                    <span>âœ“</span> Submit for Approval
+                    <span>Γ£ô</span> Submit for Approval
                 </button>
                 <a href="/dashboard" class="btn btn-secondary">
-                    <span>âœ•</span> Cancel
+                    <span>Γ£ò</span> Cancel
                 </a>
             </div>
         </form>
@@ -840,10 +840,10 @@
     <!-- Footer -->
     <div class="footer">
         <div class="footer-text">
-            Â© 2025 <span class="footer-brand">@volunteerplatform.org</span> <strong>Bhadrak</strong> Team. All rights reserved.
+            ┬⌐ 2025 <span class="footer-brand">@volunteerplatform.org</span> <strong>Bhadrak</strong> Team. All rights reserved.
         </div>
         <div class="footer-text">
-            Village-Level Atlas â€¢ 1,315 Villages
+            Village-Level Atlas ΓÇó 1,315 Villages
         </div>
     </div>
 
@@ -1047,7 +1047,7 @@
                 tag.className = 'tag';
                 tag.innerHTML = `
                     ${skill}
-                    <button type="button" class="tag-remove" onclick="removeTag(${index})">Ã—</button>
+                    <button type="button" class="tag-remove" onclick="removeTag(${index})">├ù</button>
                 `;
                 container.insertBefore(tag, tagInput);
             });
@@ -1118,7 +1118,7 @@
 
         function showError(message) {
             const alert = document.getElementById('errorAlert');
-            alert.textContent = 'âŒ ' + message;
+            alert.textContent = 'Γ¥î ' + message;
             alert.classList.add('show');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             setTimeout(() => alert.classList.remove('show'), 5000);
@@ -1126,5 +1126,4 @@
     </script>
 </body>
 </html>
-
 
