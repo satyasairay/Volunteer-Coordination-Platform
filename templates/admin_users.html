@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,7 +13,7 @@
             <div class="container mx-auto px-4 py-6">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-3xl font-bold">👥 User Management</h1>
+                        <h1 class="text-3xl font-bold">   User Management</h1>
                         <p class="text-blue-100">Manage coordinators and admin access</p>
                     </div>
                     <div class="flex gap-3">
@@ -24,7 +24,7 @@
                             Homepage
                         </a>
                         <a href="/admin" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition">
-                            ← Dashboard
+                              Dashboard
                         </a>
                     </div>
                 </div>
@@ -86,7 +86,7 @@
             </div>
 
             <div id="emptyState" class="bg-white rounded-xl shadow-md p-12 text-center" style="display: none;">
-                <div class="text-6xl mb-4">👥</div>
+                <div class="text-6xl mb-4">  </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">No Users Found</h3>
                 <p class="text-gray-600">All users have been reviewed or no users match your filters.</p>
             </div>
@@ -96,7 +96,7 @@
     <!-- Approve User Modal -->
     <div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">✅ Approve User</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">  Approve User</h3>
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Assign Blocks (comma-separated)</label>
                 <input type="text" id="assignedBlocks" placeholder="Bhadrak,Tihidi,Basudevpur" 
@@ -117,7 +117,7 @@
     <!-- Reject User Modal -->
     <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">❌ Reject User</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">  Reject User</h3>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Rejection Reason *</label>
             <textarea id="rejectionReason" rows="4" 
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
@@ -136,7 +136,7 @@
     <!-- Edit Blocks Modal -->
     <div id="editBlocksModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">🗺️ Edit Block Assignment</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">    Edit Block Assignment</h3>
             <div class="mb-4">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">Assigned Blocks (comma-separated)</label>
                 <input type="text" id="editAssignedBlocks" placeholder="Bhadrak,Tihidi,Basudevpur" 
@@ -296,11 +296,11 @@
                         <div class="flex gap-3 pt-4 border-t">
                             <button onclick="showApproveModal(${user.id}, '${user.primary_block}')" 
                                     class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-                                ✅ Approve
+                                  Approve
                             </button>
                             <button onclick="showRejectModal(${user.id})" 
                                     class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
-                                ❌ Reject
+                                  Reject
                             </button>
                         </div>
                         ` : ''}
@@ -309,11 +309,11 @@
                         <div class="flex gap-3 pt-4 border-t">
                             <button onclick="showEditBlocksModal(${user.id}, '${user.assigned_blocks || user.primary_block}')" 
                                     class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-                                🗺️ Edit Blocks
+                                    Edit Blocks
                             </button>
                             <button onclick="deactivateUser(${user.id})" 
                                     class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition">
-                                🚫 Deactivate
+                                   Deactivate
                             </button>
                         </div>
                         ` : ''}
@@ -539,17 +539,18 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    alert('✅ Admin created successfully!');
+                    alert('  Admin created successfully!');
                     closeCreateAdminModal();
                     loadUsers(); // Reload users list
                 } else {
                     const error = await response.json();
-                    alert('❌ Error: ' + error.detail);
+                    alert('  Error: ' + error.detail);
                 }
             } catch (error) {
-                alert('❌ Network error. Please try again.');
+                alert('  Network error. Please try again.');
             }
         }
     </script>
 </body>
 </html>
+

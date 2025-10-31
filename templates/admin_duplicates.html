@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,12 +13,12 @@
             <div class="container mx-auto px-4 py-6">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-3xl font-bold">⚠️ Duplicate Phone Exceptions</h1>
+                        <h1 class="text-3xl font-bold">   Duplicate Phone Exceptions</h1>
                         <p class="text-orange-100">Review Field Workers with duplicate phone numbers</p>
                     </div>
                     <div class="flex gap-3">
                         <a href="/admin" class="px-4 py-2 bg-white text-orange-600 rounded-lg font-semibold hover:bg-orange-50 transition">
-                            ← Dashboard
+                              Dashboard
                         </a>
                     </div>
                 </div>
@@ -44,7 +44,7 @@
 
             <!-- Info Banner -->
             <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
-                <h2 class="text-lg font-bold text-blue-800 mb-2">ℹ️ About Duplicate Exceptions</h2>
+                <h2 class="text-lg font-bold text-blue-800 mb-2">   About Duplicate Exceptions</h2>
                 <p class="text-blue-700">
                     When coordinators submit a Field Worker with a phone number that already exists, they must provide a reason.
                     These submissions appear here for your review. You can approve if the duplicate is legitimate (e.g., multiple departments)
@@ -58,7 +58,7 @@
             </div>
 
             <div id="emptyState" class="bg-white rounded-xl shadow-md p-12 text-center" style="display: none;">
-                <div class="text-6xl mb-4">✅</div>
+                <div class="text-6xl mb-4"> </div>
                 <h3 class="text-2xl font-bold text-gray-800 mb-2">No Pending Exceptions</h3>
                 <p class="text-gray-600">All duplicate phone exception requests have been reviewed.</p>
             </div>
@@ -68,7 +68,7 @@
     <!-- Approval Modal -->
     <div id="approvalModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">✅ Approve Duplicate Exception</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">  Approve Duplicate Exception</h3>
             <p class="text-gray-600 mb-6">Confirming this duplicate will allow both Field Workers to coexist with the same phone number.</p>
             <div class="flex gap-3">
                 <button id="confirmApprove" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
@@ -84,7 +84,7 @@
     <!-- Rejection Modal -->
     <div id="rejectionModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">❌ Reject Duplicate Exception</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">  Reject Duplicate Exception</h3>
             <label class="block text-sm font-semibold text-gray-700 mb-2">Rejection Reason *</label>
             <textarea id="rejectionReason" rows="4" 
                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:outline-none mb-4"
@@ -147,7 +147,7 @@
                 <div class="bg-white rounded-xl shadow-md overflow-hidden border-l-4 border-orange-500">
                     <!-- Comparison Header -->
                     <div class="bg-orange-50 px-6 py-4 border-b border-orange-200">
-                        <h3 class="text-lg font-bold text-orange-800">🔄 Duplicate Phone: ${dup.phone}</h3>
+                        <h3 class="text-lg font-bold text-orange-800">   Duplicate Phone: ${dup.phone}</h3>
                         <p class="text-sm text-orange-700">Submitted by: ${dup.submitted_by_name} on ${new Date(dup.created_at).toLocaleDateString()}</p>
                     </div>
 
@@ -156,7 +156,7 @@
                         <!-- New Submission (Requesting Exception) -->
                         <div class="p-6 bg-yellow-50">
                             <h4 class="text-sm font-bold text-yellow-800 uppercase mb-3 flex items-center gap-2">
-                                <span class="text-xl">🆕</span> New Submission (Pending)
+                                <span class="text-xl">  </span> New Submission (Pending)
                             </h4>
                             <div class="space-y-2">
                                 <div>
@@ -193,7 +193,7 @@
                         <!-- Existing Entry -->
                         <div class="p-6">
                             <h4 class="text-sm font-bold text-gray-600 uppercase mb-3 flex items-center gap-2">
-                                <span class="text-xl">📌</span> Existing Entry
+                                <span class="text-xl">  </span> Existing Entry
                             </h4>
                             ${dup.existing_entry ? `
                             <div class="space-y-2">
@@ -237,11 +237,11 @@
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex gap-3">
                         <button onclick="showApprovalModal(${dup.id})" 
                                 class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-                            ✅ Approve Exception
+                              Approve Exception
                         </button>
                         <button onclick="showRejectionModal(${dup.id})" 
                                 class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
-                            ❌ Reject
+                              Reject
                         </button>
                     </div>
                 </div>
@@ -324,3 +324,4 @@
     </script>
 </body>
 </html>
+

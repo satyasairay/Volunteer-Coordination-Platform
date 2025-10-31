@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -17,7 +17,7 @@
         <header class="bg-gray-900 text-white p-4 shadow-lg">
             <div class="max-w-7xl mx-auto flex justify-between items-center">
                 <div>
-                    <h1 class="text-2xl font-bold">🗺️ Map Visualization Settings</h1>
+                    <h1 class="text-2xl font-bold">    Map Visualization Settings</h1>
                     <p class="text-sm text-gray-400">Control choropleth colors, metrics, and display options</p>
                 </div>
                 <a href="/admin" class="bg-gray-700 hover:bg-gray-600 px-4 py-2 rounded-lg transition">Back to Admin</a>
@@ -88,7 +88,7 @@
                         
                         <!-- Save Button -->
                         <button type="submit" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-lg transition shadow-lg">
-                            💾 Save Settings
+                               Save Settings
                         </button>
                     </form>
                     
@@ -187,15 +187,15 @@
                 
                 if (response.ok) {
                     status.className = 'mt-4 p-3 rounded-lg bg-green-100 text-green-800';
-                    status.textContent = '✓ Settings saved successfully! Visit the main map to see changes.';
+                    status.textContent = '  Settings saved successfully! Visit the main map to see changes.';
                     loadSettings();
                 } else {
                     status.className = 'mt-4 p-3 rounded-lg bg-red-100 text-red-800';
-                    status.textContent = '✗ Failed to save settings';
+                    status.textContent = '  Failed to save settings';
                 }
             } catch (error) {
                 status.className = 'mt-4 p-3 rounded-lg bg-red-100 text-red-800';
-                status.textContent = '✗ Error: ' + error.message;
+                status.textContent = '  Error: ' + error.message;
             }
         });
         
@@ -204,3 +204,4 @@
     </script>
 </body>
 </html>
+

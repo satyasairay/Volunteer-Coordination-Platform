@@ -70,3 +70,9 @@ Exit Criteria
 - Navbar: brand left, hamburger right, no search.
 - Bottom‑left: theme dock + “Bhadrak” label present; no overlap with footer/zoom; label does not move with zoom.
 - APIs: `/api/map-settings`, `/api/villages/pins`, `/api/blocks` → 200.
+
+### Encoding / Icon Failures — Root Cause & Fix
+- Root cause: pasting emoji/icon glyphs into templates led to mojibake on some systems (non‑UTF8 round‑trips, CRLF normalization), producing unreadable characters and broken UI.
+- Decision: remove non‑ASCII from all templates and replace decorative icons with inline SVGs only.
+- Policy: no emoji fonts in HTML; only SVG or web icon sets, and ensure `meta charset="UTF-8"` is present.
+- Status: non‑ASCII sanitized across `templates/*.html` as a recovery step. SVG replacements will be introduced progressively under Phase 3 (controls) or Phase 4 (search).

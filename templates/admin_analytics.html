@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,12 +14,12 @@
             <div class="container mx-auto px-4 py-6">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-3xl font-bold">📊 Analytics Dashboard</h1>
+                        <h1 class="text-3xl font-bold">   Analytics Dashboard</h1>
                         <p class="text-purple-100">System-wide insights and statistics</p>
                     </div>
                     <div class="flex gap-3">
                         <a href="/admin" class="px-4 py-2 bg-white text-purple-600 rounded-lg font-semibold hover:bg-purple-50 transition">
-                            ← Dashboard
+                              Dashboard
                         </a>
                     </div>
                 </div>
@@ -55,26 +55,26 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <!-- Submissions by Block -->
                 <div class="bg-white rounded-xl shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">📍 Submissions by Block</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">   Submissions by Block</h2>
                     <canvas id="blockChart"></canvas>
                 </div>
 
                 <!-- Status Breakdown -->
                 <div class="bg-white rounded-xl shadow-md p-6">
-                    <h2 class="text-xl font-bold text-gray-800 mb-4">✅ Approval Status</h2>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">  Approval Status</h2>
                     <canvas id="statusChart"></canvas>
                 </div>
             </div>
 
             <!-- Activity Timeline -->
             <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">📈 Submissions Over Time</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">   Submissions Over Time</h2>
                 <canvas id="timelineChart"></canvas>
             </div>
 
             <!-- Top Contributors -->
             <div class="bg-white rounded-xl shadow-md p-6 mb-8">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">🏆 Top Contributors</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">   Top Contributors</h2>
                 <div id="topContributors" class="space-y-3">
                     <!-- Loaded via JS -->
                 </div>
@@ -82,7 +82,7 @@
 
             <!-- Export Options -->
             <div class="bg-white rounded-xl shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">📥 Export Data</h2>
+                <h2 class="text-xl font-bold text-gray-800 mb-4">   Export Data</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <button onclick="exportUsers()" class="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition">
                         Export Users
@@ -255,3 +255,4 @@
     </script>
 </body>
 </html>
+

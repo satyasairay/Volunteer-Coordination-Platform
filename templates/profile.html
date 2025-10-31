@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,7 +11,7 @@
         <!-- Header -->
         <div class="mb-8">
             <div class="flex justify-between items-center">
-                <h1 class="text-4xl font-bold text-gray-800">👤 My Profile</h1>
+                <h1 class="text-4xl font-bold text-gray-800">   My Profile</h1>
                 <a href="/dashboard" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">
                     Back to Dashboard
                 </a>
@@ -31,9 +31,9 @@
                         <h2 class="text-2xl font-bold">{{ user.full_name }}</h2>
                         <p class="text-indigo-100">
                             {% if user.role == 'super_admin' %}
-                                🔑 Super Admin
+                                   Super Admin
                             {% else %}
-                                📋 Block Coordinator
+                                   Block Coordinator
                             {% endif %}
                         </p>
                     </div>
@@ -42,7 +42,7 @@
 
             <!-- Account Information -->
             <div class="p-8">
-                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-3">📋 Account Information</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-3">   Account Information</h3>
                 
                 <form id="profileForm" class="space-y-6">
                     <!-- Full Name -->
@@ -108,7 +108,7 @@
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Account Status</label>
                         <span class="inline-block px-4 py-2 rounded-lg font-semibold
                                      {% if user.is_active %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                            {% if user.is_active %}✅ Active{% else %}⏳ Pending Approval{% endif %}
+                            {% if user.is_active %}  Active{% else %}  Pending Approval{% endif %}
                         </span>
                     </div>
 
@@ -133,7 +133,7 @@
                     <div class="pt-4 border-t">
                         <button type="submit" id="saveBtn"
                                 class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold text-lg hover:bg-indigo-700 transition">
-                            💾 Save Changes
+                               Save Changes
                         </button>
                     </div>
                 </form>
@@ -141,7 +141,7 @@
 
             <!-- Password Change Section -->
             <div class="p-8 bg-gray-50 border-t border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800 mb-6">🔒 Change Password</h3>
+                <h3 class="text-xl font-bold text-gray-800 mb-6">   Change Password</h3>
                 
                 <form id="passwordForm" class="space-y-4">
                     <div>
@@ -168,7 +168,7 @@
 
                     <button type="submit" id="passwordBtn"
                             class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
-                        🔐 Update Password
+                           Update Password
                     </button>
                 </form>
             </div>
@@ -176,9 +176,9 @@
 
         <!-- Danger Zone -->
         <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 mt-8">
-            <h3 class="text-xl font-bold text-red-800 mb-3">⚠️ Danger Zone</h3>
+            <h3 class="text-xl font-bold text-red-800 mb-3">   Danger Zone</h3>
             <p class="text-red-700 mb-4">Need to delete your account or have concerns? Contact the administrator.</p>
-            <p class="text-sm text-gray-600">📧 Admin Contact: <a href="mailto:admin@volunteerplatform.org.in" class="text-indigo-600 underline">admin@volunteerplatform.org.in</a></p>
+            <p class="text-sm text-gray-600">   Admin Contact: <a href="mailto:admin@volunteerplatform.org.in" class="text-indigo-600 underline">admin@volunteerplatform.org.in</a></p>
         </div>
     </div>
 
@@ -188,7 +188,7 @@
             e.preventDefault();
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
-            btn.textContent = '⏳ Saving...';
+            btn.textContent = '  Saving...';
 
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
@@ -201,22 +201,22 @@
                 });
 
                 if (response.ok) {
-                    btn.textContent = '✅ Saved!';
+                    btn.textContent = '  Saved!';
                     btn.classList.add('bg-green-600');
                     setTimeout(() => {
-                        btn.textContent = '💾 Save Changes';
+                        btn.textContent = '   Save Changes';
                         btn.classList.remove('bg-green-600');
                         btn.disabled = false;
                     }, 2000);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Failed to update profile');
-                    btn.textContent = '💾 Save Changes';
+                    btn.textContent = '   Save Changes';
                     btn.disabled = false;
                 }
             } catch (error) {
                 alert('Network error. Please try again.');
-                btn.textContent = '💾 Save Changes';
+                btn.textContent = '   Save Changes';
                 btn.disabled = false;
             }
         });
@@ -235,7 +235,7 @@
             }
 
             btn.disabled = true;
-            btn.textContent = '⏳ Updating...';
+            btn.textContent = '  Updating...';
 
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
@@ -248,26 +248,27 @@
                 });
 
                 if (response.ok) {
-                    btn.textContent = '✅ Password Updated!';
+                    btn.textContent = '  Password Updated!';
                     btn.classList.add('bg-green-600');
                     document.getElementById('passwordForm').reset();
                     setTimeout(() => {
-                        btn.textContent = '🔐 Update Password';
+                        btn.textContent = '   Update Password';
                         btn.classList.remove('bg-green-600');
                         btn.disabled = false;
                     }, 2000);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Failed to update password');
-                    btn.textContent = '🔐 Update Password';
+                    btn.textContent = '   Update Password';
                     btn.disabled = false;
                 }
             } catch (error) {
                 alert('Network error. Please try again.');
-                btn.textContent = '🔐 Update Password';
+                btn.textContent = '   Update Password';
                 btn.disabled = false;
             }
         });
     </script>
 </body>
 </html>
+

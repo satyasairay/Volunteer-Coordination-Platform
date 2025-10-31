@@ -421,43 +421,43 @@
     
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
-            <button class="menu-close" onclick="toggleMenu()">├ù</button>
+            <button class="menu-close" onclick="toggleMenu()">  </button>
             <h2>Menu</h2>
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
             <a href="/" class="menu-link">
-                <span class="menu-link-icon">≡ƒù║∩╕Å</span>
+                <span class="menu-link-icon">       </span>
                 <span>Map</span>
             </a>
             <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon">ΓÜò∩╕Å</span>
+                <span class="menu-link-icon">      </span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
                     <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon">≡ƒææ</span>
+                        <span class="menu-link-icon">    </span>
                         <span>Admin</span>
                     </a>
                 {% else %}
                     <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon">≡ƒôè</span>
+                        <span class="menu-link-icon">    </span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon">≡ƒÜ¬</span>
+                    <span class="menu-link-icon">    </span>
                     <span>Logout</span>
                 </a>
             {% else %}
                 <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon">≡ƒöÉ</span>
+                    <span class="menu-link-icon">    </span>
                     <span>Login</span>
                 </a>
             {% endif %}
             <a href="/about" class="menu-link">
-                <span class="menu-link-icon">Γä╣∩╕Å</span>
+                <span class="menu-link-icon">      </span>
                 <span>About</span>
             </a>
         </div>
@@ -466,7 +466,7 @@
     <nav>
         <div class="nav-brand">
             Volunteer Management Platform
-            <span class="nav-location">≡ƒôì Bhadrak</span>
+            <span class="nav-location">     Bhadrak</span>
         </div>
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
@@ -478,12 +478,12 @@
     <div class="page-content">
     <div class="register-container">
         <div class="header">
-            <h1>≡ƒôï Block Coordinator Registration</h1>
+            <h1>     Block Coordinator Registration</h1>
             <p>Request access to submit Field Worker information</p>
         </div>
 
         <div id="successAlert" class="alert alert-success">
-            Γ£à Registration successful! Your request is pending admin approval.
+                Registration successful! Your request is pending admin approval.
         </div>
 
         <div id="errorAlert" class="alert alert-error"></div>
@@ -609,7 +609,7 @@
         }
 
         function showError(message) {
-            errorAlert.textContent = 'Γ¥î ' + message;
+            errorAlert.textContent = '    ' + message;
             errorAlert.style.display = 'block';
             successAlert.style.display = 'none';
         }
@@ -627,3 +627,4 @@
     </div>
 </body>
 </html>
+

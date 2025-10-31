@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -338,7 +338,7 @@
     <div class="container">
         <div class="header">
             <div class="header-title">
-                <h1>📋 My Submissions</h1>
+                <h1>   My Submissions</h1>
                 <p>Track all your Field Worker submissions</p>
             </div>
             <div class="header-actions">
@@ -387,7 +387,7 @@
         </div>
 
         <div class="empty-state" id="emptyState" style="display: none;">
-            <h3>📝 No Submissions Yet</h3>
+            <h3>   No Submissions Yet</h3>
             <p>You haven't submitted any Field Worker information yet.</p>
             <a href="/field-workers/new" class="btn btn-primary">Add Your First Field Worker</a>
         </div>
@@ -456,7 +456,7 @@
                         <div class="submission-info">
                             <h3>${submission.full_name}</h3>
                             <div class="submission-meta">
-                                Submitted on ${new Date(submission.created_at).toLocaleDateString()} • 
+                                Submitted on ${new Date(submission.created_at).toLocaleDateString()}   
                                 ${submission.village_name}, ${submission.block_name}
                             </div>
                         </div>
@@ -548,3 +548,4 @@
     </script>
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -11,12 +11,12 @@
         <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
         <div class="ml-auto flex gap-4">
             <a href="/" class="text-blue-600 hover:underline font-semibold">Homepage</a>
-            <a href="/admin/analytics" class="text-purple-600 hover:underline font-semibold">📊 Analytics</a>
-            <a href="/admin/users" class="text-indigo-600 hover:underline font-semibold">👥 Users</a>
-            <a href="/admin/field-workers" class="text-green-600 hover:underline font-semibold">📋 Field Workers</a>
-            <a href="/admin/duplicates" class="text-orange-600 hover:underline font-semibold">⚠️ Duplicates</a>
-            <a href="/admin/form-config" class="text-teal-600 hover:underline font-semibold">⚙️ Form Config</a>
-            <a href="/admin/about" class="text-pink-600 hover:underline font-semibold">📄 About Page</a>
+            <a href="/admin/analytics" class="text-purple-600 hover:underline font-semibold">   Analytics</a>
+            <a href="/admin/users" class="text-indigo-600 hover:underline font-semibold">   Users</a>
+            <a href="/admin/field-workers" class="text-green-600 hover:underline font-semibold">   Field Workers</a>
+            <a href="/admin/duplicates" class="text-orange-600 hover:underline font-semibold">   Duplicates</a>
+            <a href="/admin/form-config" class="text-teal-600 hover:underline font-semibold">   Form Config</a>
+            <a href="/admin/about" class="text-pink-600 hover:underline font-semibold">   About Page</a>
             <a href="/admin/members" class="text-blue-600 hover:underline">Members</a>
             <a href="/admin/doctors" class="text-blue-600 hover:underline">Doctors</a>
             <a href="/admin/logout" class="text-red-600 hover:underline">Logout</a>
@@ -41,7 +41,7 @@
 
         <!-- Customizable Labels Section -->
         <div class="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 class="text-xl font-bold mb-4">📝 Customize Map Labels & Terminology</h2>
+            <h2 class="text-xl font-bold mb-4">   Customize Map Labels & Terminology</h2>
             <p class="text-sm text-gray-600 mb-4">Change the labels displayed on the map (e.g., "Field Workers" instead of "Volunteers")</p>
             
             <div id="labels-container" class="space-y-4"></div>
@@ -50,7 +50,7 @@
 
         <!-- Pin Style Selector -->
         <div class="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 class="text-xl font-bold mb-4">📍 Choose Pin Style</h2>
+            <h2 class="text-xl font-bold mb-4">   Choose Pin Style</h2>
             <p class="text-sm text-gray-600 mb-4">Select the pin marker style to display on the map when zoomed in</p>
             
             <div id="pin-style-grid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
@@ -105,16 +105,16 @@
     <script>
         // 3D GLOWING DOT STYLES - CSS-based, no SVG!
         const dotStyles = [
-            { id: 'neon_glow', name: '✨ Neon Glow', desc: 'Bright neon with soft outer glow' },
-            { id: 'pulse_ring', name: '💫 Pulse Ring', desc: 'Pulsing ring animation' },
-            { id: 'double_halo', name: '🌟 Double Halo', desc: 'Two-layer glowing rings' },
-            { id: 'soft_blur', name: '☁️ Soft Blur', desc: 'Gentle blurred edges' },
-            { id: 'sharp_core', name: '💎 Sharp Core', desc: 'Crisp center with glow' },
-            { id: 'plasma', name: '🔮 Plasma', desc: 'Energy plasma effect' },
-            { id: 'crystal', name: '💠 Crystal', desc: 'Crystalline shimmer' },
-            { id: 'firefly', name: '🪲 Firefly', desc: 'Bioluminescent glow' },
-            { id: 'laser', name: '🔴 Laser', desc: 'Intense laser dot' },
-            { id: 'halo_fade', name: '⭕ Halo Fade', desc: 'Fading outer halo' }
+            { id: 'neon_glow', name: '  Neon Glow', desc: 'Bright neon with soft outer glow' },
+            { id: 'pulse_ring', name: '   Pulse Ring', desc: 'Pulsing ring animation' },
+            { id: 'double_halo', name: '   Double Halo', desc: 'Two-layer glowing rings' },
+            { id: 'soft_blur', name: '   Soft Blur', desc: 'Gentle blurred edges' },
+            { id: 'sharp_core', name: '   Sharp Core', desc: 'Crisp center with glow' },
+            { id: 'plasma', name: '   Plasma', desc: 'Energy plasma effect' },
+            { id: 'crystal', name: '   Crystal', desc: 'Crystalline shimmer' },
+            { id: 'firefly', name: '   Firefly', desc: 'Bioluminescent glow' },
+            { id: 'laser', name: '   Laser', desc: 'Intense laser dot' },
+            { id: 'halo_fade', name: '  Halo Fade', desc: 'Fading outer halo' }
         ];
 
         // Load map settings and populate dot styles
@@ -171,7 +171,7 @@
                 });
                 
                 if (res.ok) {
-                    message.innerHTML = '<p class="text-green-600">✓ Dot style updated! Refresh the map to see changes.</p>';
+                    message.innerHTML = '<p class="text-green-600">  Dot style updated! Refresh the map to see changes.</p>';
                     setTimeout(() => message.innerHTML = '', 3000);
                     loadPinStyles(); // Reload to update selection
                 } else {
@@ -214,7 +214,7 @@
                                     data-key="${label.key}"
                                     data-field="icon"
                                     class="label-input w-full border border-gray-300 rounded px-3 py-2"
-                                    placeholder="e.g., 👥"
+                                    placeholder="e.g.,   "
                                 />
                             </div>
                         </div>
@@ -245,7 +245,7 @@
                 });
                 
                 if (res.ok) {
-                    message.innerHTML = '<p class="text-green-600">✓ Label updated successfully!</p>';
+                    message.innerHTML = '<p class="text-green-600">  Label updated successfully!</p>';
                     setTimeout(() => message.innerHTML = '', 3000);
                 } else {
                     throw new Error('Failed to update label');
@@ -272,7 +272,7 @@
                 const data = await res.json();
                 result.innerHTML = `
                     <div class="p-3 bg-green-50 rounded">
-                        <p class="text-green-800 font-semibold">✓ Inserted: ${data.inserted}</p>
+                        <p class="text-green-800 font-semibold">  Inserted: ${data.inserted}</p>
                         ${data.errors.length ? `<p class="text-red-600 mt-2">Errors: ${data.errors.join(', ')}</p>` : ''}
                     </div>
                 `;
@@ -296,7 +296,7 @@
                 const data = await res.json();
                 result.innerHTML = `
                     <div class="p-3 bg-green-50 rounded">
-                        <p class="text-green-800 font-semibold">✓ Inserted: ${data.inserted}</p>
+                        <p class="text-green-800 font-semibold">  Inserted: ${data.inserted}</p>
                         ${data.errors.length ? `<p class="text-red-600 mt-2">Errors: ${data.errors.join(', ')}</p>` : ''}
                     </div>
                 `;
@@ -308,3 +308,4 @@
     </script>
 </body>
 </html>
+
