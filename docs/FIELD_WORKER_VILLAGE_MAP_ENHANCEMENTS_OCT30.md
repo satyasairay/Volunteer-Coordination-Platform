@@ -44,3 +44,92 @@ All changes committed in `7351290`.
 - When zoom level exceeds ~6, render crisp village name lettering anchored to polygon centroids, wrapped in a contrast-aware halo for readability.
 - Add a hover outline plus micro-tooltip that previews `Village · Block` before opening the modal, reusing the new professional typography.
 - Run a final audit so legend, footer, and zoom controls echo the sharpened aesthetic prior to hand-off.
+
+## Oct 31, 2025 — Step 2: Etched Badges + Mercury Dots
+
+Summary
+- Introduced theme-aware etched badge pins with village initials that appear at close zoom, and replaced larger dots with smaller, glossy “mercury” micro-dots for wider views.
+
+Pin color choices (by theme)
+- Purple theme (default): `#94a3b8` (slate-silver) — harmonizes with purple gradients without overpowering choropleth.
+- Ocean theme: `#7fb7d6` (sea blue) — sits softly over ocean palette.
+- Grass theme: `#9cd5b4` (moss green) — complements green tones while remaining legible.
+
+Changes
+- templates/index.html
+  - New helper `getPinBaseColor()` selects the base pin color per active theme.
+  - Switched pin rendering to `dotStyle = 'mercury'` with a 5px glossy micro-dot that reads like a mercury droplet.
+  - Added `badgeLayer` rendering SVG badge pins: 8px etched circle, white rim, inner shadow, gloss highlight, and two-letter initials.
+  - Zoom behavior: micro-dots fade out at zoom ≥ 6; badges fade in from zoom 5 to 6. Labels continue to fade in beyond zoom 3.
+  - Badge events: hover shows compact “Village · Block” tooltip; click opens the village modal (same as existing pins).
+
+QA / Smoke
+- FastAPI TestClient (venv) smoke unchanged and passing:
+  - GET `/api/map-settings` → 200 OK
+  - GET `/api/villages/pins` → 200 OK
+  - GET `/api/villages/field-worker-counts` → 200 OK
+  - GET `/api/blocks` → 200 OK
+- Frontend verification:
+  - Micro-dots appear at low/medium zoom, smaller and less distracting.
+  - At zoom ≥ 6, etched badges with initials become visible and stay anchored at centroids.
+  - Hover micro-tooltip and click-to-modal work from both polygon and badge interactions.
+
+Notes
+- Theme toggle persists existing behavior (reload applies new colors). Pins adopt new base color automatically after reload.
+- Dots are intentionally subtle to “sit with the background”; badges carry the identity at close inspection.
+
+## Oct 31, 2025 — Step 1: Carved Village Edges
+
+Summary
+- Added crisp, non-scaling village borders and a subtle inner shadow that activates at high zoom for a “laser-carved” separation between adjacent polygons.
+
+Changes
+- templates/index.html:548
+  - `.village-polygon` now uses `vector-effect: non-scaling-stroke` and `paint-order: stroke fill markers` so borders stay sharp at high zoom and render above fills.
+  - Unified hover state via `.village-polygon:hover, .village-polygon.hovered` with a subtle stroke emphasis instead of heavy darkening.
+- templates/index.html:842
+  - Injected an SVG `<defs><filter id="innerShadow">…</filter></defs>` and wired a GaussianBlur + arithmetic composite to create a light inner shadow effect.
+- templates/index.html:989, 1002–1013
+  - Kept default polygon filter as a soft drop-shadow for performance; added event handlers for hover outline + micro-tooltip scaffold.
+- templates/index.html:1526–1536
+  - In `zoomed()`, polygons switch to `url(#innerShadow) drop-shadow(...)` at zoom ≥ 6; otherwise revert to the original drop-shadow.
+- templates/index.html:1360–1378
+  - Added `showMicroTooltip(event, d)` and `moveTooltip(event)` helpers that render a compact “Village · Block” tooltip on polygon hover.
+
+QA / Smoke
+- FastAPI TestClient (venv) smoke:
+  - GET `/api/map-settings` → 200 OK
+  - GET `/api/villages/pins` → 200 OK
+  - GET `/api/villages/field-worker-counts` → 200 OK
+  - GET `/api/blocks` → 200 OK
+- Manual sanity checks in the template:
+  - Borders remain consistent while zooming (no excessive thickening).
+  - At zoom ≥ 6, inner shadow subtly enhances polygon edges without overpowering fill.
+  - Hover outline is visible; micro-tooltip shows “Village · Block”.
+
+Notes
+- Inner shadow is applied via SVG filter only at higher zoom to avoid cost at wide views.
+- Labels and badge pins are untouched in this step; they will be addressed next.
+
+## Oct 31, 2025 — Step 2R: Pin Restyle Rollback + Dark Mercury Dots
+
+Summary
+- Rolled back etched initial badge pins. Adopted small, dark micro-dots that “sit with” background palettes and fade as you zoom in.
+
+Changes
+- templates/index.html
+  - Removed `badgeLayer` and all badge rendering/toggling logic.
+  - Set unified dark neutral pin color `#111827` (slate-900) across themes.
+  - Kept the compact “mercury” dot (≈5px) but without bright glow, for subtle presence.
+  - Pins fade out at zoom ≥ 6 to declutter close-inspection views.
+
+Validation
+- FastAPI TestClient smoke:
+  - GET `/api/map-settings` → 200 OK
+  - GET `/api/villages/pins` → 200 OK
+  - GET `/api/villages/field-worker-counts` → 200 OK
+  - GET `/api/blocks` → 200 OK
+- Visual: pins are subdued on all three themes and disappear at high zoom.
+
+Next
+- Step 3 will “etch” village names inside polygons at zoom ≥ 6 with a contrast-aware halo. This is documented below and will be implemented next.

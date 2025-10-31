@@ -551,12 +551,17 @@
             cursor: pointer;
             transition: all 0.2s;
             opacity: 0.9;
+            /* Keep borders crisp at high zoom */
+            vector-effect: non-scaling-stroke;
+            /* Draw stroke over fill for sharper separation */
+            paint-order: stroke fill markers;
         }
         
-        .village-polygon:hover {
+        .village-polygon:hover,
+        .village-polygon.hovered {
             stroke: #333;
-            stroke-width: 1.5;
-            filter: brightness(0.8);
+            stroke-width: 1.2;
+            filter: brightness(0.96);
             opacity: 1;
         }
         
@@ -831,6 +836,34 @@
         svg.call(zoom);
         
         let g = svg.append("g");
+        // Define subtle inner shadow filter for carved village edges (activated at high zoom)
+        const defs = svg.append("defs");
+        const innerShadow = defs.append("filter")
+            .attr("id", "innerShadow")
+            .attr("x", "-50%")
+            .attr("y", "-50%")
+            .attr("width", "200%")
+            .attr("height", "200%");
+        innerShadow.append("feGaussianBlur")
+            .attr("in", "SourceAlpha")
+            .attr("stdDeviation", 1.5)
+            .attr("result", "blur");
+        innerShadow.append("feComposite")
+            .attr("in", "blur")
+            .attr("in2", "SourceAlpha")
+            .attr("operator", "arithmetic")
+            .attr("k2", -1)
+            .attr("k3", 1)
+            .attr("result", "innerShadowComp");
+        innerShadow.append("feColorMatrix")
+            .attr("in", "innerShadowComp")
+            .attr("type", "matrix")
+            .attr("values", "0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.35 0")
+            .attr("result", "innerShadowColor");
+        innerShadow.append("feComposite")
+            .attr("in", "SourceGraphic")
+            .attr("in2", "innerShadowColor")
+            .attr("operator", "over");
         let projection, path;
         let colorScale, pinColorScale;
         let villageLabelLayer;
@@ -984,6 +1017,8 @@
                         const idx = Math.floor(t * (colors.length - 1));
                         return colors[idx];
                     });
+                // Dark neutral pin color that sits with all backgrounds
+                const pinBaseColor = '#111827'; // slate-900
                 
                 const villagePaths = g.selectAll(".village-polygon")
                     .data(villages.features)
@@ -997,6 +1032,21 @@
                     .attr("stroke-opacity", 0.6)
                     .style("filter", "drop-shadow(0px 1px 2px var(--theme-glow))")
                     .style("transition", "all 0.3s ease");
+                
+                // Polygon hover micro-outline + tooltip handlers
+                villagePaths
+                    .on("mouseover", function(event, d) {
+                        d3.select(this).classed("hovered", true);
+                        showMicroTooltip(event, d);
+                    })
+                    .on("mousemove", function(event, d) {
+                        moveTooltip(event);
+                    })
+                    .on("mouseout", function() {
+                        d3.select(this).classed("hovered", false);
+                        hideTooltip();
+                    })
+                    .on("click", showVillageModal);
                 
                 console.log(` Rendered ${villagePaths.size()} village polygons`);
 
@@ -1032,8 +1082,8 @@
                     .domain([0, 15])
                     .interpolator(t => d3.interpolateBlues(0.5 + t * 0.4));
                 
-                // Add 3D GLOWING DOTS for ALL 1,315 villages (CSS-based, no SVG!)
-                const dotStyle = mapSettings.dot_style || 'neon_glow';
+                // Mercury micro-dots for all villages (smaller, glossy)
+                const dotStyle = 'mercury';
                 
                 const pins = g.selectAll(".village-pin")
                     .data(villages.features)
@@ -1057,7 +1107,7 @@
                     .on("click", showVillageModal);
 
                 const renderPinDot = (selection, count) => {
-                    const color = count > 0 ? pinColorScale(count) : "#3b7bbf";
+                    const color = pinBaseColor;
                     const dotHTML = getDotHTML(dotStyle, color);
                     selection.html(`
                         <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; pointer-events: none;">
@@ -1335,9 +1385,13 @@
             }
         }
         
-        // Generate 3D glowing dot HTML based on style (SMALLER DOTS)
+        // Generate micro-dot HTML (includes glossy 'mercury' style)
         function getDotHTML(styleId, color) {
             const styles = {
+                'mercury': `<div style="width: 5px; height: 5px; border-radius: 50%; background: ${color}; position: relative; box-shadow: 0 0 6px ${color}44, 0 0 2px ${color}aa;">
+                                <div style=\"position:absolute; top:0; left:0; width:60%; height:60%; border-radius:50%; background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(255,255,255,0.0) 70%);\"></div>
+                                <div style=\"position:absolute; bottom:0; right:0; width:50%; height:50%; border-radius:50%; background: radial-gradient(circle at 70% 70%, rgba(0,0,0,0.15), rgba(0,0,0,0.0) 70%);\"></div>
+                           </div>`,
                 'neon_glow': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 2px ${color}, 0 0 8px 3px ${color}88, inset 0 0 2px ${color};"></div>`,
                 'pulse_ring': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 0 2px ${color}99, 0 0 6px 2px ${color}; animation: pulse 1.5s ease-in-out infinite;"></div>`,
                 'double_halo': `<div style="width: 6px; height: 6px; background: ${color}; border-radius: 50%; box-shadow: 0 0 4px 1px ${color}, 0 0 8px 3px ${color}88, 0 0 12px 5px ${color}55;"></div>`,
@@ -1388,7 +1442,27 @@
                 .style("top", (event.pageY - 10) + "px")
                 .classed("show", true);
         }
-        
+
+        // Micro tooltip for polygon hover: "Village · Block"
+        function showMicroTooltip(event, d) {
+            const tooltip = d3.select("#tooltip");
+            const props = d.properties || {};
+            const name = props.name || props.village_name || '';
+            const block = props.block || props.block_name || '';
+            const content = name && block ? `${name} · ${block}` : (name || block || '');
+            tooltip
+                .html(`<strong>${content}</strong>`)
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px")
+                .classed("show", true);
+        }
+
+        function moveTooltip(event) {
+            d3.select("#tooltip")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 10) + "px");
+        }
+
         function hideTooltip() {
             d3.select("#tooltip").classed("show", false);
         }
@@ -1526,12 +1600,20 @@
             const zoomLevel = event.transform.k;
             const pins = g.selectAll(".village-pin");
             
-            if (zoomLevel > 5) {
-                pins.transition().duration(200).attr("opacity", 0.45);
+            if (zoomLevel >= 6) {
+                pins.transition().duration(150).attr("opacity", 0); // fade out micro-dots
             } else if (zoomLevel > 2) {
-                pins.transition().duration(200).attr("opacity", 0.7);
+                pins.transition().duration(150).attr("opacity", 0.6);
             } else {
-                pins.transition().duration(200).attr("opacity", 0);
+                pins.transition().duration(150).attr("opacity", 0);
+            }
+
+            // Activate carved inner shadow on polygons at high zoom
+            const polygons = g.selectAll(".village-polygon");
+            if (zoomLevel >= 6) {
+                polygons.style("filter", "url(#innerShadow) drop-shadow(0px 1px 2px var(--theme-glow))");
+            } else {
+                polygons.style("filter", "drop-shadow(0px 1px 2px var(--theme-glow))");
             }
 
             if (villageLabelLayer && typeof path === 'function') {
@@ -1548,6 +1630,9 @@
                         return `translate(${x}, ${y}) scale(${scaleFactor})`;
                     });
             }
+
+            // Toggle etched badge pins at high zoom
+            // No etched badge pins; micro-dots only
         }
         
         function zoomIn() {
