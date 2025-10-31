@@ -211,6 +211,13 @@ Validation
 - FastAPI TestClient smoke: OK.
 - Manual sanity: pins are hidden at start, appear after zooming beyond threshold, no white/black discrepancy, and shrink at max zoom.
 
+## Pending / Not Yet Implemented (To Track)
+- Etched village names fixed at k≥6 with contrast-aware halo; collision/overlap handling.
+- Unified glass navbar + expanding search on index page (and make consistent on admin pages where applicable).
+- Theme switcher UI inside navbar with 3 backgrounds fully harmonized across all pages.
+- Neumorphic control buttons (plus/minus/reset) with consistent shadows, keyboard shortcuts tooltip.
+- Final legend/footer aesthetic pass to match new glass style.
+
 ## Oct 31, 2025 — Pin Artifact Fix (Double Pins)
 
 Summary
