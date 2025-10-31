@@ -43,48 +43,147 @@ Do NOT proceed to Phase 2 until Phase 1 completion criteria are met:
 
 ---
 
-## PROMPT 2: PHASE 2 - UI/UX STANDARDIZATION
-**Duration:** 2-3 weeks | **Priority:** HIGH
+## PROMPT 2A: PHASE 2 - TEMPLATE MIGRATIONS (Day 3-5)
+**Duration:** 3 days | **Priority:** HIGH
 
 ```
-I need to execute Phase 2 (UI/UX Standardization) from AUDIT_REMEDIATION.md.
+I need to continue Phase 2 template migrations. Design system infrastructure is already created (theme.css, components.css, typography.css, utilities.css).
 
-First, read AUDIT_REMEDIATION.md Phase 2 section and CODE_AUDIT_REPORT.md Phase 6 (UI/UX Design Consistency Review) to understand all UI inconsistencies.
+First, read docs/PHASE2_MIGRATION_PROGRESS.md to see completed templates (login.html, register.html, dashboard.html are done).
 
-Then implement all Phase 2 tasks:
+Then migrate remaining templates systematically:
 
-WEEK 1: Design System Foundation
-- Day 1-2: Create SDLC design system infrastructure in static/css/:
-  * theme.css (CSS variables for colors, spacing, typography)
-  * components.css (buttons, cards, inputs, modals)
-  * typography.css (font system)
-  * utilities.css (common utilities)
-  Create style guide document.
-- Day 3-5: Unify color system - replace all hardcoded colors across templates with CSS variables. Update index.html, login.html, dashboard.html, register.html, admin.html, admin_users.html, admin_field_workers.html, profile.html.
+TEMPLATES TO MIGRATE (in order):
+1. index.html - Base template (already has CSS variables, needs component migration)
+2. admin.html - Plain gray background, white nav
+3. admin_users.html - Blue gradient header
+4. admin_field_workers.html - Blue gradient header
+5. profile.html - Multi-color gradient background
+6. field_worker_new.html - Mixed styles
+7. field_worker_submissions.html - Glassmorphic cards
+8. admin_about.html - Admin content editor
+9. admin_blocks.html - Glassmorphic dark theme
+10. admin_villages.html - Admin village management
+11. admin_analytics.html - Analytics dashboard
+12. admin_duplicates.html - Duplicate management
+13. admin_form_config.html - Form configuration
+14. admin_map_settings.html - Map settings
+15. about.html - Public about page
+16. doctors.html - Public doctors page
+17. doctors_admin.html - Admin doctors page
+18. members.html - Members page
+19. sample_village_choropleth.html - Sample visualization
+20. dashboard_enhanced.html - Enhanced dashboard (if exists)
 
-WEEK 2: Component Standardization
-- Day 6-7: Create unified navigation component. Standardize all navigation bars across templates. Consistent height (72px), hamburger placement, menu items.
-- Day 8-9: Create button and form component systems. Replace all button implementations (custom CSS, Tailwind, inline styles). Standardize form inputs.
-- Day 10: Create card component system. Replace all card implementations.
+For each template:
+1. Include design system CSS files in <head>
+2. Replace hardcoded colors with CSS variables
+3. Replace custom buttons with .btn components
+4. Replace custom cards with .card components
+5. Replace custom form inputs with .form-input
+6. Replace navigation with .app-nav component
+7. Update spacing to use spacing utilities (8px grid)
+8. Include components.js before </body>
+9. Update docs/PHASE2_MIGRATION_PROGRESS.md immediately after each template completion
 
-WEEK 3: Typography, Spacing & Polish
-- Day 11-12: Implement typographic scale. Replace all font-family, font-size, font-weight inconsistencies.
-- Day 13: Implement 8px spacing scale. Replace all inconsistent spacing.
-- Day 14-15: Create modal component system. Standardize responsive design. Ensure mobile navigation consistency.
+Use docs/DESIGN_SYSTEM_MIGRATION_GUIDE.md for migration patterns. Work template by template. Log completion in markdown after each template.
+```
 
-Work file by file. After updating each template, verify it works. Document any issues. Use the exact file paths and inconsistencies identified in the audit report.
+---
 
-Do NOT proceed to Phase 3 until Phase 2 completion criteria are met:
-✅ Single design system implemented
-✅ All colors unified
-✅ Navigation standardized
-✅ Buttons standardized
-✅ Forms standardized
-✅ Cards standardized
-✅ Typography standardized
-✅ Spacing standardized
-✅ Modals standardized
-✅ Responsive design consistent
+## PROMPT 2B: PHASE 2 - COMPONENT STANDARDIZATION (Day 6-10)
+**Duration:** 5 days | **Priority:** HIGH
+
+```
+I need to complete Phase 2 component standardization. All templates should be migrated (from 2A), now ensure components are consistently applied.
+
+Read docs/PHASE2_MIGRATION_PROGRESS.md to verify template migrations are complete.
+
+Then execute:
+
+DAY 6-7: Navigation Standardization
+- Verify all templates use .app-nav component consistently
+- Ensure navigation height is 72px (--nav-height) everywhere
+- Standardize hamburger menu placement (right side, consistent styling)
+- Ensure mobile menu behavior is consistent (slide from right)
+- Update any templates that still have custom navigation
+
+DAY 8-9: Button & Form Standardization  
+- Audit all templates for remaining custom button styles
+- Replace ALL button implementations with .btn components:
+  * Custom CSS buttons → .btn .btn-primary
+  * Tailwind utility buttons → .btn .btn-primary/.btn-secondary
+  * Inline style buttons → .btn components
+- Replace ALL form inputs with .form-input, .form-select, .form-textarea
+- Ensure all forms use .form-label with .required class where needed
+- Verify focus states are consistent
+
+DAY 10: Card Standardization
+- Audit all card implementations
+- Replace glassmorphic cards with .card .card-glass
+- Replace plain white cards with .card component
+- Replace Tailwind cards with .card component
+- Ensure consistent padding (24px), border-radius (16px), shadows
+- Update docs/PHASE2_MIGRATION_PROGRESS.md with completion status
+
+Work systematically. After each component type, verify visual consistency. Test responsive behavior.
+```
+
+---
+
+## PROMPT 2C: PHASE 2 - TYPOGRAPHY, SPACING & FINAL POLISH (Day 11-15)
+**Duration:** 5 days | **Priority:** HIGH
+
+```
+I need to complete Phase 2 final polish. Templates and components should be standardized (from 2A and 2B).
+
+Read docs/PHASE2_MIGRATION_PROGRESS.md to verify progress.
+
+Then execute:
+
+DAY 11-12: Typography Standardization
+- Audit all templates for font-family inconsistencies
+- Replace all hardcoded font-family with var(--font-family-primary) or remove (handled by typography.css)
+- Replace hardcoded font sizes with typography scale classes (.text-xs, .text-sm, .text-base, .text-lg, etc.)
+- Replace hardcoded font weights with .font-medium, .font-semibold, .font-bold
+- Ensure heading hierarchy (h1 → h2 → h3) is correct
+- Verify one h1 per page
+
+DAY 13: Spacing System Implementation
+- Audit all templates for hardcoded spacing values
+- Replace ALL padding/margin values with spacing utilities (p-4, m-6, mb-8, etc.)
+- Use 8px grid system (--spacing-1 through --spacing-24)
+- Replace hardcoded gap values with .gap-2, .gap-4, .gap-6
+- Ensure visual rhythm is consistent
+
+DAY 14-15: Modals & Responsive Polish
+- Audit all modal implementations
+- Replace Tailwind modals with .modal component structure
+- Replace custom CSS modals with .modal component
+- Ensure all modals use .modal-backdrop, .modal, .modal-header, .modal-body, .modal-footer
+- Standardize modal sizes (.modal, .modal-lg, .modal-xl)
+- Test responsive breakpoints on all pages:
+  * Mobile (< 640px)
+  * Tablet (640px - 1024px)
+  * Desktop (> 1024px)
+- Ensure mobile navigation works consistently
+- Verify touch targets are 44px minimum
+- Check accessibility (focus states, keyboard navigation)
+
+FINAL VALIDATION:
+- Verify Phase 2 completion criteria:
+  ✅ Single design system implemented
+  ✅ All colors unified (no hardcoded colors)
+  ✅ Navigation standardized (.app-nav everywhere)
+  ✅ Buttons standardized (.btn components everywhere)
+  ✅ Forms standardized (.form-input everywhere)
+  ✅ Cards standardized (.card components everywhere)
+  ✅ Typography standardized (typography scale everywhere)
+  ✅ Spacing standardized (8px grid everywhere)
+  ✅ Modals standardized (.modal component everywhere)
+  ✅ Responsive design consistent (test all breakpoints)
+
+Update docs/PHASE2_MIGRATION_PROGRESS.md with final status. Mark Phase 2 as complete.
 ```
 
 ---
@@ -253,7 +352,10 @@ This completes the full remediation plan. Provide a summary of the remediation s
 
 2. **Execute Sequentially**
    - Paste Prompt 1, wait for completion
-   - Then paste Prompt 2, wait for completion
+   - Then paste Prompt 2A, wait for completion
+   - Then paste Prompt 2B, wait for completion
+   - Then paste Prompt 2C, wait for completion
+   - Then paste Prompt 3, wait for completion
    - Continue through Prompt 5
 
 3. **Between Prompts**
@@ -270,7 +372,9 @@ This completes the full remediation plan. Provide a summary of the remediation s
 
 ```
 New Chat → Paste Prompt 1 → Wait for Phase 1 Complete
-        → Paste Prompt 2 → Wait for Phase 2 Complete  
+        → Paste Prompt 2A → Wait for Templates Migrated
+        → Paste Prompt 2B → Wait for Components Standardized
+        → Paste Prompt 2C → Wait for Phase 2 Complete
         → Paste Prompt 3 → Wait for Phase 3 Complete
         → Paste Prompt 4 → Wait for Day 0-3 Complete
         → Paste Prompt 5 → Complete All Remediation
@@ -300,5 +404,5 @@ These prompts instruct the AI to read these files first, so they're self-contain
 ---
 
 **Last Updated:** November 2025  
-**Total Prompts:** 5 (covering all 4 phases)  
+**Total Prompts:** 7 (Prompt 1, 2A, 2B, 2C, 3, 4, 5 covering all 4 phases)  
 **Estimated Total Duration:** 8 weeks
