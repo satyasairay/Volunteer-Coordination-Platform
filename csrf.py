@@ -108,6 +108,23 @@ def create_csrf_middleware(app):
                 )
             return response
         
+        # Skip CSRF for authentication endpoints (login, register, logout)
+        # These are entry points where users don't have sessions yet
+        auth_paths = ["/admin/login", "/api/auth/login", "/api/auth/register", "/admin/logout"]
+        if any(request.url.path == path for path in auth_paths):
+            response = await call_next(request)
+            # Still add CSRF token cookie if not present
+            if not request.cookies.get("csrf_token"):
+                csrf_token = generate_csrf_token()
+                response.set_cookie(
+                    "csrf_token",
+                    csrf_token,
+                    httponly=False,
+                    samesite="lax",
+                    max_age=CSRF_TOKEN_MAX_AGE
+                )
+            return response
+        
         # For POST, PUT, DELETE, PATCH - validate CSRF token
         try:
             # Get token from form or header

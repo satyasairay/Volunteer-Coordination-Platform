@@ -938,13 +938,13 @@ async def admin_login(
     """Admin login - uses password hash verification for all users including admin"""
     from auth import verify_password
     
-    # Check if admin user exists in database
+    # First check if admin user exists in database (for backward compatibility)
     result = await session.execute(
         select(User).where(User.email == ADMIN_EMAIL)
     )
     admin_user = result.scalar_one_or_none()
     
-    # If admin user exists, verify password hash
+    # If email matches ADMIN_EMAIL and admin user exists, verify password hash
     if admin_user and email == ADMIN_EMAIL:
         if verify_password(password, admin_user.password_hash):
             token = create_session_token(email, "super_admin")
@@ -952,7 +952,40 @@ async def admin_login(
             response.set_cookie(key="session", value=token, httponly=True, max_age=86400*7, samesite="lax")
             return response
     
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+    # Check for any user with the provided email
+    result = await session.execute(
+        select(User).where(User.email == email)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Verify password hash
+    if not verify_password(password, user.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Check if user is active/approved
+    if not user.is_active:
+        raise HTTPException(
+            status_code=403,
+            detail="Your account is pending admin approval. Please contact the administrator."
+        )
+    
+    # Update last login
+    user.last_login = datetime.now(timezone.utc)
+    user.login_count += 1
+    await session.commit()
+    
+    # Create session token with user's role
+    token = create_session_token(user.email, user.role)
+    
+    # Redirect based on role
+    redirect_url = "/admin" if user.role == "super_admin" else "/dashboard"
+    
+    response = RedirectResponse(url=redirect_url, status_code=303)
+    response.set_cookie(key="session", value=token, httponly=True, max_age=86400*7, samesite="lax")
+    return response
 
 
 @app.get("/admin/logout")
