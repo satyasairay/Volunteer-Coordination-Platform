@@ -693,41 +693,135 @@ This document outlines a comprehensive 4-phase remediation plan based on the cod
 ---
 
 ## PHASE 4: DOCUMENTATION & DEPLOYMENT
-**Duration:** 1 week  
+**Duration:** 1 week (7 days)  
 **Priority:** MEDIUM  
 **Target:** Production-ready with complete documentation
 
 ### Objectives
-1. Complete all documentation
-2. Set up CI/CD pipeline
-3. Create deployment guides
-4. Final production readiness checks
+1. Reorganize existing documentation into SDLC-compliant structure
+2. Complete all documentation
+3. Set up CI/CD pipeline
+4. Create deployment guides
+5. Final production readiness checks
+
+---
+
+### Day 0: Documentation Reorganization (PREREQUISITE)
+
+**Note:** This must be completed BEFORE creating new documentation to ensure new files are placed in proper SDLC structure.
+
+#### Tasks: Documentation Structure Reorganization
+
+**Task 1:** Create SDLC-compliant directory structure
+- Create `docs/01-requirements/` directory
+- Create `docs/02-design/` directory
+- Create `docs/03-implementation/` directory
+- Create `docs/04-testing/` directory
+- Create `docs/05-deployment/` directory
+- Create `docs/06-user-documentation/` directory
+- Create `docs/07-governance/` directory
+- Create `docs/08-audit/` directory with `BUG_TRACKING/` subdirectory
+- Create `docs/09-archive/` directory
+- Create category README.md files explaining each directory's purpose
+- **Effort:** 1 hour
+
+**Task 2:** Move and organize existing documentation
+- **User Documentation:**
+  - `ADMIN_GUIDE.md` → `docs/06-user-documentation/ADMIN_GUIDE.md`
+  - `COORDINATOR_MANUAL.md` → `docs/06-user-documentation/COORDINATOR_MANUAL.md`
+  
+- **Implementation History:**
+  - `PHASE1_COMPLETE.md` → `docs/03-implementation/PHASE1_AUTHENTICATION.md`
+  - `PHASE2_COMPLETE.md` → `docs/03-implementation/PHASE2_FIELD_WORKERS.md`
+  - `PHASE3_PHASE4_COMPLETION_REPORT.md` → Consolidate/reorganize in `docs/03-implementation/`
+  - `PHASE3_PHASE4_FINAL_SUMMARY.md` → Extract relevant content to appropriate phase files
+  - `PHASE_6_PROFESSIONAL_UX_OVERHAUL.md` → `docs/03-implementation/PHASE6_UX_OVERHAUL.md`
+  - `IMPLEMENTATION_COMPLETE.md` → `docs/03-implementation/IMPLEMENTATION_COMPLETE.md`
+  - `PHASE3_PHASE4_PLAN.md` → `docs/03-implementation/PHASE3_PHASE4_PLAN.md`
+  
+- **Planning Documents:**
+  - `EMERGENCY_SERVICES_PLAN.md` → `docs/01-requirements/EMERGENCY_SERVICES_PLAN.md`
+  - `UX_PLAN.md` → `docs/02-design/UX_PLAN.md`
+  - `docs/plans/` → `docs/03-implementation/plans/`
+  
+- **Testing Documentation:**
+  - `QA_PHASE1_REPORT.md` → `docs/04-testing/QA_PHASE1_REPORT.md`
+  - `QA_PHASE2_REPORT.md` → `docs/04-testing/QA_PHASE2_REPORT.md`
+  - `COMPREHENSIVE_QA_ASSESSMENT.md` → `docs/04-testing/COMPREHENSIVE_QA_ASSESSMENT.md`
+  
+- **Deployment Documentation:**
+  - `replit.md` → `docs/05-deployment/replit.md`
+  
+- **Audit Documentation:**
+  - `CODE_AUDIT_REPORT.md` → `docs/08-audit/CODE_AUDIT_REPORT.md`
+  - `AUDIT_REMEDIATION.md` → `docs/08-audit/AUDIT_REMEDIATION.md`
+  - `cursor_granular_code_audit.md` → `docs/08-audit/cursor_granular_code_audit.md`
+  
+- **Bug Tracking:**
+  - `CRITICAL_FIXES_OCT_29.md` → `docs/08-audit/BUG_TRACKING/CRITICAL_FIXES_OCT_29.md`
+  - `CRITICAL_FIXES_COMPLETE_OCT_29.md` → `docs/08-audit/BUG_TRACKING/CRITICAL_FIXES_COMPLETE_OCT_29.md`
+  - `PRIORITY_FIXES_OCT_29_2025_COMPLETE.md` → `docs/08-audit/BUG_TRACKING/PRIORITY_FIXES_OCT_29_2025_COMPLETE.md`
+  - `docs/BUGFIX_FIELD_WORKER_SUBMISSION_OCT29.md` → `docs/08-audit/BUG_TRACKING/BUGFIX_FIELD_WORKER_SUBMISSION_OCT29.md`
+  - `docs/FIELD_WORKER_VILLAGE_MAP_ENHANCEMENTS_OCT30.md` → `docs/08-audit/BUG_TRACKING/FIELD_WORKER_VILLAGE_MAP_ENHANCEMENTS_OCT30.md`
+  
+- **Archive Historical Files:**
+  - `docs/AGENTLOGS/` → `docs/09-archive/AGENTLOGS/`
+  - `docs/CHANGES_P0_P1_P2_OCT29.md` → `docs/09-archive/CHANGES_P0_P1_P2_OCT29.md`
+  - `docs/COMPLETION_REPORT_OCT29.md` → `docs/09-archive/COMPLETION_REPORT_OCT29.md`
+  - `docs/MILESTONE_2025_10_31.md` → `docs/09-archive/MILESTONE_2025_10_31.md`
+  - `docs/OPERATOR_PROMPT.md` → `docs/09-archive/OPERATOR_PROMPT.md`
+  - `docs/PRIORITY_3_COMPLETE_OCT29.md` → `docs/09-archive/PRIORITY_3_COMPLETE_OCT29.md`
+  - `docs/SUMMARY_OCT29_COMPLETE.md` → `docs/09-archive/SUMMARY_OCT29_COMPLETE.md`
+  - `docs/AGENTS.md` → `docs/09-archive/AGENTS.md`
+  - `docs/PLAN_UI_NAV_MAP_POLISH_NOV2025.md` → `docs/09-archive/PLAN_UI_NAV_MAP_POLISH_NOV2025.md`
+  
+- **Effort:** 3-4 hours
+
+**Task 3:** Update cross-references
+- Update `README.md` with new documentation paths
+- Update any internal links in documentation files
+- Verify all references work after reorganization
+- Add redirect notes in old locations if needed (optional)
+- **Effort:** 1 hour
+
+**Deliverables:**
+- SDLC-compliant documentation structure created
+- All existing documentation organized by category
+- Historical files archived
+- All cross-references updated
+- Documentation structure ready for new content
+
+**Total Day 0 Effort:** 5-6 hours
 
 ---
 
 ### Day 1-2: Documentation Completion
 
+**Note:** New documentation will now be created in the proper SDLC structure established on Day 0.
+
 #### Day 1: Requirements & Design Documentation
 
 **Tasks:**
-1. Create REQUIREMENTS.md
+1. Create `docs/01-requirements/REQUIREMENTS.md`
    - Project scope
    - Functional requirements
    - Non-functional requirements
    - User stories
    - Acceptance criteria
+   - **Location:** `docs/01-requirements/REQUIREMENTS.md`
    - **Effort:** 1 day
 
 2. Create design documentation
-   - Database ERD (use dbdiagram.io or generate from SQLModel)
-   - API design documentation
-   - Architecture diagram
-   - Data flow diagrams
+   - `docs/02-design/DATABASE_SCHEMA.md` - Database ERD (use dbdiagram.io or generate from SQLModel)
+   - `docs/02-design/API_DESIGN.md` - API design documentation
+   - `docs/02-design/ARCHITECTURE.md` - Architecture diagram (extract from replit.md)
+   - `docs/02-design/DATA_FLOW.md` - Data flow diagrams
+   - `docs/02-design/UX_DESIGN_SYSTEM.md` - Design system documentation
    - **Effort:** 1 day
 
 **Deliverables:**
-- Complete requirements documentation
-- Complete design documentation
+- Complete requirements documentation in `docs/01-requirements/`
+- Complete design documentation in `docs/02-design/`
 
 ---
 
@@ -743,9 +837,10 @@ This document outlines a comprehensive 4-phase remediation plan based on the cod
 
 2. Verify and document API endpoints
    - Ensure FastAPI auto-docs accessible at `/docs`
-   - Create API.md with endpoint documentation
+   - Create `docs/06-user-documentation/API_REFERENCE.md` with endpoint documentation
    - Add usage examples
    - Create Postman collection
+   - **Location:** `docs/06-user-documentation/API_REFERENCE.md`
    - **Effort:** 1 day
 
 **Deliverables:**
@@ -758,22 +853,22 @@ This document outlines a comprehensive 4-phase remediation plan based on the cod
 
 **Tasks:**
 1. Create testing documentation
-   - Test plan document
-   - Test coverage report
-   - Testing guidelines
+   - `docs/04-testing/TEST_PLAN.md` - Test plan document
+   - `docs/04-testing/TEST_COVERAGE_REPORT.md` - Test coverage report template
+   - `docs/04-testing/TESTING_GUIDELINES.md` - Testing guidelines
    - **Effort:** 4 hours
 
 2. Create deployment documentation
-   - Step-by-step deployment guide
-   - Environment variable checklist
-   - Rollback procedures
-   - Health check procedures
+   - `docs/05-deployment/DEPLOYMENT_GUIDE.md` - Step-by-step deployment guide
+   - `docs/05-deployment/ENVIRONMENT_SETUP.md` - Environment variable checklist
+   - `docs/05-deployment/ROLLBACK_PROCEDURES.md` - Rollback procedures
+   - `docs/05-deployment/HEALTH_CHECKS.md` - Health check procedures
    - **Effort:** 4 hours
 
 3. Create monitoring documentation
-   - Logging strategy document
-   - Monitoring setup guide
-   - Alerting procedures
+   - `docs/05-deployment/MONITORING_SETUP.md` - Logging strategy document
+   - Add monitoring setup guide to `docs/05-deployment/MONITORING_SETUP.md`
+   - Document alerting procedures
    - **Effort:** 4 hours
 
 **Deliverables:**
@@ -813,15 +908,16 @@ This document outlines a comprehensive 4-phase remediation plan based on the cod
 
 **Tasks:**
 1. Create governance documents
-   - CONTRIBUTING.md (contribution guidelines)
-   - SECURITY.md (security policy)
-   - CODE_OF_CONDUCT.md
+   - `docs/07-governance/CONTRIBUTING.md` - Contribution guidelines
+   - `docs/07-governance/SECURITY.md` - Security policy
+   - `docs/07-governance/CODE_OF_CONDUCT.md` - Code of conduct
+   - `docs/07-governance/VERSIONING.md` - Versioning strategy
    - **Effort:** 1 day
 
 2. Set up versioning
-   - Create CHANGELOG.md (Keep a Changelog format)
+   - Create `docs/07-governance/CHANGELOG.md` (Keep a Changelog format)
    - Tag current version in git
-   - Document versioning strategy
+   - Document versioning strategy in `docs/07-governance/VERSIONING.md`
    - **Effort:** 4 hours
 
 **Deliverables:**
@@ -832,13 +928,84 @@ This document outlines a comprehensive 4-phase remediation plan based on the cod
 
 ### Phase 4 Completion Criteria
 
-✅ All documentation complete  
+✅ Documentation reorganized into SDLC structure  
+✅ All documentation complete and in proper locations  
 ✅ CI/CD pipeline functional  
 ✅ Deployment procedures documented  
 ✅ Governance in place  
 ✅ Versioning system active  
 
 **Phase 4 Sign-off - Project Ready for Production**
+
+---
+
+### Phase 4 Documentation Structure (Final State)
+
+After completion, documentation will be organized as:
+
+```
+docs/
+├── 01-requirements/
+│   ├── REQUIREMENTS.md
+│   ├── USER_STORIES.md
+│   ├── ACCEPTANCE_CRITERIA.md
+│   └── EMERGENCY_SERVICES_PLAN.md
+│
+├── 02-design/
+│   ├── ARCHITECTURE.md
+│   ├── DATABASE_SCHEMA.md
+│   ├── API_DESIGN.md
+│   ├── DATA_FLOW.md
+│   ├── UX_DESIGN_SYSTEM.md
+│   └── UX_PLAN.md
+│
+├── 03-implementation/
+│   ├── PHASE1_AUTHENTICATION.md
+│   ├── PHASE2_FIELD_WORKERS.md
+│   ├── PHASE3_USER_MANAGEMENT.md
+│   ├── PHASE4_MOBILE_RESPONSIVE.md
+│   ├── PHASE5_MAP_INTEGRATION.md
+│   ├── PHASE6_UX_OVERHAUL.md
+│   ├── IMPLEMENTATION_COMPLETE.md
+│   └── plans/
+│
+├── 04-testing/
+│   ├── TEST_PLAN.md
+│   ├── TEST_COVERAGE_REPORT.md
+│   ├── TESTING_GUIDELINES.md
+│   ├── QA_PHASE1_REPORT.md
+│   ├── QA_PHASE2_REPORT.md
+│   └── COMPREHENSIVE_QA_ASSESSMENT.md
+│
+├── 05-deployment/
+│   ├── DEPLOYMENT_GUIDE.md
+│   ├── ENVIRONMENT_SETUP.md
+│   ├── ROLLBACK_PROCEDURES.md
+│   ├── MONITORING_SETUP.md
+│   └── replit.md
+│
+├── 06-user-documentation/
+│   ├── ADMIN_GUIDE.md
+│   ├── COORDINATOR_MANUAL.md
+│   ├── API_REFERENCE.md
+│   └── TROUBLESHOOTING.md
+│
+├── 07-governance/
+│   ├── CHANGELOG.md
+│   ├── CONTRIBUTING.md
+│   ├── SECURITY.md
+│   ├── CODE_OF_CONDUCT.md
+│   └── VERSIONING.md
+│
+├── 08-audit/
+│   ├── CODE_AUDIT_REPORT.md
+│   ├── AUDIT_REMEDIATION.md
+│   ├── cursor_granular_code_audit.md
+│   └── BUG_TRACKING/
+│
+└── 09-archive/
+    └── [Historical files]
+```
 
 ---
 
@@ -851,7 +1018,7 @@ This document outlines a comprehensive 4-phase remediation plan based on the cod
 | Phase 1: Security & Critical | Week 1 | Week 2 | 2 weeks |
 | Phase 2: UI/UX Standardization | Week 3 | Week 5 | 3 weeks |
 | Phase 3: Code Quality & Testing | Week 6 | Week 7 | 2 weeks |
-| Phase 4: Documentation & Deployment | Week 8 | Week 8 | 1 week |
+| Phase 4: Documentation & Deployment | Week 8 | Week 8 | 1 week (includes reorganization) |
 
 **Total Estimated Duration:** 8 weeks
 
