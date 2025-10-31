@@ -4,36 +4,100 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Profile - Volunteer Management Platform</title>
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/typography.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/utilities.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(to bottom right, var(--color-success-light), var(--color-info-light), var(--color-purple-light));
+            min-height: 100vh;
+        }
+        
+        .profile-header-gradient {
+            background: linear-gradient(to right, var(--color-indigo), var(--color-purple));
+            color: var(--color-text-inverse);
+            padding: var(--spacing-6) var(--spacing-8);
+        }
+        
+        .avatar {
+            width: 80px;
+            height: 80px;
+            background: var(--color-bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--text-4xl);
+            font-weight: var(--font-weight-bold);
+            color: var(--color-indigo);
+        }
+        
+        .block-tag {
+            padding: var(--spacing-1) var(--spacing-3);
+            background: var(--color-primary-light);
+            color: var(--color-primary-dark);
+            border-radius: 9999px;
+            font-size: var(--text-sm);
+            font-weight: var(--font-weight-semibold);
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: var(--spacing-2) var(--spacing-4);
+            border-radius: var(--radius-lg);
+            font-weight: var(--font-weight-semibold);
+        }
+        
+        .status-badge.active {
+            background: var(--color-success-light);
+            color: var(--color-success-dark);
+        }
+        
+        .status-badge.pending {
+            background: var(--color-danger-light);
+            color: var(--color-danger-dark);
+        }
+        
+        .danger-zone {
+            background: var(--color-danger-light);
+            border: 2px solid var(--color-danger);
+            border-radius: var(--radius-2xl);
+            padding: var(--spacing-6);
+            margin-top: var(--spacing-8);
+        }
+    </style>
 </head>
-<body class="bg-gradient-to-br from-green-100 via-blue-50 to-purple-100 min-h-screen">
-    <div class="container mx-auto px-4 py-8 max-w-4xl">
+<body>
+    <div style="max-width: 896px; margin: 0 auto; padding: var(--spacing-8) var(--spacing-4);">
         <!-- Header -->
-        <div class="mb-8">
-            <div class="flex justify-between items-center">
-                <h1 class="text-4xl font-bold text-gray-800">   My Profile</h1>
-                <a href="/dashboard" class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">
-                    Back to Dashboard
-                </a>
+        <div style="margin-bottom: var(--spacing-8);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 style="font-size: var(--text-4xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);">👤 My Profile</h1>
+                <a href="/dashboard" class="btn btn-primary">Back to Dashboard</a>
             </div>
-            <p class="text-gray-600 mt-2">View and update your account information</p>
+            <p style="color: var(--color-text-secondary); margin-top: var(--spacing-2);">View and update your account information</p>
         </div>
 
         <!-- Profile Card -->
-        <div class="bg-white rounded-2xl shadow-xl overflow-hidden">
+        <div class="card" style="border-radius: var(--radius-2xl); box-shadow: var(--shadow-xl); overflow: hidden;">
             <!-- Header Section -->
-            <div class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-8 py-6">
-                <div class="flex items-center gap-4">
-                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-4xl font-bold text-indigo-600">
+            <div class="profile-header-gradient">
+                <div style="display: flex; align-items: center; gap: var(--spacing-4);">
+                    <div class="avatar">
                         {{ user.full_name[0].upper() }}
                     </div>
                     <div>
-                        <h2 class="text-2xl font-bold">{{ user.full_name }}</h2>
-                        <p class="text-indigo-100">
+                        <h2 style="font-size: var(--text-2xl); font-weight: var(--font-weight-bold);">{{ user.full_name }}</h2>
+                        <p style="color: rgba(255, 255, 255, 0.9);">
                             {% if user.role == 'super_admin' %}
-                                   Super Admin
+                                ⚙️ Super Admin
                             {% else %}
-                                   Block Coordinator
+                                👥 Block Coordinator
                             {% endif %}
                         </p>
                     </div>
@@ -41,154 +105,143 @@
             </div>
 
             <!-- Account Information -->
-            <div class="p-8">
-                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-3">   Account Information</h3>
+            <div style="padding: var(--spacing-8);">
+                <h3 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: var(--spacing-6); padding-bottom: var(--spacing-3); border-bottom: 1px solid var(--color-border-light);">📋 Account Information</h3>
                 
-                <form id="profileForm" class="space-y-6">
+                <form id="profileForm" style="display: flex; flex-direction: column; gap: var(--spacing-6);">
                     <!-- Full Name -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                        <label class="form-label required">Full Name</label>
                         <input type="text" id="fullName" name="full_name" value="{{ user.full_name }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                               required>
+                               class="form-input" required>
                     </div>
 
                     <!-- Email (Read-Only) -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Email (Cannot be changed)</label>
+                        <label class="form-label">Email (Cannot be changed)</label>
                         <input type="email" value="{{ user.email }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                               disabled>
-                        <p class="text-xs text-gray-500 mt-1">Your login email cannot be modified for security reasons</p>
+                               class="form-input" style="background: var(--color-gray-100); color: var(--color-text-tertiary);" disabled>
+                        <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-1);">Your login email cannot be modified for security reasons</p>
                     </div>
 
                     <!-- Phone -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                        <label class="form-label required">Phone Number</label>
                         <input type="tel" id="phone" name="phone" value="{{ user.phone }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                               required>
+                               class="form-input" required>
                     </div>
 
                     <!-- Role (Read-Only) -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
+                        <label class="form-label">Role</label>
                         <input type="text" value="{% if user.role == 'super_admin' %}Super Admin{% else %}Block Coordinator{% endif %}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                               disabled>
+                               class="form-input" style="background: var(--color-gray-100); color: var(--color-text-tertiary);" disabled>
                     </div>
 
                     <!-- Primary Block -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Primary Block</label>
+                        <label class="form-label">Primary Block</label>
                         <input type="text" value="{{ user.primary_block }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                               disabled>
+                               class="form-input" style="background: var(--color-gray-100); color: var(--color-text-tertiary);" disabled>
                     </div>
 
                     <!-- Assigned Blocks (if any) -->
                     {% if user.assigned_blocks %}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Assigned Blocks</label>
-                        <div class="flex flex-wrap gap-2">
+                        <label class="form-label">Assigned Blocks</label>
+                        <div style="display: flex; flex-wrap: wrap; gap: var(--spacing-2);">
                             {% for block in user.assigned_blocks.split(',') %}
                             {% if block.strip() %}
-                            <span class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-sm font-semibold">
+                            <span class="block-tag">
                                 {{ block.strip() }}
                             </span>
                             {% endif %}
                             {% endfor %}
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Contact admin to modify your assigned blocks</p>
+                        <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-2);">Contact admin to modify your assigned blocks</p>
                     </div>
                     {% endif %}
 
                     <!-- Account Status -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Account Status</label>
-                        <span class="inline-block px-4 py-2 rounded-lg font-semibold
-                                     {% if user.is_active %}bg-green-100 text-green-700{% else %}bg-red-100 text-red-700{% endif %}">
-                            {% if user.is_active %}  Active{% else %}  Pending Approval{% endif %}
+                        <label class="form-label">Account Status</label>
+                        <span class="status-badge {% if user.is_active %}active{% else %}pending{% endif %}">
+                            {% if user.is_active %}✅ Active{% else %}⏳ Pending Approval{% endif %}
                         </span>
                     </div>
 
                     <!-- Member Since -->
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Member Since</label>
+                        <label class="form-label">Member Since</label>
                         <input type="text" value="{{ user.created_at.strftime('%B %d, %Y') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                               disabled>
+                               class="form-input" style="background: var(--color-gray-100); color: var(--color-text-tertiary);" disabled>
                     </div>
 
                     {% if user.last_login %}
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Last Login</label>
+                        <label class="form-label">Last Login</label>
                         <input type="text" value="{{ user.last_login.strftime('%B %d, %Y at %I:%M %p') }}"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                               disabled>
+                               class="form-input" style="background: var(--color-gray-100); color: var(--color-text-tertiary);" disabled>
                     </div>
                     {% endif %}
 
                     <!-- Save Button -->
-                    <div class="pt-4 border-t">
-                        <button type="submit" id="saveBtn"
-                                class="w-full px-6 py-3 bg-indigo-600 text-white rounded-lg font-bold text-lg hover:bg-indigo-700 transition">
-                               Save Changes
+                    <div style="padding-top: var(--spacing-4); border-top: 1px solid var(--color-border-light);">
+                        <button type="submit" id="saveBtn" class="btn btn-primary w-full" style="font-size: var(--text-lg);">
+                            💾 Save Changes
                         </button>
                     </div>
                 </form>
             </div>
 
             <!-- Password Change Section -->
-            <div class="p-8 bg-gray-50 border-t border-gray-200">
-                <h3 class="text-xl font-bold text-gray-800 mb-6">   Change Password</h3>
+            <div style="padding: var(--spacing-8); background: var(--color-gray-50); border-top: 1px solid var(--color-border-light);">
+                <h3 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: var(--spacing-6);">🔒 Change Password</h3>
                 
-                <form id="passwordForm" class="space-y-4">
+                <form id="passwordForm" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Current Password *</label>
+                        <label class="form-label required">Current Password</label>
                         <input type="password" id="currentPassword" name="current_password"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                               required>
+                               class="form-input" required>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">New Password *</label>
+                        <label class="form-label required">New Password</label>
                         <input type="password" id="newPassword" name="new_password"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                               required minlength="8">
-                        <p class="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
+                               class="form-input" required minlength="8">
+                        <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-1);">Minimum 8 characters</p>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Confirm New Password *</label>
+                        <label class="form-label required">Confirm New Password</label>
                         <input type="password" id="confirmPassword" name="confirm_password"
-                               class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                               required minlength="8">
+                               class="form-input" required minlength="8">
                     </div>
 
-                    <button type="submit" id="passwordBtn"
-                            class="w-full px-6 py-3 bg-purple-600 text-white rounded-lg font-bold hover:bg-purple-700 transition">
-                           Update Password
+                    <button type="submit" id="passwordBtn" class="btn btn-primary w-full">
+                        🔐 Update Password
                     </button>
                 </form>
             </div>
         </div>
 
         <!-- Danger Zone -->
-        <div class="bg-red-50 border-2 border-red-200 rounded-2xl p-6 mt-8">
-            <h3 class="text-xl font-bold text-red-800 mb-3">   Danger Zone</h3>
-            <p class="text-red-700 mb-4">Need to delete your account or have concerns? Contact the administrator.</p>
-            <p class="text-sm text-gray-600">   Admin Contact: <a href="mailto:admin@volunteerplatform.org.in" class="text-indigo-600 underline">admin@volunteerplatform.org.in</a></p>
+        <div class="danger-zone">
+            <h3 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); color: var(--color-danger-dark); margin-bottom: var(--spacing-3);">⚠️ Danger Zone</h3>
+            <p style="color: var(--color-danger-dark); margin-bottom: var(--spacing-4);">Need to delete your account or have concerns? Contact the administrator.</p>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary);">📧 Admin Contact: <a href="mailto:admin@volunteerplatform.org.in" style="color: var(--color-primary); text-decoration: underline;">admin@volunteerplatform.org.in</a></p>
         </div>
     </div>
 
+    <!-- Design System Components -->
+    <script src="/static/js/components.js"></script>
     <script>
         // Profile Form Submission
         document.getElementById('profileForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('saveBtn');
             btn.disabled = true;
-            btn.textContent = '  Saving...';
+            btn.textContent = '💾 Saving...';
 
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
@@ -201,22 +254,24 @@
                 });
 
                 if (response.ok) {
-                    btn.textContent = '  Saved!';
-                    btn.classList.add('bg-green-600');
+                    btn.textContent = '✅ Saved!';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-success');
                     setTimeout(() => {
-                        btn.textContent = '   Save Changes';
-                        btn.classList.remove('bg-green-600');
+                        btn.textContent = '💾 Save Changes';
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-primary');
                         btn.disabled = false;
                     }, 2000);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Failed to update profile');
-                    btn.textContent = '   Save Changes';
+                    btn.textContent = '💾 Save Changes';
                     btn.disabled = false;
                 }
             } catch (error) {
                 alert('Network error. Please try again.');
-                btn.textContent = '   Save Changes';
+                btn.textContent = '💾 Save Changes';
                 btn.disabled = false;
             }
         });
@@ -235,7 +290,7 @@
             }
 
             btn.disabled = true;
-            btn.textContent = '  Updating...';
+            btn.textContent = '🔐 Updating...';
 
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData);
@@ -248,27 +303,28 @@
                 });
 
                 if (response.ok) {
-                    btn.textContent = '  Password Updated!';
-                    btn.classList.add('bg-green-600');
+                    btn.textContent = '✅ Password Updated!';
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-success');
                     document.getElementById('passwordForm').reset();
                     setTimeout(() => {
-                        btn.textContent = '   Update Password';
-                        btn.classList.remove('bg-green-600');
+                        btn.textContent = '🔐 Update Password';
+                        btn.classList.remove('btn-success');
+                        btn.classList.add('btn-primary');
                         btn.disabled = false;
                     }, 2000);
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Failed to update password');
-                    btn.textContent = '   Update Password';
+                    btn.textContent = '🔐 Update Password';
                     btn.disabled = false;
                 }
             } catch (error) {
                 alert('Network error. Please try again.');
-                btn.textContent = '   Update Password';
+                btn.textContent = '🔐 Update Password';
                 btn.disabled = false;
             }
         });
     </script>
 </body>
 </html>
-

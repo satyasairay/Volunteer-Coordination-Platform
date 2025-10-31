@@ -40,6 +40,73 @@
    - ✅ Typography updated to use typography scale (h1, h2, p)
    - **Notes:** All content cards now use card component, buttons standardized
 
+4. **index.html** ✅
+   - ✅ Design system CSS files included
+   - ✅ Navigation updated to `.app-nav` with `.app-nav-brand` and `.app-nav-toggle`
+   - ✅ Colors migrated to CSS variables (footer gradient → `--gradient-primary`, map background → `--color-gray-*`)
+   - ✅ Menu links migrated to use CSS variables (`--color-gray-50`, `--color-primary`, etc.)
+   - ✅ Spacing updated to use spacing utilities (`var(--spacing-*)`)
+   - ✅ Typography updated to use typography scale (`var(--text-*)`, `var(--font-weight-*)`)
+   - ✅ Hamburger button migrated to `.app-nav-toggle` with custom styling
+   - ✅ Reload button migrated to `.btn .btn-secondary`
+   - ✅ Footer migrated to use design system variables
+   - ✅ Components.js included
+   - **Notes:** Complex map template with D3.js visualization. Theme switching preserved. Navigation and UI elements migrated while maintaining map functionality.
+
+5. **admin.html** ✅
+   - ✅ Design system CSS files included
+   - ✅ Navigation migrated to custom `.admin-nav` (horizontal nav for admin panel)
+   - ✅ Tailwind cards replaced with `.card` components
+   - ✅ Tailwind buttons replaced with `.btn .btn-primary` and `.btn-success`
+   - ✅ Tailwind form inputs replaced with `.form-input`
+   - ✅ Colors migrated to CSS variables (`var(--color-primary)`, `var(--color-success)`, etc.)
+   - ✅ Spacing updated to use spacing utilities (`var(--spacing-*)`)
+   - ✅ Typography updated to use typography scale
+   - ✅ Components.js included
+   - **Notes:** Admin dashboard with bulk upload forms. All Tailwind utility classes replaced with design system components. Inline styles for dynamic content use CSS variables.
+
+6. **admin_users.html** ✅
+   - ✅ Design system CSS files included
+   - ✅ Blue gradient header migrated to `var(--gradient-blue)`
+   - ✅ Tailwind cards replaced with `.card` components and custom stats cards
+   - ✅ Tailwind buttons replaced with `.btn` components (success, danger, primary, secondary, warning)
+   - ✅ Tailwind form inputs replaced with `.form-input`, `.form-select`, `.form-textarea`
+   - ✅ Modals migrated to `.modal`, `.modal-backdrop`, `.modal-header`, `.modal-body`, `.modal-footer`
+   - ✅ Colors migrated to CSS variables (status badges, alert boxes, stats cards)
+   - ✅ Spacing updated to use spacing utilities
+   - ✅ Typography updated to use typography scale
+   - ✅ Status badges use design system color variables
+   - ✅ Components.js included
+   - **Notes:** Complex admin user management page with dynamic user cards, modals, and filtering. All Tailwind classes replaced with design system components. JavaScript-generated HTML uses CSS variables.
+
+7. **admin_field_workers.html** ✅
+   - ✅ Design system CSS files included
+   - ✅ Blue gradient header migrated to `var(--gradient-blue)`
+   - ✅ Tailwind cards replaced with `.card` components and custom stats cards
+   - ✅ Tailwind buttons replaced with `.btn` components (success, danger, secondary)
+   - ✅ Tailwind form inputs replaced with `.form-input`, `.form-select`, `.form-textarea`
+   - ✅ Modals migrated to `.modal` component structure
+   - ✅ Colors migrated to CSS variables (status badges, alert boxes, stats cards)
+   - ✅ Spacing updated to use spacing utilities
+   - ✅ Typography updated to use typography scale
+   - ✅ Status badges and alert boxes use design system color variables
+   - ✅ Components.js included
+   - **Notes:** Field worker approval page with similar structure to admin_users.html. Dynamic submission cards use CSS variables. All Tailwind replaced with design system.
+
+8. **profile.html** ✅
+   - ✅ Design system CSS files included
+   - ✅ Multi-color gradient background migrated to CSS variables (`var(--color-success-light)`, `var(--color-info-light)`, `var(--color-purple-light)`)
+   - ✅ Profile card header gradient migrated to `var(--color-indigo)`, `var(--color-purple)`
+   - ✅ Tailwind cards replaced with `.card` component
+   - ✅ Tailwind buttons replaced with `.btn .btn-primary`, `.btn-success`
+   - ✅ Tailwind form inputs replaced with `.form-input` component
+   - ✅ Colors migrated to CSS variables (disabled inputs, status badges, block tags)
+   - ✅ Spacing updated to use spacing utilities
+   - ✅ Typography updated to use typography scale
+   - ✅ Danger zone uses design system danger colors
+   - ✅ Components.js included
+   - **Notes:** User profile page with form inputs, password change, and danger zone. Multi-color gradient preserved using design system variables. All Tailwind replaced.
+
 ---
 
 ### 🔄 In Progress Templates

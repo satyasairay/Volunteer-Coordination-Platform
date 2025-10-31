@@ -4,117 +4,183 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Satsangee</title>
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/typography.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/utilities.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Admin-specific navigation styling */
+        .admin-nav {
+            background: var(--color-bg-primary);
+            box-shadow: var(--shadow-sm);
+            height: var(--nav-height);
+            display: flex;
+            align-items: center;
+            padding: 0 var(--spacing-8);
+        }
+        
+        .admin-nav-links {
+            display: flex;
+            gap: var(--spacing-4);
+            margin-left: auto;
+            flex-wrap: wrap;
+        }
+        
+        .admin-nav-link {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: var(--font-weight-semibold);
+            transition: color var(--duration-base) var(--easing-ease);
+        }
+        
+        .admin-nav-link:hover {
+            text-decoration: underline;
+        }
+        
+        @media (max-width: 768px) {
+            .admin-nav {
+                flex-direction: column;
+                height: auto;
+                padding: var(--spacing-4);
+            }
+            
+            .admin-nav-links {
+                margin-left: 0;
+                margin-top: var(--spacing-2);
+                width: 100%;
+            }
+        }
+    </style>
 </head>
-<body class="bg-gray-50">
-    <nav class="bg-white shadow-sm h-16 flex items-center px-4 md:px-8">
-        <h1 class="text-xl font-bold text-gray-800">Admin Dashboard</h1>
-        <div class="ml-auto flex gap-4">
-            <a href="/" class="text-blue-600 hover:underline font-semibold">Homepage</a>
-            <a href="/admin/analytics" class="text-purple-600 hover:underline font-semibold">   Analytics</a>
-            <a href="/admin/users" class="text-indigo-600 hover:underline font-semibold">   Users</a>
-            <a href="/admin/field-workers" class="text-green-600 hover:underline font-semibold">   Field Workers</a>
-            <a href="/admin/duplicates" class="text-orange-600 hover:underline font-semibold">   Duplicates</a>
-            <a href="/admin/form-config" class="text-teal-600 hover:underline font-semibold">   Form Config</a>
-            <a href="/admin/about" class="text-pink-600 hover:underline font-semibold">   About Page</a>
-            <a href="/admin/members" class="text-blue-600 hover:underline">Members</a>
-            <a href="/admin/doctors" class="text-blue-600 hover:underline">Doctors</a>
-            <a href="/admin/logout" class="text-red-600 hover:underline">Logout</a>
+<body style="background: var(--color-gray-50);">
+    <nav class="admin-nav">
+        <h1 class="text-xl font-bold" style="color: var(--color-text-primary);">Admin Dashboard</h1>
+        <div class="admin-nav-links">
+            <a href="/" class="admin-nav-link">Homepage</a>
+            <a href="/admin/analytics" class="admin-nav-link">📊 Analytics</a>
+            <a href="/admin/users" class="admin-nav-link">👥 Users</a>
+            <a href="/admin/field-workers" class="admin-nav-link">👷 Field Workers</a>
+            <a href="/admin/duplicates" class="admin-nav-link">🔁 Duplicates</a>
+            <a href="/admin/form-config" class="admin-nav-link">📝 Form Config</a>
+            <a href="/admin/about" class="admin-nav-link">ℹ️ About Page</a>
+            <a href="/admin/members" class="admin-nav-link">Members</a>
+            <a href="/admin/doctors" class="admin-nav-link">Doctors</a>
+            <a href="/admin/logout" style="color: var(--color-danger);" class="admin-nav-link">Logout</a>
         </div>
     </nav>
 
-    <div class="max-w-6xl mx-auto p-8">
+    <div style="max-width: 1152px; margin: 0 auto; padding: var(--spacing-8);">
         <div class="grid md:grid-cols-3 gap-6 mb-8">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-3xl font-bold text-blue-600">{{ stats.villages }}</h3>
-                <p class="text-gray-600 mt-2">Villages</p>
+            <div class="card">
+                <div class="card-body">
+                    <h3 style="font-size: var(--text-3xl); font-weight: var(--font-weight-bold); color: var(--color-primary);">{{ stats.villages }}</h3>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--spacing-2);">Villages</p>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-3xl font-bold text-green-600">{{ stats.members }}</h3>
-                <p class="text-gray-600 mt-2">Members</p>
+            <div class="card">
+                <div class="card-body">
+                    <h3 style="font-size: var(--text-3xl); font-weight: var(--font-weight-bold); color: var(--color-success);">{{ stats.members }}</h3>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--spacing-2);">Members</p>
+                </div>
             </div>
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h3 class="text-3xl font-bold text-purple-600">{{ stats.doctors }}</h3>
-                <p class="text-gray-600 mt-2">Doctors</p>
+            <div class="card">
+                <div class="card-body">
+                    <h3 style="font-size: var(--text-3xl); font-weight: var(--font-weight-bold); color: var(--color-purple);">{{ stats.doctors }}</h3>
+                    <p style="color: var(--color-text-secondary); margin-top: var(--spacing-2);">Doctors</p>
+                </div>
             </div>
         </div>
 
         <!-- Customizable Labels Section -->
-        <div class="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 class="text-xl font-bold mb-4">   Customize Map Labels & Terminology</h2>
-            <p class="text-sm text-gray-600 mb-4">Change the labels displayed on the map (e.g., "Field Workers" instead of "Volunteers")</p>
-            
-            <div id="labels-container" class="space-y-4"></div>
-            <div id="labels-message" class="mt-4"></div>
+        <div class="card mb-6">
+            <div class="card-body">
+                <h2 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-4);">🏷️ Customize Map Labels & Terminology</h2>
+                <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">Change the labels displayed on the map (e.g., "Field Workers" instead of "Volunteers")</p>
+                
+                <div id="labels-container" style="display: flex; flex-direction: column; gap: var(--spacing-4);"></div>
+                <div id="labels-message" style="margin-top: var(--spacing-4);"></div>
+            </div>
         </div>
 
         <!-- Pin Style Selector -->
-        <div class="bg-white p-6 rounded-lg shadow mb-6">
-            <h2 class="text-xl font-bold mb-4">   Choose Pin Style</h2>
-            <p class="text-sm text-gray-600 mb-4">Select the pin marker style to display on the map when zoomed in</p>
-            
-            <div id="pin-style-grid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
-                <!-- Pin options will be loaded here -->
+        <div class="card mb-6">
+            <div class="card-body">
+                <h2 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-4);">📍 Choose Pin Style</h2>
+                <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">Select the pin marker style to display on the map when zoomed in</p>
+                
+                <div id="pin-style-grid" class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
+                    <!-- Pin options will be loaded here -->
+                </div>
+                <div id="pin-style-message" style="margin-top: var(--spacing-4);"></div>
             </div>
-            <div id="pin-style-message" class="mt-4"></div>
         </div>
 
         <div class="grid md:grid-cols-2 gap-6">
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h2 class="text-xl font-bold mb-4">Bulk Upload Villages</h2>
-                <p class="text-sm text-gray-600 mb-4">CSV Format: name,block,lat,lng,south,west,north,east,code_2011</p>
-                <form id="villages-form" enctype="multipart/form-data" class="space-y-4">
-                    <input 
-                        type="file" 
-                        name="file" 
-                        accept=".csv" 
-                        required
-                        class="w-full border border-gray-300 rounded p-2"
-                    />
-                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
-                        Upload Villages
-                    </button>
-                </form>
-                <div id="villages-result" class="mt-4"></div>
+            <div class="card">
+                <div class="card-body">
+                    <h2 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-4);">Bulk Upload Villages</h2>
+                    <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">CSV Format: name,block,lat,lng,south,west,north,east,code_2011</p>
+                    <form id="villages-form" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+                        <input 
+                            type="file" 
+                            name="file" 
+                            accept=".csv" 
+                            required
+                            class="form-input"
+                        />
+                        <button type="submit" class="btn btn-primary w-full">
+                            Upload Villages
+                        </button>
+                    </form>
+                    <div id="villages-result" style="margin-top: var(--spacing-4);"></div>
+                </div>
             </div>
 
-            <div class="bg-white p-6 rounded-lg shadow">
-                <h2 class="text-xl font-bold mb-4">Bulk Upload Members</h2>
-                <p class="text-sm text-gray-600 mb-4">CSV Format: full_name,role,phone,languages,village</p>
-                <form id="members-form" enctype="multipart/form-data" class="space-y-4">
-                    <input 
-                        type="file" 
-                        name="file" 
-                        accept=".csv" 
-                        required
-                        class="w-full border border-gray-300 rounded p-2"
-                    />
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="verify_on_import" class="rounded" />
-                        <span class="text-sm">Verify all on import</span>
-                    </label>
-                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">
-                        Upload Members
-                    </button>
-                </form>
-                <div id="members-result" class="mt-4"></div>
+            <div class="card">
+                <div class="card-body">
+                    <h2 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); margin-bottom: var(--spacing-4);">Bulk Upload Members</h2>
+                    <p style="font-size: var(--text-sm); color: var(--color-text-secondary); margin-bottom: var(--spacing-4);">CSV Format: full_name,role,phone,languages,village</p>
+                    <form id="members-form" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
+                        <input 
+                            type="file" 
+                            name="file" 
+                            accept=".csv" 
+                            required
+                            class="form-input"
+                        />
+                        <label style="display: flex; align-items: center; gap: var(--spacing-2);">
+                            <input type="checkbox" name="verify_on_import" style="border-radius: var(--radius-sm);" />
+                            <span style="font-size: var(--text-sm);">Verify all on import</span>
+                        </label>
+                        <button type="submit" class="btn btn-success w-full">
+                            Upload Members
+                        </button>
+                    </form>
+                    <div id="members-result" style="margin-top: var(--spacing-4);"></div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Design System Components -->
+    <script src="/static/js/components.js"></script>
     <script>
         // 3D GLOWING DOT STYLES - CSS-based, no SVG!
         const dotStyles = [
-            { id: 'neon_glow', name: '  Neon Glow', desc: 'Bright neon with soft outer glow' },
-            { id: 'pulse_ring', name: '   Pulse Ring', desc: 'Pulsing ring animation' },
-            { id: 'double_halo', name: '   Double Halo', desc: 'Two-layer glowing rings' },
-            { id: 'soft_blur', name: '   Soft Blur', desc: 'Gentle blurred edges' },
-            { id: 'sharp_core', name: '   Sharp Core', desc: 'Crisp center with glow' },
-            { id: 'plasma', name: '   Plasma', desc: 'Energy plasma effect' },
-            { id: 'crystal', name: '   Crystal', desc: 'Crystalline shimmer' },
-            { id: 'firefly', name: '   Firefly', desc: 'Bioluminescent glow' },
-            { id: 'laser', name: '   Laser', desc: 'Intense laser dot' },
-            { id: 'halo_fade', name: '  Halo Fade', desc: 'Fading outer halo' }
+            { id: 'neon_glow', name: '✨ Neon Glow', desc: 'Bright neon with soft outer glow' },
+            { id: 'pulse_ring', name: '💫 Pulse Ring', desc: 'Pulsing ring animation' },
+            { id: 'double_halo', name: '🌟 Double Halo', desc: 'Two-layer glowing rings' },
+            { id: 'soft_blur', name: '🌫️ Soft Blur', desc: 'Gentle blurred edges' },
+            { id: 'sharp_core', name: '💎 Sharp Core', desc: 'Crisp center with glow' },
+            { id: 'plasma', name: '⚡ Plasma', desc: 'Energy plasma effect' },
+            { id: 'crystal', name: '🔮 Crystal', desc: 'Crystalline shimmer' },
+            { id: 'firefly', name: '🪲 Firefly', desc: 'Bioluminescent glow' },
+            { id: 'laser', name: '🔴 Laser', desc: 'Intense laser dot' },
+            { id: 'halo_fade', name: '💫 Halo Fade', desc: 'Fading outer halo' }
         ];
 
         // Load map settings and populate dot styles
@@ -130,13 +196,13 @@
                         class="dot-style-option ${currentStyle === style.id ? 'selected' : ''}"
                         data-style="${style.id}"
                         onclick="selectPinStyle('${style.id}')"
-                        style="cursor: pointer; border: 3px solid ${currentStyle === style.id ? '#3b82f6' : '#e5e7eb'}; border-radius: 12px; padding: 16px; text-align: center; transition: all 0.2s; background: #1a1a1a;"
+                        style="cursor: pointer; border: 3px solid ${currentStyle === style.id ? 'var(--color-primary)' : 'var(--color-border-light)'}; border-radius: var(--radius-lg); padding: var(--spacing-4); text-align: center; transition: all 0.2s; background: var(--color-gray-900);"
                     >
                         <div class="dot-preview" style="width: 50px; height: 50px; margin: 0 auto; position: relative; display: flex; align-items: center; justify-content: center;">
                             ${getDotPreviewHTML(style.id, '#3b7bbf')}
                         </div>
-                        <div style="margin-top: 12px; font-size: 13px; font-weight: 600; color: white;">${style.name}</div>
-                        <div style="margin-top: 4px; font-size: 10px; color: #999;">${style.desc}</div>
+                        <div style="margin-top: var(--spacing-3); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); color: var(--color-text-inverse);">${style.name}</div>
+                        <div style="margin-top: var(--spacing-1); font-size: var(--text-xs); color: var(--color-text-tertiary);">${style.desc}</div>
                     </div>
                 `).join('');
             } catch (err) {
@@ -171,14 +237,14 @@
                 });
                 
                 if (res.ok) {
-                    message.innerHTML = '<p class="text-green-600">  Dot style updated! Refresh the map to see changes.</p>';
+                    message.innerHTML = '<p style="color: var(--color-success);">✅ Dot style updated! Refresh the map to see changes.</p>';
                     setTimeout(() => message.innerHTML = '', 3000);
                     loadPinStyles(); // Reload to update selection
                 } else {
                     throw new Error('Failed to update dot style');
                 }
             } catch (err) {
-                message.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+                message.innerHTML = `<p style="color: var(--color-danger);">Error: ${err.message}</p>`;
             }
         }
         
@@ -193,32 +259,32 @@
                 const container = document.getElementById('labels-container');
                 
                 container.innerHTML = labels.map(label => `
-                    <div class="border border-gray-200 rounded p-4">
+                    <div style="border: 1px solid var(--color-border-light); border-radius: var(--radius-md); padding: var(--spacing-4);">
                         <div class="grid md:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-sm font-medium mb-1">Label</label>
+                                <label class="form-label">Label</label>
                                 <input 
                                     type="text" 
                                     value="${label.value}" 
                                     data-key="${label.key}"
                                     data-field="value"
-                                    class="label-input w-full border border-gray-300 rounded px-3 py-2"
+                                    class="form-input label-input"
                                     placeholder="e.g., Field Workers"
                                 />
                             </div>
                             <div>
-                                <label class="block text-sm font-medium mb-1">Icon/Emoji</label>
+                                <label class="form-label">Icon/Emoji</label>
                                 <input 
                                     type="text" 
                                     value="${label.icon}" 
                                     data-key="${label.key}"
                                     data-field="icon"
-                                    class="label-input w-full border border-gray-300 rounded px-3 py-2"
-                                    placeholder="e.g.,   "
+                                    class="form-input label-input"
+                                    placeholder="e.g., 👷"
                                 />
                             </div>
                         </div>
-                        <p class="text-xs text-gray-500 mt-2">Key: ${label.key}</p>
+                        <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-2);">Key: ${label.key}</p>
                     </div>
                 `).join('');
                 
@@ -245,13 +311,13 @@
                 });
                 
                 if (res.ok) {
-                    message.innerHTML = '<p class="text-green-600">  Label updated successfully!</p>';
+                    message.innerHTML = '<p style="color: var(--color-success);">✅ Label updated successfully!</p>';
                     setTimeout(() => message.innerHTML = '', 3000);
                 } else {
                     throw new Error('Failed to update label');
                 }
             } catch (err) {
-                message.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+                message.innerHTML = `<p style="color: var(--color-danger);">Error: ${err.message}</p>`;
             }
         }
         
@@ -262,7 +328,7 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const result = document.getElementById('villages-result');
-            result.innerHTML = '<p class="text-blue-600">Uploading...</p>';
+            result.innerHTML = '<p style="color: var(--color-primary);">Uploading...</p>';
             
             try {
                 const res = await fetch('/admin/bulk/villages', {
@@ -271,14 +337,14 @@
                 });
                 const data = await res.json();
                 result.innerHTML = `
-                    <div class="p-3 bg-green-50 rounded">
-                        <p class="text-green-800 font-semibold">  Inserted: ${data.inserted}</p>
-                        ${data.errors.length ? `<p class="text-red-600 mt-2">Errors: ${data.errors.join(', ')}</p>` : ''}
+                    <div style="padding: var(--spacing-3); background: var(--color-success-light); border-radius: var(--radius-md);">
+                        <p style="color: var(--color-success-dark); font-weight: var(--font-weight-semibold);">✅ Inserted: ${data.inserted}</p>
+                        ${data.errors.length ? `<p style="color: var(--color-danger); margin-top: var(--spacing-2);">Errors: ${data.errors.join(', ')}</p>` : ''}
                     </div>
                 `;
                 e.target.reset();
             } catch (err) {
-                result.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+                result.innerHTML = `<p style="color: var(--color-danger);">Error: ${err.message}</p>`;
             }
         });
 
@@ -286,7 +352,7 @@
             e.preventDefault();
             const formData = new FormData(e.target);
             const result = document.getElementById('members-result');
-            result.innerHTML = '<p class="text-blue-600">Uploading...</p>';
+            result.innerHTML = '<p style="color: var(--color-primary);">Uploading...</p>';
             
             try {
                 const res = await fetch('/admin/bulk/members', {
@@ -295,17 +361,16 @@
                 });
                 const data = await res.json();
                 result.innerHTML = `
-                    <div class="p-3 bg-green-50 rounded">
-                        <p class="text-green-800 font-semibold">  Inserted: ${data.inserted}</p>
-                        ${data.errors.length ? `<p class="text-red-600 mt-2">Errors: ${data.errors.join(', ')}</p>` : ''}
+                    <div style="padding: var(--spacing-3); background: var(--color-success-light); border-radius: var(--radius-md);">
+                        <p style="color: var(--color-success-dark); font-weight: var(--font-weight-semibold);">✅ Inserted: ${data.inserted}</p>
+                        ${data.errors.length ? `<p style="color: var(--color-danger); margin-top: var(--spacing-2);">Errors: ${data.errors.join(', ')}</p>` : ''}
                     </div>
                 `;
                 e.target.reset();
             } catch (err) {
-                result.innerHTML = `<p class="text-red-600">Error: ${err.message}</p>`;
+                result.innerHTML = `<p style="color: var(--color-danger);">Error: ${err.message}</p>`;
             }
         });
     </script>
 </body>
 </html>
-

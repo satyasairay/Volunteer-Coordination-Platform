@@ -4,156 +4,239 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Management - Admin</title>
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/typography.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/utilities.css">
+    
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Admin page specific styles */
+        .admin-header {
+            background: var(--gradient-blue);
+            color: var(--color-text-inverse);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .stats-card {
+            background: var(--color-bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-6);
+        }
+        
+        .stats-card-warning {
+            background: var(--color-warning-light);
+            border: 1px solid var(--color-warning);
+        }
+        
+        .stats-card-success {
+            background: var(--color-success-light);
+            border: 1px solid var(--color-success);
+        }
+        
+        .stats-card-danger {
+            background: var(--color-danger-light);
+            border: 1px solid var(--color-danger);
+        }
+        
+        .status-badge {
+            padding: var(--spacing-1) var(--spacing-3);
+            border-radius: 9999px;
+            font-size: var(--text-xs);
+            font-weight: var(--font-weight-semibold);
+            text-transform: uppercase;
+        }
+        
+        .status-badge.active {
+            background: var(--color-success-light);
+            color: var(--color-success-dark);
+        }
+        
+        .status-badge.rejected {
+            background: var(--color-danger-light);
+            color: var(--color-danger-dark);
+        }
+        
+        .status-badge.pending {
+            background: var(--color-warning-light);
+            color: var(--color-warning-dark);
+        }
+        
+        .user-card {
+            background: var(--color-bg-primary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-6);
+            transition: box-shadow var(--duration-base) var(--easing-ease);
+        }
+        
+        .user-card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .alert-box {
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-3);
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .alert-box-danger {
+            background: var(--color-danger-light);
+            border: 1px solid var(--color-danger);
+        }
+        
+        .alert-box-success {
+            background: var(--color-success-light);
+            border: 1px solid var(--color-success);
+        }
+    </style>
 </head>
-<body class="bg-gray-100">
-    <div class="min-h-screen">
+<body style="background: var(--color-gray-100);">
+    <div style="min-height: 100vh;">
         <!-- Header -->
-        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg">
-            <div class="container mx-auto px-4 py-6">
-                <div class="flex justify-between items-center">
+        <div class="admin-header">
+            <div style="max-width: 1280px; margin: 0 auto; padding: var(--spacing-4) var(--spacing-6);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
                     <div>
-                        <h1 class="text-3xl font-bold">   User Management</h1>
-                        <p class="text-blue-100">Manage coordinators and admin access</p>
+                        <h1 style="font-size: var(--text-3xl); font-weight: var(--font-weight-bold);">👥 User Management</h1>
+                        <p style="color: rgba(255, 255, 255, 0.9);">Manage coordinators and admin access</p>
                     </div>
-                    <div class="flex gap-3">
-                        <button onclick="openCreateAdminModal()" class="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
+                    <div style="display: flex; gap: var(--spacing-3);">
+                        <button onclick="openCreateAdminModal()" class="btn btn-success">
                             + Create Admin
                         </button>
-                        <a href="/" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition">
-                            Homepage
-                        </a>
-                        <a href="/admin" class="px-4 py-2 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition">
-                              Dashboard
-                        </a>
+                        <a href="/" class="btn btn-secondary">Homepage</a>
+                        <a href="/admin" class="btn btn-secondary">📊 Dashboard</a>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="container mx-auto px-4 py-8">
+        <div style="max-width: 1280px; margin: 0 auto; padding: var(--spacing-4) var(--spacing-8);">
             <!-- Stats Cards -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <h3 class="text-gray-500 text-sm font-semibold uppercase mb-2">Total Users</h3>
-                    <p class="text-4xl font-bold text-gray-800" id="totalCount">0</p>
+                <div class="stats-card">
+                    <h3 style="color: var(--color-text-tertiary); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-2);">Total Users</h3>
+                    <p style="font-size: var(--text-4xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);" id="totalCount">0</p>
                 </div>
-                <div class="bg-yellow-50 rounded-xl shadow-md p-6 border border-yellow-200">
-                    <h3 class="text-yellow-700 text-sm font-semibold uppercase mb-2">Pending Approval</h3>
-                    <p class="text-4xl font-bold text-yellow-700" id="pendingCount">0</p>
+                <div class="stats-card stats-card-warning">
+                    <h3 style="color: var(--color-warning-dark); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-2);">Pending Approval</h3>
+                    <p style="font-size: var(--text-4xl); font-weight: var(--font-weight-bold); color: var(--color-warning-dark);" id="pendingCount">0</p>
                 </div>
-                <div class="bg-green-50 rounded-xl shadow-md p-6 border border-green-200">
-                    <h3 class="text-green-700 text-sm font-semibold uppercase mb-2">Active Users</h3>
-                    <p class="text-4xl font-bold text-green-700" id="activeCount">0</p>
+                <div class="stats-card stats-card-success">
+                    <h3 style="color: var(--color-success-dark); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-2);">Active Users</h3>
+                    <p style="font-size: var(--text-4xl); font-weight: var(--font-weight-bold); color: var(--color-success-dark);" id="activeCount">0</p>
                 </div>
-                <div class="bg-red-50 rounded-xl shadow-md p-6 border border-red-200">
-                    <h3 class="text-red-700 text-sm font-semibold uppercase mb-2">Inactive</h3>
-                    <p class="text-4xl font-bold text-red-700" id="inactiveCount">0</p>
+                <div class="stats-card stats-card-danger">
+                    <h3 style="color: var(--color-danger-dark); font-size: var(--text-sm); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-2);">Inactive</h3>
+                    <p style="font-size: var(--text-4xl); font-weight: var(--font-weight-bold); color: var(--color-danger-dark);" id="inactiveCount">0</p>
                 </div>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Status</label>
-                        <select id="statusFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option value="">All Statuses</option>
-                            <option value="pending" selected>Pending</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Role</label>
-                        <select id="roleFilter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <option value="">All Roles</option>
-                            <option value="block_coordinator">Block Coordinator</option>
-                            <option value="super_admin">Super Admin</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Search</label>
-                        <input type="text" id="searchFilter" placeholder="Search by name or email..." 
-                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+            <div class="card mb-6">
+                <div class="card-body">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="form-label">Status</label>
+                            <select id="statusFilter" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="pending" selected>Pending</option>
+                                <option value="active">Active</option>
+                                <option value="inactive">Inactive</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Role</label>
+                            <select id="roleFilter" class="form-select">
+                                <option value="">All Roles</option>
+                                <option value="block_coordinator">Block Coordinator</option>
+                                <option value="super_admin">Super Admin</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label">Search</label>
+                            <input type="text" id="searchFilter" placeholder="Search by name or email..." class="form-input">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Users List -->
-            <div id="usersList" class="space-y-4">
+            <div id="usersList" style="display: flex; flex-direction: column; gap: var(--spacing-4);">
                 <!-- Loaded via JavaScript -->
             </div>
 
-            <div id="emptyState" class="bg-white rounded-xl shadow-md p-12 text-center" style="display: none;">
-                <div class="text-6xl mb-4">  </div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-2">No Users Found</h3>
-                <p class="text-gray-600">All users have been reviewed or no users match your filters.</p>
+            <div id="emptyState" class="card" style="display: none; text-align: center; padding: var(--spacing-12);">
+                <div style="font-size: 4rem; margin-bottom: var(--spacing-4);">🔍</div>
+                <h3 style="font-size: var(--text-2xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary); margin-bottom: var(--spacing-2);">No Users Found</h3>
+                <p style="color: var(--color-text-secondary);">All users have been reviewed or no users match your filters.</p>
             </div>
         </div>
     </div>
 
     <!-- Approve User Modal -->
-    <div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">  Approve User</h3>
-            <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Assign Blocks (comma-separated)</label>
-                <input type="text" id="assignedBlocks" placeholder="Bhadrak,Tihidi,Basudevpur" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <p class="text-xs text-gray-500 mt-1">Leave empty to use primary block only</p>
+    <div id="approveModal" class="modal-backdrop" style="display: none;">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">✅ Approve User</h3>
             </div>
-            <div class="flex gap-3">
-                <button id="confirmApprove" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-                    Approve
-                </button>
-                <button id="cancelApprove" class="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition">
-                    Cancel
-                </button>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="form-label">Assign Blocks (comma-separated)</label>
+                    <input type="text" id="assignedBlocks" placeholder="Bhadrak,Tihidi,Basudevpur" class="form-input">
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-1);">Leave empty to use primary block only</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmApprove" class="btn btn-success">Approve</button>
+                <button id="cancelApprove" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
 
     <!-- Reject User Modal -->
-    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">  Reject User</h3>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">Rejection Reason *</label>
-            <textarea id="rejectionReason" rows="4" 
-                      class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none mb-4"
-                      placeholder="Provide a clear reason for rejection..."></textarea>
-            <div class="flex gap-3">
-                <button id="confirmReject" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
-                    Reject
-                </button>
-                <button id="cancelReject" class="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition">
-                    Cancel
-                </button>
+    <div id="rejectModal" class="modal-backdrop" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 class="modal-title">❌ Reject User</h3>
+            </div>
+            <div class="modal-body">
+                <label class="form-label required">Rejection Reason</label>
+                <textarea id="rejectionReason" rows="4" class="form-textarea" placeholder="Provide a clear reason for rejection..."></textarea>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmReject" class="btn btn-danger">Reject</button>
+                <button id="cancelReject" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
 
     <!-- Edit Blocks Modal -->
-    <div id="editBlocksModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50 p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">    Edit Block Assignment</h3>
-            <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">Assigned Blocks (comma-separated)</label>
-                <input type="text" id="editAssignedBlocks" placeholder="Bhadrak,Tihidi,Basudevpur" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                <p class="text-xs text-gray-500 mt-1">Available blocks: Bhadrak, Tihidi, Basudevpur, Bhandaripokhari, Bonth, Agarpada, Dhamanagar</p>
+    <div id="editBlocksModal" class="modal-backdrop" style="display: none;">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h3 class="modal-title">📍 Edit Block Assignment</h3>
             </div>
-            <div class="flex gap-3">
-                <button id="confirmEditBlocks" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-                    Update
-                </button>
-                <button id="cancelEditBlocks" class="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition">
-                    Cancel
-                </button>
+            <div class="modal-body">
+                <div class="mb-4">
+                    <label class="form-label">Assigned Blocks (comma-separated)</label>
+                    <input type="text" id="editAssignedBlocks" placeholder="Bhadrak,Tihidi,Basudevpur" class="form-input">
+                    <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); margin-top: var(--spacing-1);">Available blocks: Bhadrak, Tihidi, Basudevpur, Bhandaripokhari, Bonth, Agarpada, Dhamanagar</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="confirmEditBlocks" class="btn btn-primary">Update</button>
+                <button id="cancelEditBlocks" class="btn btn-secondary">Cancel</button>
             </div>
         </div>
     </div>
 
+    <!-- Design System Components -->
+    <script src="/static/js/components.js"></script>
     <script>
         let allUsers = [];
         let currentUserId = null;
@@ -218,102 +301,98 @@
                 return;
             }
 
-            list.style.display = 'block';
+            list.style.display = 'flex';
             emptyState.style.display = 'none';
 
             list.innerHTML = filtered.map(user => {
                 const status = user.is_active ? 'active' : (user.rejection_reason ? 'rejected' : 'pending');
-                const statusBadge = status === 'active' ? 'bg-green-100 text-green-700' :
-                                   status === 'rejected' ? 'bg-red-100 text-red-700' :
-                                   'bg-yellow-100 text-yellow-700';
+                const statusBadgeClass = status === 'active' ? 'status-badge active' :
+                                       status === 'rejected' ? 'status-badge rejected' :
+                                       'status-badge pending';
 
                 return `
-                    <div class="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition">
-                        <div class="flex justify-between items-start mb-4">
+                    <div class="user-card">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: var(--spacing-4);">
                             <div>
-                                <h3 class="text-xl font-bold text-gray-800">${user.full_name}</h3>
-                                <p class="text-sm text-gray-500">${user.email}</p>
-                                <p class="text-sm text-gray-500">Registered on ${new Date(user.created_at).toLocaleDateString()}</p>
+                                <h3 style="font-size: var(--text-xl); font-weight: var(--font-weight-bold); color: var(--color-text-primary);">${user.full_name}</h3>
+                                <p style="font-size: var(--text-sm); color: var(--color-text-tertiary);">${user.email}</p>
+                                <p style="font-size: var(--text-sm); color: var(--color-text-tertiary);">Registered on ${new Date(user.created_at).toLocaleDateString()}</p>
                             </div>
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold uppercase ${statusBadge}">
+                            <span class="${statusBadgeClass}">
                                 ${status}
                             </span>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div>
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Phone</p>
-                                <p class="text-gray-800">${user.phone}</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Phone</p>
+                                <p style="color: var(--color-text-primary);">${user.phone}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Role</p>
-                                <p class="text-gray-800">${user.role === 'super_admin' ? 'Super Admin' : 'Block Coordinator'}</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Role</p>
+                                <p style="color: var(--color-text-primary);">${user.role === 'super_admin' ? 'Super Admin' : 'Block Coordinator'}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Primary Block</p>
-                                <p class="text-gray-800">${user.primary_block}</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Primary Block</p>
+                                <p style="color: var(--color-text-primary);">${user.primary_block}</p>
                             </div>
                             ${user.assigned_blocks ? `
                             <div class="md:col-span-3">
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Assigned Blocks</p>
-                                <p class="text-gray-800">${user.assigned_blocks}</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Assigned Blocks</p>
+                                <p style="color: var(--color-text-primary);">${user.assigned_blocks}</p>
                             </div>
                             ` : ''}
                             ${user.login_count > 0 ? `
                             <div>
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Last Login</p>
-                                <p class="text-gray-800">${user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Last Login</p>
+                                <p style="color: var(--color-text-primary);">${user.last_login ? new Date(user.last_login).toLocaleDateString() : 'Never'}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Login Count</p>
-                                <p class="text-gray-800">${user.login_count}</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Login Count</p>
+                                <p style="color: var(--color-text-primary);">${user.login_count}</p>
                             </div>
                             ` : ''}
                             ${user.submission_count !== undefined ? `
                             <div>
-                                <p class="text-xs text-gray-500 font-semibold uppercase mb-1">Field Workers</p>
-                                <p class="text-gray-800">${user.submission_count} submitted</p>
+                                <p style="font-size: var(--text-xs); color: var(--color-text-tertiary); font-weight: var(--font-weight-semibold); text-transform: uppercase; margin-bottom: var(--spacing-1);">Field Workers</p>
+                                <p style="color: var(--color-text-primary);">${user.submission_count} submitted</p>
                             </div>
                             ` : ''}
                         </div>
 
                         ${user.rejection_reason ? `
-                        <div class="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-                            <p class="text-xs font-semibold text-red-700 uppercase mb-1">Rejection Reason</p>
-                            <p class="text-sm text-red-800">${user.rejection_reason}</p>
-                            <p class="text-xs text-red-600 mt-1">Rejected by ${user.approved_by} on ${new Date(user.approved_at).toLocaleDateString()}</p>
+                        <div class="alert-box alert-box-danger mb-4">
+                            <p style="font-size: var(--text-xs); font-weight: var(--font-weight-semibold); color: var(--color-danger-dark); text-transform: uppercase; margin-bottom: var(--spacing-1);">Rejection Reason</p>
+                            <p style="font-size: var(--text-sm); color: var(--color-danger-dark);">${user.rejection_reason}</p>
+                            <p style="font-size: var(--text-xs); color: var(--color-danger); margin-top: var(--spacing-1);">Rejected by ${user.approved_by} on ${new Date(user.approved_at).toLocaleDateString()}</p>
                         </div>
                         ` : ''}
 
                         ${user.is_active && user.approved_by ? `
-                        <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-                            <p class="text-xs font-semibold text-green-700 uppercase mb-1">Approved</p>
-                            <p class="text-sm text-green-800">Approved by ${user.approved_by} on ${new Date(user.approved_at).toLocaleDateString()}</p>
+                        <div class="alert-box alert-box-success mb-4">
+                            <p style="font-size: var(--text-xs); font-weight: var(--font-weight-semibold); color: var(--color-success-dark); text-transform: uppercase; margin-bottom: var(--spacing-1);">Approved</p>
+                            <p style="font-size: var(--text-sm); color: var(--color-success-dark);">Approved by ${user.approved_by} on ${new Date(user.approved_at).toLocaleDateString()}</p>
                         </div>
                         ` : ''}
 
                         ${status === 'pending' ? `
-                        <div class="flex gap-3 pt-4 border-t">
-                            <button onclick="showApproveModal(${user.id}, '${user.primary_block}')" 
-                                    class="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-                                  Approve
+                        <div style="display: flex; gap: var(--spacing-3); padding-top: var(--spacing-4); border-top: 1px solid var(--color-border-light);">
+                            <button onclick="showApproveModal(${user.id}, '${user.primary_block}')" class="btn btn-success flex-1">
+                                ✅ Approve
                             </button>
-                            <button onclick="showRejectModal(${user.id})" 
-                                    class="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition">
-                                  Reject
+                            <button onclick="showRejectModal(${user.id})" class="btn btn-danger flex-1">
+                                ❌ Reject
                             </button>
                         </div>
                         ` : ''}
 
                         ${status === 'active' ? `
-                        <div class="flex gap-3 pt-4 border-t">
-                            <button onclick="showEditBlocksModal(${user.id}, '${user.assigned_blocks || user.primary_block}')" 
-                                    class="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition">
-                                    Edit Blocks
+                        <div style="display: flex; gap: var(--spacing-3); padding-top: var(--spacing-4); border-top: 1px solid var(--color-border-light);">
+                            <button onclick="showEditBlocksModal(${user.id}, '${user.assigned_blocks || user.primary_block}')" class="btn btn-primary flex-1">
+                                📍 Edit Blocks
                             </button>
-                            <button onclick="deactivateUser(${user.id})" 
-                                    class="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg font-semibold hover:bg-orange-700 transition">
-                                   Deactivate
+                            <button onclick="deactivateUser(${user.id})" class="btn btn-warning flex-1">
+                                🚫 Deactivate
                             </button>
                         </div>
                         ` : ''}
@@ -325,22 +404,25 @@
         function showApproveModal(id, primaryBlock) {
             currentUserId = id;
             document.getElementById('assignedBlocks').value = primaryBlock;
-            document.getElementById('approveModal').classList.remove('hidden');
-            document.getElementById('approveModal').classList.add('flex');
+            const modal = document.getElementById('approveModal');
+            modal.style.display = 'flex';
+            modal.classList.add('modal-backdrop');
         }
 
         function showRejectModal(id) {
             currentUserId = id;
             document.getElementById('rejectionReason').value = '';
-            document.getElementById('rejectModal').classList.remove('hidden');
-            document.getElementById('rejectModal').classList.add('flex');
+            const modal = document.getElementById('rejectModal');
+            modal.style.display = 'flex';
+            modal.classList.add('modal-backdrop');
         }
 
         function showEditBlocksModal(id, currentBlocks) {
             currentUserId = id;
             document.getElementById('editAssignedBlocks').value = currentBlocks;
-            document.getElementById('editBlocksModal').classList.remove('hidden');
-            document.getElementById('editBlocksModal').classList.add('flex');
+            const modal = document.getElementById('editBlocksModal');
+            modal.style.display = 'flex';
+            modal.classList.add('modal-backdrop');
         }
 
         async function approveUser() {
@@ -435,79 +517,58 @@
         }
 
         function closeModals() {
-            document.getElementById('approveModal').classList.add('hidden');
-            document.getElementById('approveModal').classList.remove('flex');
-            document.getElementById('rejectModal').classList.add('hidden');
-            document.getElementById('rejectModal').classList.remove('flex');
-            document.getElementById('editBlocksModal').classList.add('hidden');
-            document.getElementById('editBlocksModal').classList.remove('flex');
+            document.getElementById('approveModal').style.display = 'none';
+            document.getElementById('rejectModal').style.display = 'none';
+            document.getElementById('editBlocksModal').style.display = 'none';
             currentUserId = null;
         }
 
-        // Event listeners
-        document.getElementById('confirmApprove').addEventListener('click', approveUser);
-        document.getElementById('cancelApprove').addEventListener('click', closeModals);
-        document.getElementById('confirmReject').addEventListener('click', rejectUser);
-        document.getElementById('cancelReject').addEventListener('click', closeModals);
-        document.getElementById('confirmEditBlocks').addEventListener('click', updateBlocks);
-        document.getElementById('cancelEditBlocks').addEventListener('click', closeModals);
-        document.getElementById('statusFilter').addEventListener('change', renderUsers);
-        document.getElementById('roleFilter').addEventListener('change', renderUsers);
-        document.getElementById('searchFilter').addEventListener('input', renderUsers);
-
-        // Initialize
-        loadUsers();
         // ============================================================
-        // Create Admin Modal Functions (Priority 3 Implementation)
+        // Create Admin Modal Functions
         // ============================================================
         
         function openCreateAdminModal() {
             // Create modal HTML
             const modal = document.createElement('div');
             modal.id = 'createAdminModal';
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+            modal.className = 'modal-backdrop';
+            modal.style.display = 'flex';
             modal.innerHTML = `
-                <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
-                    <h3 class="text-2xl font-bold text-gray-800 mb-4">+ Create New Admin</h3>
-                    <form id="createAdminForm">
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
-                            <input type="text" name="full_name" required
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Email *</label>
-                            <input type="email" name="email" required
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Password * (min 8 chars)</label>
-                            <input type="password" name="password" required minlength="8"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                        <div class="mb-4">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Role *</label>
-                            <select name="role" required onchange="toggleBlockField(this)"
-                                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                                <option value="super_admin">Super Admin</option>
-                                <option value="block_coordinator">Block Coordinator</option>
-                            </select>
-                        </div>
-                        <div class="mb-4" id="blockField" style="display: none;">
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">Primary Block *</label>
-                            <input type="text" name="primary_block"
-                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                                   placeholder="e.g., Bhadrak">
-                        </div>
-                        <div class="flex gap-3">
-                            <button type="submit" class="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition">
-                                Create Admin
-                            </button>
-                            <button type="button" onclick="closeCreateAdminModal()" class="flex-1 px-6 py-3 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition">
-                                Cancel
-                            </button>
-                        </div>
-                    </form>
+                <div class="modal">
+                    <div class="modal-header">
+                        <h3 class="modal-title">+ Create New Admin</h3>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createAdminForm">
+                            <div class="mb-4">
+                                <label class="form-label required">Full Name</label>
+                                <input type="text" name="full_name" required class="form-input">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label required">Email</label>
+                                <input type="email" name="email" required class="form-input">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label required">Password (min 8 chars)</label>
+                                <input type="password" name="password" required minlength="8" class="form-input">
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label required">Role</label>
+                                <select name="role" required onchange="toggleBlockField(this)" class="form-select">
+                                    <option value="super_admin">Super Admin</option>
+                                    <option value="block_coordinator">Block Coordinator</option>
+                                </select>
+                            </div>
+                            <div class="mb-4" id="blockField" style="display: none;">
+                                <label class="form-label required">Primary Block</label>
+                                <input type="text" name="primary_block" class="form-input" placeholder="e.g., Bhadrak">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="document.getElementById('createAdminForm').dispatchEvent(new Event('submit'))" class="btn btn-success">Create Admin</button>
+                        <button type="button" onclick="closeCreateAdminModal()" class="btn btn-secondary">Cancel</button>
+                    </div>
                 </div>
             `;
             document.body.appendChild(modal);
@@ -539,18 +600,31 @@
                 
                 if (response.ok) {
                     const data = await response.json();
-                    alert('  Admin created successfully!');
+                    alert('✅ Admin created successfully!');
                     closeCreateAdminModal();
                     loadUsers(); // Reload users list
                 } else {
                     const error = await response.json();
-                    alert('  Error: ' + error.detail);
+                    alert('❌ Error: ' + error.detail);
                 }
             } catch (error) {
-                alert('  Network error. Please try again.');
+                alert('❌ Network error. Please try again.');
             }
         }
+
+        // Event listeners
+        document.getElementById('confirmApprove').addEventListener('click', approveUser);
+        document.getElementById('cancelApprove').addEventListener('click', closeModals);
+        document.getElementById('confirmReject').addEventListener('click', rejectUser);
+        document.getElementById('cancelReject').addEventListener('click', closeModals);
+        document.getElementById('confirmEditBlocks').addEventListener('click', updateBlocks);
+        document.getElementById('cancelEditBlocks').addEventListener('click', closeModals);
+        document.getElementById('statusFilter').addEventListener('change', renderUsers);
+        document.getElementById('roleFilter').addEventListener('change', renderUsers);
+        document.getElementById('searchFilter').addEventListener('input', renderUsers);
+
+        // Initialize
+        loadUsers();
     </script>
 </body>
 </html>
-
