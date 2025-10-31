@@ -167,3 +167,27 @@ Changes
 QA / Validation
 - Backend smoke (unchanged endpoints) passing.
 - Frontend: verified no early `zoomed()` transform runs before layers are initialized.
+
+## Oct 31, 2025 — Zoom + Pins (Finalize per UX)
+
+Summary
+- Clamp zoom to `[2, 10]`, apply initial `k=2` only after all layers render.
+- Pins: single bulgy deep color (navy-slate `#0b1220`) using `mercury_deep` style; remain visible through `k=end`.
+- Layout: lowered map container by 8px to create breathing room under the navbar.
+
+Changes
+- templates/index.html
+  - `scaleExtent([2, 10])`; initial transform applied at end of `loadMap()` via `requestAnimationFrame`.
+  - Pin color unified; `dotStyle = 'mercury_deep'` with 8px glossy dome.
+  - `zoomed()` keeps pin opacity ~0.6 across the range; no fade-out at high zoom.
+  - `#map-container` height reduced and `margin-top: 8px` added.
+
+Validation
+- FastAPI TestClient smoke: OK (no API changes).
+- Frontend sanity (manual):
+  - No mixed pin colors (white vs black) — all pins share the deep neutral.
+  - Initial view starts at k=2 without interfering with layer creation.
+  - Map sits slightly lower; footer unchanged.
+
+Notes
+- Next step remains etched labels at k≥6 with a contrast-aware halo.
