@@ -230,3 +230,12 @@ Changes
 Validation
 - Manual: pins now render as a single bulgy deep dot with soft highlight; no adjacent light dot. Color consistent across all pins.
 - Backend smoke: unchanged and passing.
+
+## Pending / Not Yet Implemented (Nov 2025)
+- Apply branding “Volunteer Management Platform” uniformly across all templates (plan approved; to verify per page after Phase 1 run).
+- Map page: bottom‑left theme dock (small glass button) and “Bhadrak” label (HTML overlay) — implement with theme‑aware color.
+- Lighter background gradients for Ocean/Grass so village ramp reads clearly; avoid stacked depth cues.
+- Keep zoom +/- only; ensure any reset control is removed/hidden across UIs.
+- Labels polish (k≥6): contrast‑aware halo and overlap handling (defer until presentation stabilizes).
+- Search UI is deferred to Phase 4: left‑expanding beside brand, `/api/villages` typeahead, keyboard shortcuts.
+- Boundary union and clip path moved to Backlog; static boundary is acceptable unless seam complaints increase.
