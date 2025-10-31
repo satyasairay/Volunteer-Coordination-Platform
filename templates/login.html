@@ -477,7 +477,7 @@
         <div id="errorAlert" class="alert alert-error"></div>
         <div id="infoAlert" class="alert alert-info"></div>
 
-        <form id="loginForm">
+        <form method="post" action="/admin/login">
             <div class="form-group">
                 <label for="email">Email Address</label>
                 <input type="email" id="email" name="email" required 
@@ -501,87 +501,9 @@
         </div>
     </div>
 
-    <script>
-        const form = document.getElementById('loginForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const errorAlert = document.getElementById('errorAlert');
-        const infoAlert = document.getElementById('infoAlert');
-
-        // Check for logout success message
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('logout') === 'success') {
-            showInfo('    You have been logged out successfully.');
-            // Clear the URL parameter
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const formData = new FormData(form);
-            
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Logging in...';
-            hideAlerts();
-
-            try {
-                const response = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    showInfo('Login successful! Redirecting...');
-                    
-                    setTimeout(() => {
-                        if (result.role === 'super_admin') {
-                            window.location.href = '/admin';
-                        } else if (result.role === 'block_coordinator') {
-                            window.location.href = '/dashboard';
-                        } else {
-                            window.location.href = '/';
-                        }
-                    }, 500);
-                } else {
-                    showError(result.detail || 'Login failed. Please check your credentials.');
-                }
-            } catch (error) {
-                showError('Network error. Please check your connection and try again.');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Login';
-            }
-        });
-
-        function showError(message) {
-            errorAlert.textContent = '    ' + message;
-            errorAlert.style.display = 'block';
-        }
-
-        function showInfo(message) {
-            infoAlert.textContent = '       ' + message;
-            infoAlert.style.display = 'block';
-        }
-
-        function hideAlerts() {
-            errorAlert.style.display = 'none';
-            infoAlert.style.display = 'none';
-        }
-        
-        // Modern Menu Toggle Function
-        function toggleMenu() {
-            const menu = document.getElementById('slideMenu');
-            const overlay = document.getElementById('menuOverlay');
-            const btn = document.getElementById('hamburgerBtn');
-            
-            menu.classList.toggle('active');
-            overlay.classList.toggle('active');
-            btn.classList.toggle('active');
-        }
-    </script>
+    
     </div>
 </body>
 </html>
+
 
