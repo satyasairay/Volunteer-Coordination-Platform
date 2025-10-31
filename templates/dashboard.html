@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -334,43 +334,43 @@
     
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
-            <button class="menu-close" onclick="toggleMenu()">×</button>
+            <button class="menu-close" onclick="toggleMenu()">Ã—</button>
             <h2>Menu</h2>
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
             <a href="/" class="menu-link">
-                <span class="menu-link-icon">🗺️</span>
+                <span class="menu-link-icon">ðŸ—ºï¸</span>
                 <span>Map</span>
             </a>
             <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon">⚕️</span>
+                <span class="menu-link-icon">âš•ï¸</span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
                     <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon">👑</span>
+                        <span class="menu-link-icon">ðŸ‘‘</span>
                         <span>Admin</span>
                     </a>
                 {% else %}
                     <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon">📊</span>
+                        <span class="menu-link-icon">ðŸ“Š</span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon">🚪</span>
+                    <span class="menu-link-icon">ðŸšª</span>
                     <span>Logout</span>
                 </a>
             {% else %}
                 <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon">🔐</span>
+                    <span class="menu-link-icon">ðŸ”</span>
                     <span>Login</span>
                 </a>
             {% endif %}
             <a href="/about" class="menu-link">
-                <span class="menu-link-icon">ℹ️</span>
+                <span class="menu-link-icon">â„¹ï¸</span>
                 <span>About</span>
             </a>
         </div>
@@ -379,7 +379,7 @@
     <nav>
         <div class="nav-brand">
             Volunteer Management Platform
-            <span class="nav-location">📍 Bhadrak</span>
+            <span class="nav-location">ðŸ“ Bhadrak</span>
         </div>
         <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
@@ -391,30 +391,30 @@
     <div class="page-content">
     <div class="dashboard-container">
         <div class="header">
-            <h1>📊 Block Coordinator Dashboard</h1>
+            <h1>ðŸ“Š Block Coordinator Dashboard</h1>
             <p>Welcome! Your account is active and ready to submit Field Worker information.</p>
         </div>
 
         <div class="content-card">
-            <h2>🗺️ View Village Map</h2>
+            <h2>ðŸ—ºï¸ View Village Map</h2>
             <p>Explore the interactive map showing all 1,315 villages in Bhadrak district with geographic boundaries, choropleth visualization, and 3D glowing dots.</p>
             <a href="/" class="btn">Open Village Map</a>
         </div>
 
         <div class="content-card">
-            <h2>📝 Submit Field Worker Information</h2>
+            <h2>ðŸ“ Submit Field Worker Information</h2>
             <p>Add new Field Worker contact details for villages in your assigned block(s). All submissions require admin approval before going live.</p>
             <a href="/field-workers/new" class="btn">Add Field Worker</a>
         </div>
 
         <div class="content-card">
-            <h2>📋 My Submissions</h2>
+            <h2>ðŸ“‹ My Submissions</h2>
             <p>View and manage all Field Worker entries you've submitted, including pending approvals and approved entries.</p>
             <a href="/field-workers/my-submissions" class="btn">View My Submissions</a>
         </div>
 
         <div class="content-card">
-            <h2>⚙️ Account Settings</h2>
+            <h2>âš™ï¸ Account Settings</h2>
             <p>Update your profile information, change password, and manage notification preferences.</p>
             <a href="/admin/login" class="btn btn-secondary">Logout</a>
         </div>
@@ -434,3 +434,4 @@
     </script>
 </body>
 </html>
+
