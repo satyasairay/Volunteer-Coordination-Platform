@@ -133,3 +133,21 @@ Validation
 
 Next
 - Step 3 will “etch” village names inside polygons at zoom ≥ 6 with a contrast-aware halo. This is documented below and will be implemented next.
+
+## Oct 31, 2025 — Zoom Policy Update (Prune + Extend)
+
+Summary
+- Set zoom range to `[2, 10]` and initialize at `k=2` (prunes the first, widest level). Pins remain visible through `k=end` so users can retain positional context at all close zooms.
+
+Changes
+- templates/index.html
+  - `d3.zoom().scaleExtent([2, 10])` and initial transform `scale(2)`.
+  - `resetZoom()` returns to `k=2`.
+  - Pins stay visible across the entire range (opacity ~0.6, ~0.5 beyond `k≥8`).
+
+Rationale
+- Keeping pins through the full range improves continuity while we finalize the etched label experience at high zoom.
+- Pruning the first zoom reduces wide-view overdraw and aligns the default view with practical usage.
+
+Validation
+- No API changes; smoke tests unchanged and passing.
