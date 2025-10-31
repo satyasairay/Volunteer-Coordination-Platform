@@ -819,5 +819,563 @@ With the prioritized fixes applied, this application can achieve production read
 
 ---
 
+## PHASE 6: UI/UX DESIGN CONSISTENCY REVIEW
+
+### Executive Summary
+
+**UI Consistency Grade: D (55/100)**
+
+The application suffers from significant visual design inconsistencies that create a fragmented user experience. Multiple design systems, color schemes, and component styles are used across different pages, resulting in an unprofessional appearance and confusion for users navigating between sections.
+
+---
+
+### 1. COLOR SCHEME INCONSISTENCIES [BLOCKER]
+
+#### Issue: Multiple Conflicting Color Systems
+
+**Found Color Schemes:**
+1. **index.html**: CSS variable-based theme system (Indigo: `#4338ca`, `#312e81`)
+2. **login.html, dashboard.html, register.html, field_worker_new.html**: Hardcoded purple gradient (`#667eea` → `#764ba2`)
+3. **admin.html**: Plain gray (`bg-gray-50`) with white navigation
+4. **admin_users.html, admin_field_workers.html**: Blue gradient headers (`from-blue-600` → `to-blue-700`)
+5. **profile.html**: Multi-color gradient background (`from-green-100 via-blue-50 to-purple-100`)
+6. **admin_blocks.html**: Glassmorphic dark theme with neon colors
+
+**Impact:**
+- Users experience visual disorientation when navigating between pages
+- No cohesive brand identity
+- Appears unprofessional and unfinished
+
+**Recommendation:** Establish single design system:
+```css
+/* Create shared CSS file: static/css/theme.css */
+:root {
+    /* Primary Brand Colors */
+    --color-primary: #4338ca;
+    --color-primary-dark: #312e81;
+    --color-primary-light: #6366f1;
+    
+    /* Semantic Colors */
+    --color-success: #10b981;
+    --color-warning: #f59e0b;
+    --color-error: #ef4444;
+    --color-info: #3b82f6;
+    
+    /* Neutrals */
+    --color-gray-50: #f9fafb;
+    --color-gray-100: #f3f4f6;
+    /* ... etc */
+}
+```
+
+**Action Items:**
+1. Standardize all pages to use CSS variables
+2. Remove all hardcoded color values
+3. Create design token system
+4. Document color usage guidelines
+
+---
+
+### 2. NAVIGATION BAR INCONSISTENCIES [HIGH]
+
+#### Issue: Three Different Navigation Styles
+
+**Navigation Variants Found:**
+
+1. **Glassmorphic Purple Nav** (index.html, login.html, dashboard.html):
+   - `background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
+   - Backdrop blur, white text
+   - Hamburger menu on right
+   - Height: ~68px
+
+2. **Plain White Nav** (admin.html):
+   - `bg-white shadow-sm`
+   - Height: `h-16` (64px)
+   - Text links with different colors
+   - No hamburger menu
+
+3. **Gradient Header** (admin_users.html, admin_field_workers.html):
+   - Blue gradient header instead of nav bar
+   - Different layout structure
+   - Height: `py-6` (~96px)
+
+**Impact:**
+- Users don't recognize consistent navigation pattern
+- Hamburger menu appears/disappears unpredictably
+- Different heights cause layout shifts
+
+**Recommendation:** Standardize navigation component:
+```html
+<!-- Create reusable nav component or shared template -->
+<nav class="app-nav">
+    <div class="app-nav-brand">...</div>
+    <div class="app-nav-menu">...</div>
+    <button class="app-nav-toggle">...</button>
+</nav>
+```
+
+**Action Items:**
+1. Create single navigation component
+2. Consistent height across all pages (72px recommended)
+3. Consistent hamburger placement
+4. Standardize navigation menu items
+
+---
+
+### 3. BUTTON STYLE INCONSISTENCIES [HIGH]
+
+#### Issue: Multiple Button Design Systems
+
+**Button Variants Found:**
+
+1. **Custom CSS Buttons** (login.html, dashboard.html, register.html):
+   ```css
+   .btn-primary {
+       background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+       border-radius: 10px;
+       padding: 0.75rem 1.5rem;
+   }
+   ```
+
+2. **Tailwind Utility Buttons** (admin.html, admin_users.html):
+   ```html
+   <button class="bg-blue-600 text-white py-2 rounded hover:bg-blue-700">
+   ```
+
+3. **Inline Style Buttons** (admin.html JavaScript):
+   ```html
+   <button style="cursor: pointer; border: 3px solid...">
+   ```
+
+4. **Gradient Buttons** (admin_blocks.html):
+   ```html
+   <button class="bg-gradient-to-r from-green-500 to-emerald-600...">
+   ```
+
+**Inconsistencies:**
+- Border radius: `rounded` (4px), `rounded-lg` (8px), `rounded-xl` (12px), `10px` (custom)
+- Padding: `py-2` (8px), `0.75rem 1.5rem` (12px 24px), `px-6 py-3` (24px 12px)
+- Hover effects: Different transforms, shadows, color changes
+- Font weights: `font-semibold`, `font-bold`, `font-weight: 600`
+
+**Impact:**
+- Buttons don't feel like part of same application
+- Inconsistent affordances confuse users
+- No visual hierarchy established
+
+**Recommendation:** Create button component system:
+```css
+/* Primary Button */
+.btn-primary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    /* Consistent styling */
+}
+
+/* Variants */
+.btn-secondary { ... }
+.btn-danger { ... }
+.btn-success { ... }
+```
+
+**Action Items:**
+1. Define button size variants (sm, md, lg)
+2. Standardize border-radius (0.5rem / 8px)
+3. Create consistent hover states
+4. Document button usage in design system
+
+---
+
+### 4. CARD/CONTAINER INCONSISTENCIES [MEDIUM]
+
+#### Issue: Multiple Card Styles
+
+**Card Variants:**
+
+1. **Glassmorphism Cards** (dashboard.html, field_worker_submissions.html):
+   ```css
+   background: rgba(255, 255, 255, 0.15);
+   backdrop-filter: blur(20px);
+   border: 1px solid rgba(255, 255, 255, 0.3);
+   border-radius: 20px;
+   ```
+
+2. **Plain White Cards** (admin.html, admin_users.html):
+   ```html
+   <div class="bg-white rounded-xl shadow-md p-6">
+   ```
+
+3. **Tailwind Cards** (profile.html):
+   ```html
+   <div class="bg-white rounded-2xl shadow-xl">
+   ```
+
+**Border Radius Inconsistencies:**
+- `rounded-lg` (8px)
+- `rounded-xl` (12px)  
+- `rounded-2xl` (16px)
+- `border-radius: 20px` (custom)
+- `rounded` (4px)
+
+**Shadow Inconsistencies:**
+- `shadow` (small)
+- `shadow-md` (medium)
+- `shadow-xl` (large)
+- `shadow-2xl` (extra large)
+- Custom `box-shadow` values
+
+**Impact:**
+- Visual hierarchy unclear
+- Cards don't feel cohesive
+- Spacing inconsistencies create visual noise
+
+**Recommendation:** Standardize card system:
+```css
+.card {
+    background: white;
+    border-radius: 1rem; /* 16px */
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+    padding: 1.5rem;
+}
+
+.card-glass {
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(20px);
+    /* ... */
+}
+```
+
+---
+
+### 5. TYPOGRAPHY INCONSISTENCIES [MEDIUM]
+
+#### Issue: Inconsistent Font Usage
+
+**Font Families:**
+- `'Segoe UI', Tahoma, Geneva, Verdana, sans-serif` (login.html, register.html)
+- `-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif` (index.html)
+- `'Segoe UI', sans-serif` (dashboard.html)
+- Tailwind defaults (admin pages)
+
+**Font Size Inconsistencies:**
+- Headings: `text-3xl`, `text-4xl`, `1.75rem`, `2rem`, `24px`
+- Body: `0.95rem`, `1rem`, `14px`, `16px`
+- Labels: `text-sm`, `0.9rem`, `0.8125rem`
+
+**Font Weight Inconsistencies:**
+- `font-weight: 600`, `font-semibold`, `font-bold`, `font-weight: 700`, `font-weight: 800`
+
+**Impact:**
+- No clear typographic hierarchy
+- Reading experience inconsistent
+- Accessibility issues with font sizes
+
+**Recommendation:** Establish typographic scale:
+```css
+:root {
+    --font-family-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    
+    --text-xs: 0.75rem;
+    --text-sm: 0.875rem;
+    --text-base: 1rem;
+    --text-lg: 1.125rem;
+    --text-xl: 1.25rem;
+    --text-2xl: 1.5rem;
+    --text-3xl: 1.875rem;
+    --text-4xl: 2.25rem;
+}
+```
+
+---
+
+### 6. FORM INPUT INCONSISTENCIES [MEDIUM]
+
+#### Issue: Multiple Input Styles
+
+**Input Variants:**
+
+1. **Glassmorphic Inputs** (login.html, register.html):
+   ```css
+   background: rgba(255, 255, 255, 0.8);
+   border: 1px solid rgba(30, 41, 59, 0.2);
+   border-radius: 10px;
+   ```
+
+2. **Tailwind Inputs** (admin_users.html, profile.html):
+   ```html
+   <input class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+   ```
+
+3. **Mixed Styles** (field_worker_new.html):
+   - Combination of custom CSS and Tailwind
+
+**Inconsistencies:**
+- Border radius: `10px`, `rounded-lg` (8px), `rounded` (4px)
+- Padding: `0.75rem 1rem`, `px-4 py-2`, `px-4 py-3`
+- Focus states: Different border colors, shadow styles
+- Background colors: White, semi-transparent, gray
+
+**Impact:**
+- Forms feel disconnected
+- Focus states inconsistent
+- Accessibility issues with contrast
+
+**Recommendation:** Standardize form inputs:
+```css
+.form-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    background: white;
+    transition: border-color 0.2s;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(67, 56, 202, 0.1);
+}
+```
+
+---
+
+### 7. SPACING INCONSISTENCIES [MEDIUM]
+
+#### Issue: No Consistent Spacing Scale
+
+**Spacing Values Found:**
+- Padding: `p-4`, `p-6`, `p-8`, `2rem`, `24px`, `1.5rem`
+- Margins: `mb-2`, `mb-4`, `mb-6`, `mb-8`, `mt-2`, `0.5rem`
+- Gaps: `gap-3`, `gap-4`, `gap-6`, `12px`, `16px`
+
+**Impact:**
+- Visual rhythm broken
+- Pages feel unbalanced
+- Layout inconsistencies
+
+**Recommendation:** Use 8px spacing scale:
+```css
+:root {
+    --spacing-1: 0.25rem;  /* 4px */
+    --spacing-2: 0.5rem;   /* 8px */
+    --spacing-3: 0.75rem; /* 12px */
+    --spacing-4: 1rem;    /* 16px */
+    --spacing-6: 1.5rem;  /* 24px */
+    --spacing-8: 2rem;    /* 32px */
+}
+```
+
+---
+
+### 8. MODAL/DIALOG INCONSISTENCIES [MEDIUM]
+
+#### Issue: Different Modal Styles
+
+**Modal Variants:**
+
+1. **Tailwind Modals** (admin_users.html):
+   ```html
+   <div class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+   <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl">
+   ```
+
+2. **Custom CSS Modals** (index.html):
+   ```css
+   background: white;
+   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+   border-radius: 16px;
+   ```
+
+**Inconsistencies:**
+- Overlay opacity: `bg-opacity-50`, `rgba(0, 0, 0, 0.5)`, `rgba(0, 0, 0, 0.7)`
+- Border radius: `rounded-2xl` (16px), `16px`, `20px`
+- Shadow: `shadow-2xl`, custom `box-shadow`
+- Padding: `p-6`, `24px`, `2rem`
+
+**Impact:**
+- Modals don't feel consistent
+- User expectations violated
+- No standard interaction patterns
+
+---
+
+### 9. RESPONSIVE DESIGN INCONSISTENCIES [MEDIUM]
+
+#### Issue: Inconsistent Breakpoints and Mobile UX
+
+**Breakpoint Usage:**
+- Some pages: `md:grid-cols-3`, `md:px-8`
+- Others: Custom media queries
+- Inconsistent mobile navigation patterns
+
+**Mobile Navigation:**
+- index.html: Right-side slide menu
+- admin.html: No mobile menu
+- admin_users.html: No mobile menu
+- login.html: Right-side slide menu
+
+**Impact:**
+- Mobile experience fragmented
+- Navigation accessibility issues
+- Touch targets inconsistent
+
+---
+
+### 10. ACCESSIBILITY ISSUES [HIGH]
+
+#### Issues Found:
+
+1. **Color Contrast:**
+   - Some glassmorphic text may not meet WCAG AA (4.5:1 ratio)
+   - Semi-transparent backgrounds reduce contrast
+
+2. **Focus States:**
+   - Inconsistent focus indicators
+   - Some inputs lack visible focus states
+
+3. **Touch Targets:**
+   - Some buttons smaller than 44x44px recommendation
+   - Inconsistent button sizes
+
+4. **Semantic HTML:**
+   - Mixed use of `<div>` vs semantic elements
+   - Missing ARIA labels in some places
+
+5. **Keyboard Navigation:**
+   - Modal escape key handling inconsistent
+   - Tab order may be incorrect in some forms
+
+---
+
+### 11. ANIMATION/TRANSITION INCONSISTENCIES [LOW]
+
+#### Issue: Inconsistent Animation Patterns
+
+**Transition Values:**
+- `transition: all 0.3s ease`
+- `transition: all 0.2s ease`
+- `transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1)`
+- No transitions on some elements
+
+**Hover Effects:**
+- Some: `transform: translateY(-2px)`
+- Others: `transform: scale(1.05)`
+- Some: `background` color change only
+- Inconsistent shadow changes
+
+**Impact:**
+- UI feels janky
+- No unified motion language
+- Performance varies
+
+---
+
+### 12. ICON AND EMOJI INCONSISTENCIES [LOW]
+
+#### Issue: Mixed Icon Systems
+
+**Icon Usage:**
+- Emoji icons: ``, ``, ``, etc.
+- Unicode characters
+- Some pages have icons, others don't
+- Icon sizes inconsistent
+
+**Recommendation:**
+- Use icon font or SVG sprite
+- Standardize icon sizes
+- Consistent icon library (e.g., Heroicons, Font Awesome)
+
+---
+
+### PRIORITIZED UI/UX FIXES
+
+#### BLOCKER: Must Fix Immediately
+
+1. **Unify Color System** - Create single CSS variable system
+   - **Effort:** 2-3 days
+   - **Impact:** Professional appearance, brand identity
+
+2. **Standardize Navigation** - Single nav component
+   - **Effort:** 1-2 days
+   - **Impact:** User orientation, navigation clarity
+
+#### HIGH: Fix Before Production
+
+3. **Button Component System** - Unified button styles
+   - **Effort:** 1 day
+   - **Impact:** Consistent interactions
+
+4. **Card/Container Standardization** - Single card system
+   - **Effort:** 1 day
+   - **Impact:** Visual hierarchy
+
+5. **Typography Scale** - Consistent fonts and sizes
+   - **Effort:** 1 day
+   - **Impact:** Readability, accessibility
+
+6. **Form Input Standardization** - Unified form styles
+   - **Effort:** 1 day
+   - **Impact:** Form usability
+
+#### MEDIUM: Fix Within Next Sprint
+
+7. **Spacing System** - 8px grid system
+8. **Modal Standardization** - Consistent modal patterns
+9. **Responsive Design Audit** - Mobile consistency
+10. **Accessibility Improvements** - WCAG compliance
+
+#### LOW: Optional Polish
+
+11. **Animation System** - Unified transitions
+12. **Icon System** - Standardized icons
+
+---
+
+### DESIGN SYSTEM RECOMMENDATION
+
+**Create Shared Design System:**
+
+```
+static/
+├── css/
+│   ├── theme.css          # CSS variables, colors, spacing
+│   ├── components.css     # Buttons, cards, inputs, modals
+│   ├── typography.css     # Font system, text styles
+│   └── utilities.css      # Common utilities
+└── js/
+    └── components.js      # Reusable JS components
+```
+
+**Design Tokens:**
+- Colors (primary, secondary, semantic)
+- Typography scale
+- Spacing scale (8px grid)
+- Border radius scale
+- Shadow scale
+- Animation durations
+
+**Component Library:**
+- Navigation component
+- Button variants
+- Card variants
+- Form inputs
+- Modals/dialogs
+- Toast notifications
+
+---
+
+### ESTIMATED EFFORT FOR UI CONSISTENCY
+
+**Total Time:** 2-3 weeks
+
+- Week 1: Design system creation, color/nav/button standardization
+- Week 2: Forms, cards, typography, spacing
+- Week 3: Modals, responsive, accessibility, polish
+
+---
+
 *End of Audit Report*
 
