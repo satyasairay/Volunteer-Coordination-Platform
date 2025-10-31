@@ -210,3 +210,16 @@ Changes
 Validation
 - FastAPI TestClient smoke: OK.
 - Manual sanity: pins are hidden at start, appear after zooming beyond threshold, no white/black discrepancy, and shrink at max zoom.
+
+## Oct 31, 2025 — Pin Artifact Fix (Double Pins)
+
+Summary
+- Eliminated the “two pins per village” appearance. The lighter “second pin” was caused by separate overlay highlight elements within each dot. Replaced with a single radial-gradient highlight inside one element.
+
+Changes
+- templates/index.html
+  - `getDotHTML('mercury_deep')`: removed nested highlight divs; now uses a single radial-gradient background + subtle inner shadow. Ensures exactly one dot per village visually.
+
+Validation
+- Manual: pins now render as a single bulgy deep dot with soft highlight; no adjacent light dot. Color consistent across all pins.
+- Backend smoke: unchanged and passing.
