@@ -140,7 +140,9 @@
             padding: var(--spacing-4) var(--spacing-8);
             box-shadow: var(--shadow-lg);
             position: relative;
-            z-index: var(--z-fixed);
+            z-index: 100;
+            width: 100%;
+            box-sizing: border-box;
         }
         
         /* Theme Toggle Button */
@@ -233,101 +235,186 @@
             transform: rotate(-45deg) translate(7px, -7px);
         }
         
-        /* RIGHT-SIDE SLIDE-IN MENU */
+        /* RIGHT-SIDE SLIDE-IN MENU - Next Gen Style - Matches Map Background */
         .slide-menu {
             position: fixed;
             top: 0;
-            right: -100%;
-            width: 320px;
+            right: 0;
+            width: 280px;
             height: 100vh;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.2);
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 200;
+            background: linear-gradient(135deg, rgba(55, 65, 81, 0.98) 0%, rgba(31, 41, 55, 0.98) 100%);
+            backdrop-filter: blur(40px) saturate(180%);
+            box-shadow: -12px 0 50px rgba(0, 0, 0, 0.6), inset 1px 0 0 rgba(255, 255, 255, 0.05);
+            transform: translateX(100%);
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
             display: flex;
             flex-direction: column;
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            will-change: transform;
         }
         
         .slide-menu.active {
-            right: 0;
+            transform: translateX(0);
         }
         
         .menu-header {
-            background: linear-gradient(135deg, var(--theme-primary) 0%, var(--theme-secondary) 100%);
-            padding: var(--spacing-6);
-            color: var(--color-text-inverse);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(59, 130, 246, 0.08) 100%);
+            padding: var(--spacing-4) var(--spacing-8) var(--spacing-3);
+            color: rgba(255, 255, 255, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+            overflow: hidden;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .menu-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.06) 0%, rgba(59, 130, 246, 0.04) 100%);
+            pointer-events: none;
+        }
+        
+        .menu-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
         }
         
         .menu-header h2 {
-            font-size: var(--text-2xl);
-            font-weight: var(--font-weight-extrabold);
+            font-size: var(--text-lg);
+            font-weight: var(--font-weight-bold);
             margin-bottom: var(--spacing-1);
+            position: relative;
+            z-index: 1;
+            letter-spacing: -0.3px;
+            color: rgba(255, 255, 255, 0.95);
         }
         
         .menu-header p {
-            font-size: var(--text-sm);
-            opacity: 0.9;
+            font-size: var(--text-xs);
+            opacity: 0.75;
+            position: relative;
+            z-index: 1;
+            font-weight: var(--font-weight-normal);
+            letter-spacing: 0.2px;
         }
         
         .menu-close {
             position: absolute;
-            top: var(--spacing-5);
-            right: var(--spacing-5);
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: var(--radius-md);
-            color: var(--color-text-inverse);
-            font-size: var(--text-2xl);
+            top: var(--spacing-4);
+            right: var(--spacing-8);
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-sm);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: var(--text-base);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all var(--duration-base) var(--easing-ease);
-            min-height: 44px;
-            min-width: 44px;
+            min-height: 32px;
+            min-width: 32px;
+            z-index: 2;
+            font-weight: var(--font-weight-bold);
+        }
+        
+        .menu-close::before {
+            content: '×';
+            font-size: 24px;
+            line-height: 1;
         }
         
         .menu-close:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.25);
+            color: rgba(255, 255, 255, 1);
         }
         
         .menu-links {
             flex: 1;
-            padding: var(--spacing-6);
+            padding: var(--spacing-4) var(--spacing-8);
             overflow-y: auto;
+            background: rgba(17, 24, 39, 0.4);
+        }
+        
+        .menu-links::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .menu-links::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+        
+        .menu-links::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
         }
         
         .menu-link {
             display: flex;
             align-items: center;
-            padding: var(--spacing-4);
-            margin-bottom: var(--spacing-3);
-            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
-            border-radius: var(--radius-lg);
+            padding: var(--spacing-3) var(--spacing-4);
+            margin-bottom: var(--spacing-2);
+            background: rgba(255, 255, 255, 0.07);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 2px solid transparent;
+            border-radius: var(--radius-md);
             text-decoration: none;
-            color: var(--color-text-primary);
-            font-weight: var(--font-weight-semibold);
-            font-size: var(--text-base);
-            transition: all var(--duration-base) var(--easing-ease);
-            border: 2px solid transparent;
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: var(--font-weight-medium);
+            font-size: var(--text-sm);
+            position: relative;
+            backdrop-filter: blur(10px);
         }
         
         .menu-link:hover {
-            transform: translateX(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--color-primary);
-            background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-gray-50) 100%);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.18);
+            border-left-color: rgba(34, 197, 94, 0.6);
+            color: rgba(255, 255, 255, 1);
+        }
+        
+        .menu-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: rgba(34, 197, 94, 0.9);
+            color: rgba(255, 255, 255, 1);
+            font-weight: var(--font-weight-semibold);
         }
         
         .menu-link-icon {
-            font-size: var(--text-2xl);
-            margin-right: var(--spacing-4);
-            width: 32px;
-            text-align: center;
+            font-size: var(--text-base);
+            margin-right: var(--spacing-3);
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: var(--radius-sm);
+            flex-shrink: 0;
+            opacity: 0.85;
+        }
+        
+        .menu-link:hover .menu-link-icon,
+        .menu-link.active .menu-link-icon {
+            background: rgba(255, 255, 255, 0.12);
+            opacity: 1;
         }
         
         /* Menu Overlay */
@@ -338,10 +425,12 @@
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 199;
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 999;
+            will-change: opacity, visibility;
         }
         
         .menu-overlay.active {
@@ -395,14 +484,14 @@
             bottom: 0;
             box-shadow: inset 0 0 40px 10px rgba(0, 0, 0, 0.05);
             pointer-events: none;
-            z-index: 5;
+            z-index: 2;
         }
         
         svg {
             width: 100%;
             height: 100%;
             position: relative;
-            z-index: 2;
+            z-index: 1;
             filter: drop-shadow(0 8px 24px rgba(0,0,0,0.4));
         }
         
@@ -769,38 +858,38 @@
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
-            <a href="/" class="menu-link">
-                <span class="menu-link-icon"></span>
+            <a href="/" class="menu-link {% if request.url.path == '/' %}active{% endif %}">
+                <span class="menu-link-icon">🗺️</span>
                 <span>Map</span>
             </a>
-            <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon"></span>
+            <a href="/doctors" class="menu-link {% if '/doctors' in request.url.path %}active{% endif %}">
+                <span class="menu-link-icon">👨‍⚕️</span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
-                    <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon"></span>
+                    <a href="/admin" class="menu-link {% if '/admin' in request.url.path and '/admin/login' not in request.url.path %}active{% endif %}">
+                        <span class="menu-link-icon">⚙️</span>
                         <span>Admin</span>
                     </a>
                 {% else %}
-                    <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon"></span>
+                    <a href="/dashboard" class="menu-link {% if '/dashboard' in request.url.path %}active{% endif %}">
+                        <span class="menu-link-icon">📊</span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon"></span>
+                    <span class="menu-link-icon">🚪</span>
                     <span>Logout</span>
                 </a>
             {% else %}
-                <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon"></span>
+                <a href="/admin/login" class="menu-link {% if '/admin/login' in request.url.path %}active{% endif %}">
+                    <span class="menu-link-icon">🔐</span>
                     <span>Login</span>
                 </a>
             {% endif %}
-            <a href="/about" class="menu-link">
-                <span class="menu-link-icon"></span>
+            <a href="/about" class="menu-link {% if '/about' in request.url.path %}active{% endif %}">
+                <span class="menu-link-icon">ℹ️</span>
                 <span>About</span>
             </a>
         </div>
@@ -809,32 +898,12 @@
     <!-- Modern Navigation Bar -->
     <nav class="app-nav">
         <a href="/" class="app-nav-brand">Joyguru Bhadrak</a>
-        <button class="theme-toggle" onclick="toggleTheme()" title="Change Theme">
-            
-        </button>
         <button class="app-nav-toggle" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
             <span></span>
             <span></span>
         </button>
     </nav>
-    <!-- Floating right controls: search + nextgen theme icon -->
-    <!-- search/theme controls removed for Phase 4 -->
-        <button class="theme-toggle" onclick="toggleTheme()" title="Change Theme">
-            <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <defs>
-                    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0%" stop-color="#ffffff" stop-opacity="0.95"/>
-                        <stop offset="100%" stop-color="#d1d5db" stop-opacity="0.6"/>
-                    </linearGradient>
-                </defs>
-                <circle cx="12" cy="12" r="8" fill="url(#g1)" opacity="0.35"/>
-                <path d="M12 4a8 8 0 100 16 8 8 0 010-16z" fill="none" stroke="white" stroke-opacity="0.9" stroke-width="1.6"/>
-                <path d="M12 4 A8 8 0 0 1 20 12" fill="none" stroke="white" stroke-opacity="0.9" stroke-width="1.6"/>
-                <path d="M12 12 L19 9" stroke="white" stroke-opacity="0.9" stroke-width="1.6" stroke-linecap="round"/>
-            </svg>
-        </button>
-    </div>
     
     <!-- SIDEBAR & SEARCH REMOVED PER USER REQUEST - PRIORITY 1 -->
     
@@ -1745,6 +1814,22 @@
             overlay.classList.toggle('active');
             btn.classList.toggle('active');
         }
+        
+        // Set active menu state based on current URL
+        (function setActiveMenuState() {
+            const currentPath = window.location.pathname;
+            const menuLinks = document.querySelectorAll('.menu-link');
+            
+            menuLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && (currentPath === href || 
+                    (href !== '/' && currentPath.startsWith(href)))) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        })();
         
         // Theme Toggle Function - Cycles through 3 themes
         function toggleTheme() {
