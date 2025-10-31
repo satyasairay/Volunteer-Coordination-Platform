@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Volunteer Management Platform Bhadrak</title>
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/typography.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/utilities.css">
+    
     <style>
         * {
             margin: 0;
@@ -12,29 +19,191 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-primary);
             min-height: 100vh;
             padding: 0;
         }
         
-        .page-content {
-            min-height: calc(100vh - 68px);
+        /* Navigation - Custom styles */
+        .app-nav {
+            background: var(--gradient-primary);
+        }
+        
+        /* Hamburger Button Custom Styling */
+        .app-nav-toggle {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-lg);
+            width: 44px;
+            height: 44px;
+            transition: all var(--duration-base) var(--easing-ease);
+        }
+        
+        .app-nav-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.05);
+        }
+        
+        .app-nav-toggle span {
+            width: 24px;
+            height: 3px;
+            background: var(--color-text-inverse);
+            border-radius: 2px;
+            transition: all var(--duration-base) var(--easing-ease);
+            display: block;
+        }
+        
+        .app-nav-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(7px, 7px);
+        }
+        
+        .app-nav-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+        
+        .app-nav-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+        
+        /* RIGHT-SIDE SLIDE-IN MENU */
+        .slide-menu {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 320px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: var(--glass-blur);
+            box-shadow: var(--shadow-xl);
+            transition: right var(--duration-slower) cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: var(--z-fixed);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slide-menu.active {
+            right: 0;
+        }
+        
+        .menu-header {
+            background: var(--gradient-primary);
+            padding: var(--spacing-6);
+            color: var(--color-text-inverse);
+        }
+        
+        .menu-header h2 {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-weight-extrabold);
+            margin-bottom: var(--spacing-1);
+        }
+        
+        .menu-header p {
+            font-size: var(--text-sm);
+            opacity: 0.9;
+        }
+        
+        .menu-close {
+            position: absolute;
+            top: var(--spacing-5);
+            right: var(--spacing-5);
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            border-radius: var(--radius-md);
+            color: var(--color-text-inverse);
+            font-size: var(--text-2xl);
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem 1rem;
+            transition: all var(--duration-base) var(--easing-ease);
+            min-height: 44px;
+            min-width: 44px;
+        }
+        
+        .menu-close:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .menu-links {
+            flex: 1;
+            padding: var(--spacing-6);
+            overflow-y: auto;
+        }
+        
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-4);
+            margin-bottom: var(--spacing-3);
+            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
+            border-radius: var(--radius-lg);
+            text-decoration: none;
+            color: var(--color-text-primary);
+            font-weight: var(--font-weight-semibold);
+            font-size: var(--text-base);
+            transition: all var(--duration-base) var(--easing-ease);
+            border: 2px solid transparent;
+        }
+        
+        .menu-link:hover {
+            transform: translateX(-4px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--color-primary);
+            background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-gray-50) 100%);
+        }
+        
+        .menu-link-icon {
+            font-size: var(--text-2xl);
+            margin-right: var(--spacing-4);
+            width: 32px;
+            text-align: center;
+        }
+        
+        /* Menu Overlay */
+        .menu-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--color-bg-overlay);
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--duration-base) var(--easing-ease);
+            z-index: calc(var(--z-fixed) - 1);
+        }
+        
+        .menu-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .page-content {
+            min-height: calc(100vh - var(--nav-height));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-8) var(--spacing-4);
         }
 
         .register-container {
             width: 100%;
             max-width: 500px;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-2xl);
+            padding: var(--spacing-8);
+            box-shadow: var(--shadow-xl);
             animation: fadeIn 0.5s ease-out;
         }
 
@@ -45,373 +214,80 @@
 
         .header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: var(--spacing-8);
         }
 
         .header h1 {
-            color: #1e293b;
-            font-size: 1.75rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            color: var(--color-text-primary);
+            font-size: var(--text-3xl);
+            font-weight: var(--font-weight-bold);
+            margin-bottom: var(--spacing-2);
         }
 
         .header p {
-            color: #475569;
-            font-size: 0.95rem;
+            color: var(--color-text-secondary);
+            font-size: var(--text-base);
         }
 
         .form-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: var(--spacing-5);
         }
 
-        label {
-            display: block;
-            color: #1e293b;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        label .required {
-            color: #dc2626;
-            margin-left: 2px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid rgba(30, 41, 59, 0.2);
-            border-radius: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            color: #1e293b;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: #3b82f6;
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 0.875rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 0.5rem;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .alert {
-            padding: 0.875rem 1rem;
-            border-radius: 10px;
-            margin-bottom: 1.25rem;
-            font-size: 0.9rem;
-            display: none;
-        }
-
-        .alert-success {
-            background: rgba(34, 197, 94, 0.15);
-            border: 1px solid rgba(34, 197, 94, 0.3);
-            color: #166534;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            color: #991b1b;
+        .help-text {
+            font-size: var(--text-sm);
+            color: var(--color-text-tertiary);
+            margin-top: var(--spacing-1);
         }
 
         .footer-links {
             text-align: center;
-            margin-top: 1.5rem;
-            padding-top: 1.5rem;
-            border-top: 1px solid rgba(30, 41, 59, 0.1);
+            margin-top: var(--spacing-6);
+            padding-top: var(--spacing-6);
+            border-top: 1px solid var(--color-border-light);
         }
 
         .footer-links a {
-            color: #3b82f6;
+            color: var(--color-primary);
             text-decoration: none;
-            font-weight: 600;
-            transition: color 0.3s ease;
+            font-weight: var(--font-weight-semibold);
+            transition: color var(--duration-base) var(--easing-ease);
         }
 
         .footer-links a:hover {
-            color: #2563eb;
-        }
-
-        .help-text {
-            font-size: 0.85rem;
-            color: #64748b;
-            margin-top: 0.25rem;
-        }
-        
-        /* Modern Navigation - Same as login.html */
-        nav {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            backdrop-filter: blur(20px);
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 100;
-        }
-        
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 22px;
-            font-weight: 800;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-        
-        .nav-location {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
-            margin-left: 16px;
-            font-weight: 500;
-        }
-        
-        .hamburger-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-            transition: all 0.3s ease;
-            z-index: 101;
-        }
-        
-        .hamburger-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.05);
-        }
-        
-        .hamburger-btn span {
-            width: 24px;
-            height: 3px;
-            background: white;
-            border-radius: 2px;
-            transition: all 0.3s ease;
-        }
-        
-        .hamburger-btn.active span:nth-child(1) {
-            transform: rotate(45deg) translate(7px, 7px);
-        }
-        
-        .hamburger-btn.active span:nth-child(2) {
-            opacity: 0;
-        }
-        
-        .hamburger-btn.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
-        .slide-menu {
-            position: fixed;
-            top: 0;
-            right: -100%;
-            width: 320px;
-            height: 100vh;
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.2);
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 200;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .slide-menu.active {
-            right: 0;
-        }
-        
-        .menu-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 24px;
-            color: white;
-        }
-        
-        .menu-header h2 {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
-        }
-        
-        .menu-header p {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-        
-        .menu-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            width: 36px;
-            height: 36px;
-            background: rgba(255, 255, 255, 0.2);
-            border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s ease;
-        }
-        
-        .menu-close:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
-        }
-        
-        .menu-links {
-            flex: 1;
-            padding: 24px;
-            overflow-y: auto;
-        }
-        
-        .menu-link {
-            display: flex;
-            align-items: center;
-            padding: 16px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
-            text-decoration: none;
-            color: #1a1a1a;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-        
-        .menu-link:hover {
-            transform: translateX(-4px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-        }
-        
-        .menu-link-icon {
-            font-size: 24px;
-            margin-right: 16px;
-            width: 32px;
-            text-align: center;
-        }
-        
-        .menu-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 199;
-        }
-        
-        .menu-overlay.active {
-            opacity: 1;
-            visibility: visible;
+            color: var(--color-primary-dark);
         }
 
         @media (max-width: 768px) {
-            nav {
-                padding: 12px 20px;
-            }
-            
-            .nav-brand {
-                font-size: 18px;
-            }
-            
-            .nav-location {
-                display: none;
-            }
-            
             .slide-menu {
                 width: 280px;
             }
             
             .register-container {
-                padding: 1.5rem;
-                border-radius: 15px;
+                padding: var(--spacing-6);
+                border-radius: var(--radius-xl);
             }
 
             .header h1 {
-                font-size: 1.5rem;
+                font-size: var(--text-2xl);
             }
 
             .header p {
-                font-size: 0.875rem;
-            }
-
-            input, select {
-                padding: 0.625rem 0.875rem;
-                font-size: 0.875rem;
-            }
-
-            .btn-primary {
-                padding: 0.75rem;
-                font-size: 0.95rem;
+                font-size: var(--text-sm);
             }
         }
-
+        
         @media (max-width: 480px) {
-            nav {
-                padding: 10px 16px;
-            }
-            
-            .nav-brand {
-                font-size: 16px;
-            }
-            
             .slide-menu {
                 width: 100%;
                 max-width: 320px;
             }
             
             .register-container {
-                padding: 1.25rem;
+                padding: var(--spacing-5);
             }
 
             .header h1 {
-                font-size: 1.375rem;
+                font-size: var(--text-xl);
             }
         }
     </style>
@@ -421,54 +297,53 @@
     
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
-            <button class="menu-close" onclick="toggleMenu()">  </button>
+            <button class="menu-close" onclick="toggleMenu()">×</button>
             <h2>Menu</h2>
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
             <a href="/" class="menu-link">
-                <span class="menu-link-icon">       </span>
+                <span class="menu-link-icon">🗺️</span>
                 <span>Map</span>
             </a>
             <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon">      </span>
+                <span class="menu-link-icon">👨‍⚕️</span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
                     <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon">    </span>
+                        <span class="menu-link-icon">⚙️</span>
                         <span>Admin</span>
                     </a>
                 {% else %}
                     <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon">    </span>
+                        <span class="menu-link-icon">📊</span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon">    </span>
+                    <span class="menu-link-icon">🚪</span>
                     <span>Logout</span>
                 </a>
             {% else %}
                 <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon">    </span>
+                    <span class="menu-link-icon">🔐</span>
                     <span>Login</span>
                 </a>
             {% endif %}
             <a href="/about" class="menu-link">
-                <span class="menu-link-icon">      </span>
+                <span class="menu-link-icon">ℹ️</span>
                 <span>About</span>
             </a>
         </div>
     </div>
     
-    <nav>
-        <div class="nav-brand">
-            Volunteer Management Platform
-            <span class="nav-location">     Bhadrak</span>
-        </div>
-        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
+    <nav class="app-nav">
+        <a href="/" class="app-nav-brand">Volunteer Management Platform
+            <span style="font-size: var(--text-sm); margin-left: var(--spacing-4); font-weight: var(--font-weight-medium);">📍 Bhadrak</span>
+        </a>
+        <button class="app-nav-toggle" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
             <span></span>
             <span></span>
@@ -476,81 +351,84 @@
     </nav>
     
     <div class="page-content">
-    <div class="register-container">
-        <div class="header">
-            <h1>     Block Coordinator Registration</h1>
-            <p>Request access to submit Field Worker information</p>
-        </div>
+        <div class="register-container">
+            <div class="header">
+                <h1>👤 Block Coordinator Registration</h1>
+                <p>Request access to submit Field Worker information</p>
+            </div>
 
-        <div id="successAlert" class="alert alert-success">
+            <div id="successAlert" class="alert alert-success" style="display: none;">
                 Registration successful! Your request is pending admin approval.
-        </div>
-
-        <div id="errorAlert" class="alert alert-error"></div>
-
-        <form id="registerForm">
-            <div class="form-group">
-                <label for="full_name">Full Name <span class="required">*</span></label>
-                <input type="text" id="full_name" name="full_name" required 
-                       placeholder="Enter your full name">
             </div>
 
-            <div class="form-group">
-                <label for="email">Email Address <span class="required">*</span></label>
-                <input type="email" id="email" name="email" required 
-                       placeholder="your.email@example.com">
-                <div class="help-text">Use your official email address</div>
+            <div id="errorAlert" class="alert alert-error" style="display: none;"></div>
+
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="full_name" class="form-label required">Full Name</label>
+                    <input type="text" id="full_name" name="full_name" class="form-input" required 
+                           placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="form-label required">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-input" required 
+                           placeholder="your.email@example.com">
+                    <div class="help-text">Use your official email address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="phone" class="form-label required">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" class="form-input" required 
+                           pattern="[0-9]{10}" 
+                           placeholder="10-digit mobile number">
+                    <div class="help-text">10-digit mobile number without spaces</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="primary_block" class="form-label required">Primary Block</label>
+                    <select id="primary_block" name="primary_block" class="form-select" required>
+                        <option value="">-- Select Block --</option>
+                        <option value="Bhadrak">Bhadrak</option>
+                        <option value="Basudevpur">Basudevpur</option>
+                        <option value="Tihidi">Tihidi</option>
+                        <option value="Chandbali">Chandbali</option>
+                        <option value="Dhamnagar">Dhamnagar</option>
+                        <option value="Tihidi">Tihidi</option>
+                        <option value="Bonth">Bonth</option>
+                    </select>
+                    <div class="help-text">Select your primary working block</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password" class="form-label required">Password</label>
+                    <input type="password" id="password" name="password" class="form-input" required 
+                           minlength="6" 
+                           placeholder="Minimum 6 characters">
+                    <div class="help-text">Create a secure password (min. 6 characters)</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password" class="form-label required">Confirm Password</label>
+                    <input type="password" id="confirm_password" name="confirm_password" class="form-input" required 
+                           minlength="6" 
+                           placeholder="Re-enter your password">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full" id="submitBtn">
+                    Register Account
+                </button>
+            </form>
+
+            <div class="footer-links">
+                Already have an account? <a href="/admin/login">Login here</a>
+                <a href="/" style="display: block; margin-top: var(--spacing-2);">Back to Map</a>
             </div>
-
-            <div class="form-group">
-                <label for="phone">Phone Number <span class="required">*</span></label>
-                <input type="tel" id="phone" name="phone" required 
-                       pattern="[0-9]{10}" 
-                       placeholder="10-digit mobile number">
-                <div class="help-text">10-digit mobile number without spaces</div>
-            </div>
-
-            <div class="form-group">
-                <label for="primary_block">Primary Block <span class="required">*</span></label>
-                <select id="primary_block" name="primary_block" required>
-                    <option value="">-- Select Block --</option>
-                    <option value="Bhadrak">Bhadrak</option>
-                    <option value="Basudevpur">Basudevpur</option>
-                    <option value="Tihidi">Tihidi</option>
-                    <option value="Chandbali">Chandbali</option>
-                    <option value="Dhamnagar">Dhamnagar</option>
-                    <option value="Tihidi">Tihidi</option>
-                    <option value="Bonth">Bonth</option>
-                </select>
-                <div class="help-text">Select your primary working block</div>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password <span class="required">*</span></label>
-                <input type="password" id="password" name="password" required 
-                       minlength="6" 
-                       placeholder="Minimum 6 characters">
-                <div class="help-text">Create a secure password (min. 6 characters)</div>
-            </div>
-
-            <div class="form-group">
-                <label for="confirm_password">Confirm Password <span class="required">*</span></label>
-                <input type="password" id="confirm_password" name="confirm_password" required 
-                       minlength="6" 
-                       placeholder="Re-enter your password">
-            </div>
-
-            <button type="submit" class="btn-primary" id="submitBtn">
-                Register Account
-            </button>
-        </form>
-
-        <div class="footer-links">
-            Already have an account? <a href="/admin/login">Login here</a>
-            <a href="/" style="display: block; margin-top: 0.5rem;">Back to Map</a>
         </div>
     </div>
 
+    <!-- Design System Components -->
+    <script src="/static/js/components.js"></script>
     <script>
         const form = document.getElementById('registerForm');
         const submitBtn = document.getElementById('submitBtn');
@@ -609,7 +487,7 @@
         }
 
         function showError(message) {
-            errorAlert.textContent = '    ' + message;
+            errorAlert.textContent = '❌ ' + message;
             errorAlert.style.display = 'block';
             successAlert.style.display = 'none';
         }
@@ -624,7 +502,5 @@
             btn.classList.toggle('active');
         }
     </script>
-    </div>
 </body>
 </html>
-

@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Volunteer Management Platform Bhadrak</title>
+    
+    <!-- Design System -->
+    <link rel="stylesheet" href="/static/css/theme.css">
+    <link rel="stylesheet" href="/static/css/typography.css">
+    <link rel="stylesheet" href="/static/css/components.css">
+    <link rel="stylesheet" href="/static/css/utilities.css">
+    
     <style>
         * {
             margin: 0;
@@ -12,162 +19,59 @@
         }
 
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--gradient-primary);
             min-height: 100vh;
             padding: 0;
         }
         
-        .page-content {
-            min-height: calc(100vh - 68px);
-            padding: 2rem 1rem;
-        }
-
-        .dashboard-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .header {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .header h1 {
-            color: #1e293b;
-            font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }
-
-        .header p {
-            color: #475569;
-            font-size: 1rem;
-        }
-
-        .content-card {
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 20px;
-            padding: 2rem;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        }
-
-        .content-card h2 {
-            color: #1e293b;
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-        }
-
-        .content-card p {
-            color: #475569;
-            line-height: 1.6;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 0.75rem 1.5rem;
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-right: 1rem;
-            margin-top: 0.5rem;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
-        }
-
-        .btn-secondary {
-            background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+        /* Navigation - Custom styles */
+        .app-nav {
+            background: var(--gradient-primary);
         }
         
-        /* Modern Navigation */
-        nav {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            backdrop-filter: blur(20px);
-            padding: 16px 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-            z-index: 100;
-        }
-        
-        .nav-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 22px;
-            font-weight: 800;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-        
-        .nav-location {
-            color: rgba(255, 255, 255, 0.9);
-            font-size: 14px;
-            margin-left: 16px;
-            font-weight: 500;
-        }
-        
-        .hamburger-btn {
-            width: 44px;
-            height: 44px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            cursor: pointer;
+        /* Hamburger Button Custom Styling */
+        .app-nav-toggle {
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             gap: 5px;
-            transition: all 0.3s ease;
-            z-index: 101;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: var(--radius-lg);
+            width: 44px;
+            height: 44px;
+            transition: all var(--duration-base) var(--easing-ease);
         }
         
-        .hamburger-btn:hover {
+        .app-nav-toggle:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.05);
         }
         
-        .hamburger-btn span {
+        .app-nav-toggle span {
             width: 24px;
             height: 3px;
-            background: white;
+            background: var(--color-text-inverse);
             border-radius: 2px;
-            transition: all 0.3s ease;
+            transition: all var(--duration-base) var(--easing-ease);
+            display: block;
         }
         
-        .hamburger-btn.active span:nth-child(1) {
+        .app-nav-toggle.active span:nth-child(1) {
             transform: rotate(45deg) translate(7px, 7px);
         }
         
-        .hamburger-btn.active span:nth-child(2) {
+        .app-nav-toggle.active span:nth-child(2) {
             opacity: 0;
         }
         
-        .hamburger-btn.active span:nth-child(3) {
+        .app-nav-toggle.active span:nth-child(3) {
             transform: rotate(-45deg) translate(7px, -7px);
         }
         
+        /* RIGHT-SIDE SLIDE-IN MENU */
         .slide-menu {
             position: fixed;
             top: 0;
@@ -175,10 +79,10 @@
             width: 320px;
             height: 100vh;
             background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(20px);
-            box-shadow: -4px 0 30px rgba(0, 0, 0, 0.2);
-            transition: right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 200;
+            backdrop-filter: var(--glass-blur);
+            box-shadow: var(--shadow-xl);
+            transition: right var(--duration-slower) cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: var(--z-fixed);
             display: flex;
             flex-direction: column;
         }
@@ -188,38 +92,40 @@
         }
         
         .menu-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 24px;
-            color: white;
+            background: var(--gradient-primary);
+            padding: var(--spacing-6);
+            color: var(--color-text-inverse);
         }
         
         .menu-header h2 {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 4px;
+            font-size: var(--text-2xl);
+            font-weight: var(--font-weight-extrabold);
+            margin-bottom: var(--spacing-1);
         }
         
         .menu-header p {
-            font-size: 14px;
+            font-size: var(--text-sm);
             opacity: 0.9;
         }
         
         .menu-close {
             position: absolute;
-            top: 20px;
-            right: 20px;
+            top: var(--spacing-5);
+            right: var(--spacing-5);
             width: 36px;
             height: 36px;
             background: rgba(255, 255, 255, 0.2);
             border: none;
-            border-radius: 8px;
-            color: white;
-            font-size: 24px;
+            border-radius: var(--radius-md);
+            color: var(--color-text-inverse);
+            font-size: var(--text-2xl);
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
+            transition: all var(--duration-base) var(--easing-ease);
+            min-height: 44px;
+            min-width: 44px;
         }
         
         .menu-close:hover {
@@ -229,99 +135,75 @@
         
         .menu-links {
             flex: 1;
-            padding: 24px;
+            padding: var(--spacing-6);
             overflow-y: auto;
         }
         
         .menu-link {
             display: flex;
             align-items: center;
-            padding: 16px;
-            margin-bottom: 12px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 12px;
+            padding: var(--spacing-4);
+            margin-bottom: var(--spacing-3);
+            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
+            border-radius: var(--radius-lg);
             text-decoration: none;
-            color: #1a1a1a;
-            font-weight: 600;
-            font-size: 16px;
-            transition: all 0.3s ease;
+            color: var(--color-text-primary);
+            font-weight: var(--font-weight-semibold);
+            font-size: var(--text-base);
+            transition: all var(--duration-base) var(--easing-ease);
             border: 2px solid transparent;
         }
         
         .menu-link:hover {
             transform: translateX(-4px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
-            border-color: #667eea;
-            background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--color-primary);
+            background: linear-gradient(135deg, var(--color-bg-primary) 0%, var(--color-gray-50) 100%);
         }
         
         .menu-link-icon {
-            font-size: 24px;
-            margin-right: 16px;
+            font-size: var(--text-2xl);
+            margin-right: var(--spacing-4);
             width: 32px;
             text-align: center;
         }
         
+        /* Menu Overlay */
         .menu-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            background: var(--color-bg-overlay);
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 199;
+            transition: all var(--duration-base) var(--easing-ease);
+            z-index: calc(var(--z-fixed) - 1);
         }
         
         .menu-overlay.active {
             opacity: 1;
             visibility: visible;
         }
+        
+        .page-content {
+            min-height: calc(100vh - var(--nav-height));
+            padding: var(--spacing-8) var(--spacing-4);
+        }
+
+        .dashboard-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
 
         @media (max-width: 768px) {
-            nav {
-                padding: 12px 20px;
-            }
-            
-            .nav-brand {
-                font-size: 18px;
-            }
-            
-            .nav-location {
-                display: none;
-            }
-            
             .slide-menu {
                 width: 280px;
-            }
-            
-            .header h1 {
-                font-size: 1.5rem;
-            }
-
-            .content-card {
-                padding: 1.5rem;
-            }
-
-            .btn {
-                display: block;
-                width: 100%;
-                text-align: center;
-                margin-right: 0;
             }
         }
         
         @media (max-width: 480px) {
-            nav {
-                padding: 10px 16px;
-            }
-            
-            .nav-brand {
-                font-size: 16px;
-            }
-            
             .slide-menu {
                 width: 100%;
                 max-width: 320px;
@@ -334,54 +216,53 @@
     
     <div class="slide-menu" id="slideMenu">
         <div class="menu-header">
-            <button class="menu-close" onclick="toggleMenu()">  </button>
+            <button class="menu-close" onclick="toggleMenu()">×</button>
             <h2>Menu</h2>
             <p>Volunteer Management Platform</p>
         </div>
         <div class="menu-links">
             <a href="/" class="menu-link">
-                <span class="menu-link-icon">       </span>
+                <span class="menu-link-icon">🗺️</span>
                 <span>Map</span>
             </a>
             <a href="/doctors" class="menu-link">
-                <span class="menu-link-icon">      </span>
+                <span class="menu-link-icon">👨‍⚕️</span>
                 <span>Doctors</span>
             </a>
             {% if user %}
                 {% if user.role == "super_admin" %}
                     <a href="/admin" class="menu-link">
-                        <span class="menu-link-icon">    </span>
+                        <span class="menu-link-icon">⚙️</span>
                         <span>Admin</span>
                     </a>
                 {% else %}
                     <a href="/dashboard" class="menu-link">
-                        <span class="menu-link-icon">    </span>
+                        <span class="menu-link-icon">📊</span>
                         <span>Dashboard</span>
                     </a>
                 {% endif %}
                 <a href="/admin/logout" class="menu-link">
-                    <span class="menu-link-icon">    </span>
+                    <span class="menu-link-icon">🚪</span>
                     <span>Logout</span>
                 </a>
             {% else %}
                 <a href="/admin/login" class="menu-link">
-                    <span class="menu-link-icon">    </span>
+                    <span class="menu-link-icon">🔐</span>
                     <span>Login</span>
                 </a>
             {% endif %}
             <a href="/about" class="menu-link">
-                <span class="menu-link-icon">      </span>
+                <span class="menu-link-icon">ℹ️</span>
                 <span>About</span>
             </a>
         </div>
     </div>
     
-    <nav>
-        <div class="nav-brand">
-            Volunteer Management Platform
-            <span class="nav-location">     Bhadrak</span>
-        </div>
-        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleMenu()">
+    <nav class="app-nav">
+        <a href="/" class="app-nav-brand">Volunteer Management Platform
+            <span style="font-size: var(--text-sm); margin-left: var(--spacing-4); font-weight: var(--font-weight-medium);">📍 Bhadrak</span>
+        </a>
+        <button class="app-nav-toggle" id="hamburgerBtn" onclick="toggleMenu()">
             <span></span>
             <span></span>
             <span></span>
@@ -389,38 +270,50 @@
     </nav>
     
     <div class="page-content">
-    <div class="dashboard-container">
-        <div class="header">
-            <h1>     Block Coordinator Dashboard</h1>
-            <p>Welcome! Your account is active and ready to submit Field Worker information.</p>
-        </div>
+        <div class="dashboard-container">
+            <div class="card card-glass mb-6">
+                <div class="card-body">
+                    <h1 class="mb-2">📊 Block Coordinator Dashboard</h1>
+                    <p>Welcome! Your account is active and ready to submit Field Worker information.</p>
+                </div>
+            </div>
 
-        <div class="content-card">
-            <h2>        View Village Map</h2>
-            <p>Explore the interactive map showing all 1,315 villages in Bhadrak district with geographic boundaries, choropleth visualization, and 3D glowing dots.</p>
-            <a href="/" class="btn">Open Village Map</a>
-        </div>
+            <div class="card card-glass mb-6">
+                <div class="card-body">
+                    <h2 class="mb-4">🗺️ View Village Map</h2>
+                    <p class="mb-4">Explore the interactive map showing all 1,315 villages in Bhadrak district with geographic boundaries, choropleth visualization, and 3D glowing dots.</p>
+                    <a href="/" class="btn btn-primary">Open Village Map</a>
+                </div>
+            </div>
 
-        <div class="content-card">
-            <h2>     Submit Field Worker Information</h2>
-            <p>Add new Field Worker contact details for villages in your assigned block(s). All submissions require admin approval before going live.</p>
-            <a href="/field-workers/new" class="btn">Add Field Worker</a>
-        </div>
+            <div class="card card-glass mb-6">
+                <div class="card-body">
+                    <h2 class="mb-4">👤 Submit Field Worker Information</h2>
+                    <p class="mb-4">Add new Field Worker contact details for villages in your assigned block(s). All submissions require admin approval before going live.</p>
+                    <a href="/field-workers/new" class="btn btn-primary">Add Field Worker</a>
+                </div>
+            </div>
 
-        <div class="content-card">
-            <h2>     My Submissions</h2>
-            <p>View and manage all Field Worker entries you've submitted, including pending approvals and approved entries.</p>
-            <a href="/field-workers/my-submissions" class="btn">View My Submissions</a>
-        </div>
+            <div class="card card-glass mb-6">
+                <div class="card-body">
+                    <h2 class="mb-4">📋 My Submissions</h2>
+                    <p class="mb-4">View and manage all Field Worker entries you've submitted, including pending approvals and approved entries.</p>
+                    <a href="/field-workers/my-submissions" class="btn btn-primary">View My Submissions</a>
+                </div>
+            </div>
 
-        <div class="content-card">
-            <h2>       Account Settings</h2>
-            <p>Update your profile information, change password, and manage notification preferences.</p>
-            <a href="/admin/login" class="btn btn-secondary">Logout</a>
+            <div class="card card-glass mb-6">
+                <div class="card-body">
+                    <h2 class="mb-4">⚙️ Account Settings</h2>
+                    <p class="mb-4">Update your profile information, change password, and manage notification preferences.</p>
+                    <a href="/admin/logout" class="btn btn-secondary">Logout</a>
+                </div>
+            </div>
         </div>
-    </div>
     </div>
     
+    <!-- Design System Components -->
+    <script src="/static/js/components.js"></script>
     <script>
         function toggleMenu() {
             const menu = document.getElementById('slideMenu');
@@ -434,4 +327,3 @@
     </script>
 </body>
 </html>
-
