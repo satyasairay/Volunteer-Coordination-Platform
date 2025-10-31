@@ -830,12 +830,10 @@
             .attr("viewBox", `0 0 ${width} ${height}`);
         
         let zoom = d3.zoom()
-            .scaleExtent([2, 10])
+            .scaleExtent([1, 20])
             .on("zoom", zoomed);
         
         svg.call(zoom);
-        // Start at k=2 (prune the first zoom level)
-        svg.call(zoom.transform, d3.zoomIdentity.scale(2));
         
         let g = svg.append("g");
         // Define subtle inner shadow filter for carved village edges (activated at high zoom)
@@ -1602,12 +1600,12 @@
             const zoomLevel = event.transform.k;
             const pins = g.selectAll(".village-pin");
             
-            // Keep pins visible across the entire zoom range (k ∈ [2, 10])
-            const pinOpacity = zoomLevel >= 8 ? 0.5 : 0.6;
-            if (zoomLevel >= 2) {
-                pins.transition().duration(120).attr("opacity", pinOpacity);
+            if (zoomLevel > 5) {
+                pins.transition().duration(200).attr("opacity", 0.45);
+            } else if (zoomLevel > 2) {
+                pins.transition().duration(200).attr("opacity", 0.7);
             } else {
-                pins.transition().duration(120).attr("opacity", 0);
+                pins.transition().duration(200).attr("opacity", 0);
             }
 
             // Activate carved inner shadow on polygons at high zoom
@@ -1646,7 +1644,7 @@
         }
         
         function resetZoom() {
-            svg.transition().call(zoom.transform, d3.zoomIdentity.scale(2));
+            svg.transition().call(zoom.transform, d3.zoomIdentity);
         }
         
         function reloadMap() {

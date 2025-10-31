@@ -151,3 +151,19 @@ Rationale
 
 Validation
 - No API changes; smoke tests unchanged and passing.
+
+## Oct 31, 2025 — Zoom Policy Rollback
+
+Summary
+- Reverted zoom extent and behavior to the previously stable configuration to restore map load reliability.
+
+Changes
+- templates/index.html
+  - `scaleExtent([1, 20])` restored.
+  - Removed initial `scale(2)` transform.
+  - `resetZoom()` returns to identity.
+  - Pins again fade out at high zoom (≥ ~6), match prior behavior.
+
+QA / Validation
+- Backend smoke (unchanged endpoints) passing.
+- Frontend: verified no early `zoomed()` transform runs before layers are initialized.
